@@ -27,32 +27,38 @@ class TGR_OT_BindTGT(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
+        # Check if there is any selected bones
+        bones_to_bind = None
+        if len(context.selected_pose_bones) > 0:
+            bones_to_bind = context.selected_pose_bones
+        else:
+            bones_to_bind = context.object.pose.bones
         # Check if there are TGT bones for each DEF bone
-        for bone in context.object.pose.bones:
-            if bone.name.startswith('DEF-'):
-                # Check if there's a TGT bone with the same name
-                if (bone.name.replace('DEF-', 'TGT-') not in context.object.pose.bones) and (bone.name.replace('DEF-', 'CTRL-') not in context.object.pose.bones):
+        for bone in bones_to_bind:
+            if bone.name.startswith('TGT-') or bone.name.startswith('CTRL-'):
+                # Check if there's a DEF bone with the same name
+                if (bone.name.replace('TGT-', 'DEF-') not in context.object.pose.bones) and (bone.name.replace('CTRL-', 'DEF-') not in context.object.pose.bones):
                     self.report({"ERROR"}, "No TGT or CTRL bone for DEF bone: " + bone.name)
                     return {"CANCELLED"}
         
         # Bind the TGT bones to the DEF bones
-        for bone in context.object.pose.bones:
-            if bone.name.startswith('DEF-'):
-                # Get the TGT or CTRL bone
+        for bone in bones_to_bind:
+            if bone.name.startswith('TGT-') or bone.name.startswith('DEF-'):
+                # Get the DEF bone
                 try:
-                    tgt_bone = context.object.pose.bones[bone.name.replace('DEF-', 'TGT-')]
+                    def_bone = context.object.pose.bones[bone.name.replace('TGT-', 'DEF-')]
                 except KeyError:
-                    tgt_bone = context.object.pose.bones[bone.name.replace('DEF-', 'CTRL-')]
+                    def_bone = context.object.pose.bones[bone.name.replace('CTRL-', 'DEF-')]
                 # Bind the TGT bone to the DEF bone
                 if 'TGT' in bone.constraints:
-                    bone.constraints['TGT'].subtarget = tgt_bone.name
+                    def_bone.constraints['TGT'].subtarget = bone.name
                 else:
-                    constraint = bone.constraints.new('COPY_TRANSFORMS')
+                    constraint = def_bone.constraints.new('COPY_TRANSFORMS')
                     constraint.target = context.object.tgr_props.armature
-                    constraint.subtarget = tgt_bone.name
+                    constraint.subtarget = bone.name
                     constraint.name = 'TGT'
                     # Ensure this constraint is the first one
-                    bone.constraints.move(len(bone.constraints) - 1, 0)
+                    def_bone.constraints.move(len(def_bone.constraints) - 1, 0)
         
         # Update the view layer
         update_armature(context)
