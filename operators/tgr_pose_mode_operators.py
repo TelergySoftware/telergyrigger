@@ -415,7 +415,7 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
             bone_name = "CTRL-"
             
             for name_part in split_name[1:]:
-                bone_name += f"-{name_part}"
+                bone_name += f"{name_part}"
             
             bone.name = bone_name
         ctrl_bone_names = [bone.name for bone in context.selected_bones]
