@@ -24,6 +24,7 @@ from .tgr_edit_mode_operators import (TGR_OT_AddNonDeformBone,
                                       TGR_OT_AddDeformBone)
 # Add classes from tgr_pose_mode_operators
 from .tgr_pose_mode_operators import (TGR_OT_BindTGT,
+                                      TGR_OT_CopyTransformsToChain,
                                       TGR_OT_CreateIkFkSwichChain,
                                       TGR_OT_CreateRotationChain,
                                       TGR_OT_CreateStretchToChain,

@@ -538,4 +538,40 @@ class TGR_OT_CreateStretchToChain(bpy.types.Operator):
         
         # Finish the operation 
         return {'FINISHED'}
-        
+    
+    
+class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
+    """
+    Create a copy transforms chain considering two given names.
+    """
+    bl_idname = "tgr.copy_transforms_to_chain"
+    bl_label = "Create Stretch To Chain"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    from_prefix: bpy.props.StringProperty(name="From Prefix")
+    to_prefix: bpy.props.StringProperty(name="To Prefix")
+    constraint_name: bpy.props.StringProperty(name="Constraint Name")
+    
+    @classmethod
+    def poll(cls, context):
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+    
+    def execute(self, context):
+        for pose_bone in context.selected_pose_bones:
+            constraint = pose_bone.constraints.new('COPY_TRANSFORMS')
+            constraint.target = context.active_object
+            
+            from_bone_name = pose_bone.name.replace(self.to_prefix, self.from_prefix)
+            try:
+                _ = context.active_object.pose.bones[from_bone_name]
+            except KeyError:
+                self.report({'ERROR'}, f'{from_bone_name} not found!')
+                return {'CANCELLED'}
+            
+            constraint.subtarget = from_bone_name
+            if not self.constraint_name == '':
+                constraint.name = self.constraint_name
+
+        return {'FINISHED'}

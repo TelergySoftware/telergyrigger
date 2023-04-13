@@ -48,6 +48,7 @@ from .operators import (TGR_OT_AddDeformBone,
                         TGR_OT_ParentToRoot)
 
 from .operators import (TGR_OT_BindTGT,
+                        TGR_OT_CopyTransformsToChain,
                         TGR_OT_CreateIkFkSwichChain,
                         TGR_OT_CreateRotationChain,
                         TGR_OT_CreateStretchToChain,
