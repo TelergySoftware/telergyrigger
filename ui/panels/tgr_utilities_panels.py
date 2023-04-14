@@ -70,3 +70,31 @@ class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
 
         row = layout.row()
         row.operator("tgr.clean_name_up", text="Clean Name Up", icon='BRUSH_DATA')
+        
+
+# Selection Subpanel
+class TGR_PT_View3D_Panel_Utilities_Selection(TGR_PT_BASE):
+    """
+    Creates a subpanel for Utilities with the selection operators.
+    """
+    bl_label = "Selection"
+    bl_idname = "TGR_PT_View3D_Panel_Utilities_Selection"
+    bl_parent_id = "TGR_PT_View3D_Panel_Utilities"
+
+    @classmethod
+    def poll(cls, context):
+        is_armature = context.object.type == 'ARMATURE'
+        is_edit_mode = context.mode == 'EDIT_ARMATURE'
+        is_pose_mode = context.mode == 'POSE'
+        return is_armature and (is_edit_mode or is_pose_mode)
+
+    def draw(self, context):
+        tgr_props = context.object.tgr_props
+        layout = self.layout
+        # Search Select
+        row = layout.row()
+        row.label(text="Select by Search Match")
+        row = layout.row()
+        row.prop(tgr_props, "search_bone_name", text="Match Name")
+        row = layout.row()
+        row.operator("tgr.select_bones_by_name", text="Search and Select", icon="BORDERMOVE").bone_name = tgr_props.search_bone_name

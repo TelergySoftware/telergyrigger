@@ -14,6 +14,7 @@ from .panels import (
     # Utilities
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
+    TGR_PT_View3D_Panel_Utilities_Selection,
     # Bone Layers
     TGR_PT_View3D_Panel_BoneLayers,
 )

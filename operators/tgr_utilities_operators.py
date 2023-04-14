@@ -364,6 +364,56 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
         # Check if the shift key is pressed
         self.shift = event.shift
         return self.execute(context)
+    
+    
+class TGR_OT_SelectBonesByName(bpy.types.Operator):
+    """
+    Select all the bones of that match the searched name.
+    """
+    bl_idname = "tgr.select_bones_by_name"
+    bl_label = "Select Bones By Name"
+    bl_options = {"REGISTER", "UNDO"}
+    
+    bone_name: bpy.props.StringProperty(name="Bone Name", description="Name of bones to be selected")
+    
+    def __init__(self):
+        self.shift = False
+    
+    @classmethod
+    def poll(cls, context):
+        # Check if the selected object is an Armature
+        is_armature = context.object.type == 'ARMATURE'
+        # Check if the selected object is in Edit Mode or Pose Mode
+        is_edit_mode = context.mode == 'EDIT_ARMATURE'
+        is_pose_mode = context.mode == 'POSE'
+        # Check if the selected object is an Armature and in Edit Mode or Pose Mode
+        return is_armature and (is_edit_mode or is_pose_mode)
+    
+    def execute(self, context):
+        if not self.shift:
+            # Deselect all bones
+            if context.mode == 'EDIT_ARMATURE':
+                bpy.ops.armature.select_all(action='DESELECT')
+            elif context.mode == 'POSE':
+                bpy.ops.pose.select_all(action='DESELECT')
+                
+        if context.mode == 'EDIT_ARMATURE':
+            for edit_bone in context.active_object.data.edit_bones:
+                if self.bone_name in edit_bone.name:
+                    edit_bone.select = True
+                    edit_bone.select_head = True
+                    edit_bone.select_tail = True
+        elif context.mode == 'POSE':
+            for pose_bone in context.active_object.pose.bones:
+                if self.bone_name in pose_bone.name:
+                    pose_bone.bone.select = True
+        
+        return {"FINISHED"}
+    
+    def invoke(self, context, event):
+        # Check if the shift key is pressed
+        self.shift = event.shift
+        return self.execute(context)
 
 
 class TGR_OT_SelectLayerBones(bpy.types.Operator):

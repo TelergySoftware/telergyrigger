@@ -5,7 +5,7 @@ from .tgr_edit_mode_panels import TGR_PT_View3D_Panel_EditMode, TGR_PT_View3D_Pa
 # Pose Mode Subpanels
 from .tgr_pose_mode_panels import TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Panel_PoseMode_TGT
 # Utilities Subpanels
-from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_Panel_Utilities_Naming
+from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
 # Bone Layers Subpanels
 from .tgr_bone_layers_panels import TGR_PT_View3D_Panel_BoneLayers
 

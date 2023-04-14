@@ -63,7 +63,7 @@ from .ui import TGR_PT_View3D_Panel_EditMode_Create, TGR_PT_View3D_Panel_EditMod
 # Pose Mode Subpanels
 from .ui import TGR_PT_View3D_Panel_PoseMode_TGT
 # Utilities Subpanels
-from .ui import TGR_PT_View3D_Panel_Utilities_Naming
+from .ui import TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
 # Bone Layers Subpanels
 from .ui import TGR_PT_View3D_Panel_BoneLayers
 # Menus
@@ -112,6 +112,7 @@ CLASSES_TO_REGISTER = (
     TGR_PT_View3D_Panel_PoseMode_TGT,
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
+    TGR_PT_View3D_Panel_Utilities_Selection,
     # Menus
     TGR_MT_EditMode_PieMenu,
     TGR_MT_EditMode_AddBone,

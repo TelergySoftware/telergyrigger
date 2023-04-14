@@ -71,6 +71,8 @@ class TGR_Properties(bpy.types.PropertyGroup):
         description="The root bone of the armature",
         default="ROOT",
     )
+    # ---- UTILITIES ----
+    search_bone_name: bpy.props.StringProperty(name="Search Bone Name")
 
 
 class TGR_LayerProperties(bpy.types.PropertyGroup):
