@@ -61,7 +61,7 @@ from .ui import TGR_PT_View3D_Panel_EditMode, TGR_PT_View3D_Panel_PoseMode, TGR_
 # Edit Mode Subpanels
 from .ui import TGR_PT_View3D_Panel_EditMode_Create, TGR_PT_View3D_Panel_EditMode_Parenting, TGR_PT_View3D_Panel_EditMode_Utilities
 # Pose Mode Subpanels
-from .ui import TGR_PT_View3D_Panel_PoseMode_TGT
+from .ui import TGR_PT_View3D_Panel_PoseMode_TGT, TGR_PT_View3D_Panel_PoseMode_Constraints
 # Utilities Subpanels
 from .ui import TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
 # Bone Layers Subpanels
@@ -89,6 +89,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
     TGR_OT_CreateTGT,
+    TGR_OT_CopyTransformsToChain,
     TGR_OT_EditLayer,
     TGR_OT_IsolateBoneRotation,
     TGR_OT_LockBonesFromLayer,
@@ -109,6 +110,7 @@ CLASSES_TO_REGISTER = (
     TGR_PT_View3D_Panel_EditMode_Parenting,
     TGR_PT_View3D_Panel_EditMode_Utilities,
     TGR_PT_View3D_Panel_PoseMode,
+    TGR_PT_View3D_Panel_PoseMode_Constraints,
     TGR_PT_View3D_Panel_PoseMode_TGT,
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,

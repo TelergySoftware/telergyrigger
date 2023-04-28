@@ -198,15 +198,20 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
 class TGR_OT_CreateIkFkSwichChain(bpy.types.Operator):
     """
     Create an IK/FK switch chain.
-
-    conditions:
-        - Active object is an armature:
-            - Is pose mode:
-                - At least two bones are selected.
     """
     bl_idname = "tgr.create_ikfk_switch_chain"
     bl_label = "Create IK/FK Switch Chain"
     bl_options = {'REGISTER', 'UNDO'}
+    
+    def get_selected_bones(self, context):
+        items = []
+        for bone in context.selected_pose_bones:
+            items.append((bone.name, bone.name, ""))
+        return items
+    
+    ik_target_bone_name: bpy.props.EnumProperty(name="IK Target Bone", items=get_selected_bones)
+    ik_bone_name: bpy.props.EnumProperty(name="IK Bone Name", items=get_selected_bones)
+    ik_bones_as_ctrl: bpy.props.StringProperty(name="IK Bones as CTRL")
 
     @classmethod
     def poll(cls, context):
@@ -220,169 +225,24 @@ class TGR_OT_CreateIkFkSwichChain(bpy.types.Operator):
             self.report({"ERROR"}, "Not enough bones selected. Select at least two bones.")
             return {"CANCELLED"}
         
-        # Change the mode to edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
-        
-        # Get current mirror mode
-        mirror_mode = bpy.context.object.data.use_mirror_x
-        # Set the mirror mode to off
-        bpy.context.object.data.use_mirror_x = False
-
-        # Get the selected bones
-        selected_bones = context.selected_bones
-        
-        
-        # Duplicate the selected bones
-        bpy.ops.armature.duplicate()
-
-        # Replace the TGT- prefix for CTRL-FK- prefix and remove the .001 suffix
-        fk_bone_names = []
-        for bone in context.selected_bones:
-            if bone.name.startswith('TGT-'):
-                bone.name = bone.name.replace('TGT-', 'CTRL-FK-')
-                bone.name = bone.name.replace('.001', '')
-                fk_bone_names.append(bone.name)
-        
-        # Duplicate the selected bones
-        bpy.ops.armature.duplicate()
-
-        # Replace the CTRL-FK- prefix for MCH-IK- prefix if at least one child bone is in
-        # the selected bones, else change the prefix to CTRL-IK- instead and remove the .001 suffix
-        ik_bone_names = []
-        for bone in context.selected_bones:
-            if bone.name.startswith('CTRL-FK-'):
-                if any(child in context.selected_bones for child in bone.children): 
-                    bone.name = bone.name.replace('CTRL-FK-', 'MCH-IK-')
-                    bone.name = bone.name.replace('.001', '')
-                    ik_bone_names.append(bone.name)
-                else:
-                    bone.name = bone.name.replace('CTRL-FK-', 'CTRL-IK-')
-                    bone.name = bone.name.replace('.001', '')
-                    ik_bone_names.append(bone.name)        
-
-        # Change mirror mode to the original value
-        bpy.context.object.data.use_mirror_x = mirror_mode
-
-        # Change back to pose mode
-        bpy.ops.object.mode_set(mode='POSE')
-
-        print(fk_bone_names, ik_bone_names)
-
-        # Add copy location, rotation and scale in the Y axis constraints to the TGT- selected bones
-        # and set the target to the MCH-IK- bones or CTRL-IK- bone if no child bones are selected
-        for bone, ik_bone_name, fk_bone_name in zip(selected_bones, ik_bone_names, fk_bone_names):
-            # Get the pose bone
-            pose_bone = context.object.pose.bones[bone.name]
-            # Set ik_stretch to 0.05 to the ik_bones
-            context.object.pose.bones[ik_bone_name].ik_stretch = 0.05
-            # Add copy location constraint
-            constraint = pose_bone.constraints.new('COPY_LOCATION')
-            constraint.target = context.object
-            constraint.subtarget = ik_bone_name
-            constraint.name = 'IK COPY LOCATION'
-            # Add copy rotation constraint
-            constraint = pose_bone.constraints.new('COPY_ROTATION')
-            constraint.target = context.object
-            constraint.subtarget = ik_bone_name
-            constraint.name = 'IK COPY ROTATION'
-            # Add copy scale constraint (in Y axis only) in local space
-            constraint = pose_bone.constraints.new('COPY_SCALE')
-            constraint.target = context.object
-            constraint.subtarget = ik_bone_name
-            constraint.target_space = 'LOCAL'
-            constraint.owner_space = 'LOCAL'
-            constraint.name = 'IK COPY SCALE'
-            constraint.use_x = False
-            constraint.use_z = False
-            
-            if ik_bone_name.startswith('CTRL-IK-'):
-                # Change the parent prefix from MCH-IK to CTRL-IK-
-                ik_bone = context.object.pose.bones[ik_bone_name]
-                ik_bone.bone.parent.name = ik_bone.bone.parent.name.replace('MCH-IK-', 'CTRL-IK-')
-                # Deselect all bones
-                bpy.ops.pose.select_all(action='DESELECT')
-                # Change to Edit mode
-                bpy.ops.object.mode_set(mode='EDIT')
-                # Get current mirror mode
-                mirror_mode = bpy.context.object.data.use_mirror_x
-                # Set the mirror mode to off
-                bpy.context.object.data.use_mirror_x = False
-                # Select the bone
-                ik_edit_bone = context.object.data.edit_bones[ik_bone_name]
-                ik_edit_bone.select = True
-                if ik_edit_bone.use_connect:
-                    ik_edit_bone.parent.select_tail = True
-                else:
-                    ik_edit_bone.select_head = True
-                ik_edit_bone.select_tail = True
-                # Store parent bone name for later reference
-                target_bone_name = ik_edit_bone.parent.name
-                # Duplicate the CTRL-IK- bone and resize it to 50%
-                bpy.ops.armature.duplicate()
-                bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
-                # Replace the selected bone prefix from CTRL-IK for MCH-IK-
-                mch_ik_bone = context.selected_bones[0]
-                mch_ik_bone_name = mch_ik_bone.name = ik_bone_name.replace('CTRL-IK-', 'MCH-IK-')
-                # Remove the .001 suffix
-                mch_ik_bone.name = mch_ik_bone.name.replace('.001', '')
-                # Parent the CTRL-IK- bone to the MCH-IK- bone
-                ik_edit_bone.use_connect = False
-                ik_edit_bone.parent = context.object.data.edit_bones[mch_ik_bone_name]
-                # Duplicate the current selected bone
-                bpy.ops.armature.duplicate()
-                # Replace the selected bone prefix from CTRL-IK for CTRL-IK-CHAIN-
-                ctrl_ik_chain_bone = context.selected_bones[0]
-                ctrl_ik_chain_bone.use_connect = False
-                ctrl_ik_chain_bone.name = ik_bone_name.replace('CTRL-IK-', 'CTRL-IK-CHAIN-')
-                # Remove the .001 suffix
-                ctrl_ik_chain_bone.name = ctrl_ik_chain_bone.name.replace('.001', '')
-                # Align current selected bone to the world
-                bpy.ops.tgr.align_bone_to_world()
-                # Set CTRL-IK-CHAIN- bone as the parent of the MCK-IK- bone
-                mch_ik_bone.parent = ctrl_ik_chain_bone
-                # Set the ROOT bone as the parent of the CTRL-IK-CHAIN- bone
-                ctrl_ik_chain_bone.parent = context.object.data.edit_bones[context.object.tgr_props.root_bone]
-                # Resize it to 3 times the current size
-                bpy.ops.transform.resize(value=(3, 3, 3))
-                # Add a new non-deform bone to the same location as the target bone's head
-                bpy.ops.tgr.add_non_deform_bone()
-                pole_tgt_bone = context.selected_bones[0]
-                pole_tgt_bone_name = pole_tgt_bone.name = pole_tgt_bone.name.replace('MCH-BONE', 'CTRL-POLE-TGT')
-                pole_tgt_bone.head = context.object.data.edit_bones[target_bone_name].head + Vector((0, ctrl_ik_chain_bone.length * 3, 0.0))
-                pole_tgt_bone.tail = pole_tgt_bone.head + Vector((0, ctrl_ik_chain_bone.length * 4, 0))
-                # Set the pole target bone's parent to the CTRL-IK-CHAIN- bone
-                pole_tgt_bone.parent = ctrl_ik_chain_bone
-                # Return the mirror mode to the original value
-                bpy.context.object.data.use_mirror_x = mirror_mode
-                # Change back to pose mode
-                bpy.ops.object.mode_set(mode='POSE')
-                # Add the IK constraint to the parent bone and set the current armature as target
-                # and the current bone as subtarget.
-                constraint = context.object.pose.bones[target_bone_name].constraints.new('IK')
-                constraint.target = context.object
-                constraint.subtarget = mch_ik_bone_name
-                constraint.pole_target = context.object
-                constraint.pole_subtarget = pole_tgt_bone_name
-                constraint.name = 'IK CHAIN'
-                # Set the IK chain number to be the length of the ik_bone_names list - 1
-                constraint.chain_count = len(ik_bone_names) - 1
-                # Send the mch_ik_bone to the layer 2
-                mch_ik_bone.layers = [i == 2 for i in range(len(mch_ik_bone.layers))]
-            
-            # Send the MCH-IK bones to the layer 2
-            pose_bone.bone.layers = [i == 2 for i in range(len(pose_bone.bone.layers))]
-
-            # Add copy transform constraint to the TGT- selected bones and set the target to the CTRL-FK- bones
-            # with the influence of 0.0
-            constraint = pose_bone.constraints.new('COPY_TRANSFORMS')
-            constraint.target = context.object
-            constraint.subtarget = fk_bone_name
-            constraint.name = 'FK COPY TRANSFORM'
-            constraint.influence = 0.0
-
-        # Finish by deselecting all bones
-        bpy.ops.pose.select_all(action='DESELECT')
         return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.label(text="Testing if this works")
+        
+        row = layout.row()
+        row.prop(self, "ik_target_bone_name")
+        
+        row = layout.row()
+        row.prop(self, "ik_bone_name")
+        
 
 
 class TGR_OT_CreateRotationChain(bpy.types.Operator):
@@ -545,7 +405,7 @@ class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
     Create a copy transforms chain considering two given names.
     """
     bl_idname = "tgr.copy_transforms_to_chain"
-    bl_label = "Create Stretch To Chain"
+    bl_label = "Copy Transforms To Chain"
     bl_options = {'REGISTER', 'UNDO'}
     
     from_prefix: bpy.props.StringProperty(name="From Prefix")
@@ -575,3 +435,26 @@ class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
                 constraint.name = self.constraint_name
 
         return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        
+        row = layout.row()
+        row.label(text="From and To Prefixes:")
+        
+        row = layout.row()
+        row.prop(self, "from_prefix")
+        
+        row = layout.row()
+        row.prop(self, "to_prefix")
+        
+        row = layout.row()
+        row.label(text="Constraint Name")
+        
+        row = layout.row()
+        row.prop(self, "constraint_name")
+        

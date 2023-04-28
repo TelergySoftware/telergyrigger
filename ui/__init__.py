@@ -11,6 +11,7 @@ from .panels import (
     # Pose Mode
     TGR_PT_View3D_Panel_PoseMode,
     TGR_PT_View3D_Panel_PoseMode_TGT,
+    TGR_PT_View3D_Panel_PoseMode_Constraints,
     # Utilities
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
