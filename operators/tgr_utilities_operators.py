@@ -502,7 +502,6 @@ class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
         elif context.mode == 'POSE':
             bpy.ops.pose.select_all(action='DESELECT')
         
-        
         return {"FINISHED"}
 
 
