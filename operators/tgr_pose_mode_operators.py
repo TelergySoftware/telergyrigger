@@ -580,11 +580,19 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
 
         # Add stretch to constraint to the stretch helper with the last bone tail as the target
         stretch_helper = armature.pose.bones[stretch_helper_name]
+        last_bone = armature.pose.bones[self.last_bone_name]
+
+        for constraint in last_bone.constraints:
+            if constraint.type == "IK":
+                ik_constraint = constraint
+                break
+        else:
+            self.report({'ERROR'}, 'IK constraint not found')
+            return {'CANCELLED'}
 
         stretch_constraint = stretch_helper.constraints.new(type="STRETCH_TO")
         stretch_constraint.target = armature
-        stretch_constraint.subtarget = self.last_bone_name
-        stretch_constraint.head_tail = 1.0
+        stretch_constraint.subtarget = ik_constraint.subtarget
 
         # Add copy location to the int bone with the stretch helper as the target
         int_bone = armature.pose.bones[int_bone_name]
@@ -604,16 +612,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         copy_scale_constraint.subtarget = armature.tgr_props.root_bone
 
         # Add pole bone as the pole target of the ik chain
-        last_bone = armature.pose.bones[self.last_bone_name]
         pole_bone = armature.pose.bones[pole_bone_name]
-
-        for constraint in last_bone.constraints:
-            if constraint.type == "IK":
-                ik_constraint = constraint
-                break
-        else:
-            self.report({'ERROR'}, 'IK constraint not found')
-            return {'CANCELLED'}
 
         ik_constraint.pole_target = armature
         ik_constraint.pole_subtarget = pole_bone.name
