@@ -490,6 +490,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         armature = context.active_object
         tgr_props = context.object.tgr_props
         mch_bones = []
+        old_cursor_location = context.scene.cursor.location[:]
 
         # Enter edit mode
         bpy.ops.object.mode_set(mode='EDIT')
@@ -541,7 +542,6 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         mch_bones.append(int_bone)
 
         # Add the pole target bone to the placement bone head
-        old_cursor_location = context.scene.cursor.location
         context.scene.cursor.location = placement_bone.head
         bpy.ops.tgr.add_non_deform_bone()
         pole_bone = context.selected_editable_bones[0]
@@ -617,6 +617,8 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         ik_constraint.pole_target = armature
         ik_constraint.pole_subtarget = pole_bone.name
         ik_constraint.pole_angle = math.radians(self.pole_angle)
+
+        context.scene.cursor.location = old_cursor_location
 
         return {"FINISHED"}
 
