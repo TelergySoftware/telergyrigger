@@ -107,6 +107,14 @@ class TGR_UI_Components(bpy.types.PropertyGroup):
         min=0
     )
 
+    layer_index: bpy.props.IntProperty(
+        name="Layer Index",
+        description="Layer index, only used if component type is LAYER",
+        default=0,
+        min=0,
+        max=31
+    )
+
     selected: bpy.props.BoolProperty(
         name="Selected",
     )

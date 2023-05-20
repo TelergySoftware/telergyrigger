@@ -38,7 +38,7 @@ class TGR_PT_View3D_Panel_RigUI(TGR_PT_BASE):
                 current_line = component.line
             if component.component_type == "LAYER":
                 row.prop(component, "selected", toggle=True, text=component.value)
-            if component.component_type == "LABEL":
+            elif component.component_type == "LABEL":
                 row.prop(component, "selected", expand=True, text=component.value)
 
         row = layout.row()
