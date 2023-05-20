@@ -85,36 +85,6 @@ class TGR_LayerProperties(bpy.types.PropertyGroup):
     )
 
 
-class TGR_UIProperties(bpy.types.PropertyGroup):
-    """
-    Properties of the UI
-    """
-
-    panel_name: bpy.props.StringProperty(
-        name="Panel Name",
-        description="Name that will be shown in the N-Panel",
-        default="Telergy Rig"
-    )
-
-    ui_code: bpy.props.StringProperty(
-        name="UI Code",
-        description="Pseudo code to represent the layers UI",
-        default="Layers;\n;0;1;\n;2;3;"
-    )
-
-    enable_select: bpy.props.BoolProperty(
-        name="Enable Select",
-        description="Enable the selection of layers",
-        default=False
-    )
-
-    selected_layers: bpy.props.StringProperty(
-        name="Selected Layers",
-        description="String representing which layers are selected",
-        default=""
-    )
-
-
 class TGR_UI_Components(bpy.types.PropertyGroup):
     """Components used to create the generated UI"""
 

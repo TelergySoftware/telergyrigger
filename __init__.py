@@ -83,7 +83,7 @@ from .ui import TGR_MT_EditMode_PieMenu, TGR_MT_PoseMode_Constraints_PieMenu, TG
     TGR_MT_TrackNewLayer
 
 # Properties
-from .properties import TGR_Properties, TGR_LayerProperties, TGR_UIProperties, TGR_UI_Components
+from .properties import TGR_Properties, TGR_LayerProperties, TGR_UI_Components
 
 # Classes to register
 CLASSES_TO_REGISTER = (
@@ -145,7 +145,6 @@ CLASSES_TO_REGISTER = (
     # Properties
     TGR_LayerProperties,
     TGR_Properties,
-    TGR_UIProperties,
     TGR_UI_Components,
 )
 
@@ -167,7 +166,6 @@ def register():
 
     # Add properties to the armature object
     bpy.types.Object.tgr_props = bpy.props.PointerProperty(type=TGR_Properties)
-    bpy.types.Object.tgr_ui_props = bpy.props.PointerProperty(type=TGR_UIProperties)
     bpy.types.Object.tgr_layer_collection = bpy.props.CollectionProperty(type=TGR_LayerProperties)
     bpy.types.Object.tgr_ui_components = bpy.props.CollectionProperty(type=TGR_UI_Components)
 
