@@ -58,8 +58,6 @@ from .operators import (TGR_OT_BindTGT,
 
 from .operators import (TGR_OT_GenerateUI,
                         TGR_OT_RIG_UI_AddComponent,
-                        TGR_OT_RIG_UI_AddNewLine,
-                        TGR_OT_RIG_UI_AddLabel,
                         TGR_OT_RIG_UI_ModifyItem,
                         TGR_OT_RIG_UI_RemoveItem,
                         TGR_OT_RIG_UI_Clear,)
@@ -109,9 +107,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_IsolateBoneRotation,
     TGR_OT_LockBonesFromLayer,
     TGR_OT_ParentToRoot,
-    TGR_OT_RIG_UI_AddLabel,
     TGR_OT_RIG_UI_AddComponent,
-    TGR_OT_RIG_UI_AddNewLine,
     TGR_OT_RIG_UI_Clear,
     TGR_OT_RIG_UI_ModifyItem,
     TGR_OT_RIG_UI_RemoveItem,
