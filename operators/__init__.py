@@ -34,8 +34,6 @@ from .tgr_pose_mode_operators import (TGR_OT_BindTGT,
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (TGR_OT_GenerateUI,
                                TGR_OT_RIG_UI_AddComponent,
-                               TGR_OT_RIG_UI_AddNewLine,
-                               TGR_OT_RIG_UI_AddLabel,
                                TGR_OT_RIG_UI_ModifyItem,
                                TGR_OT_RIG_UI_RemoveItem,
                                TGR_OT_RIG_UI_Clear,)

@@ -1,4 +1,3 @@
-import bpy
 from .tgr_base_panel import TGR_PT_BASE
 
 
@@ -28,7 +27,6 @@ class TGR_PT_View3D_Panel_RigUI(TGR_PT_BASE):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def draw(self, context):
-        ui_props = context.active_object.tgr_ui_props
         ui_components = context.active_object.tgr_ui_components
         layout = self.layout
 
@@ -50,7 +48,6 @@ class TGR_PT_View3D_Panel_RigUI(TGR_PT_BASE):
         row.alignment = 'EXPAND'
         row.scale_x = 3
         row.operator("tgr.ui_add_component", icon='ADD', text='')
-        row.operator("tgr.ui_add_label", icon='OUTLINER_OB_FONT', text='')
 
         if any(filter(lambda x: x.selected, ui_components)):
             row = layout.row(align=True)

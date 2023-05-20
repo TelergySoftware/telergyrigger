@@ -207,7 +207,6 @@ def unregister():
 
     # Remove properties from the armature object
     del bpy.types.Object.tgr_ui_components
-    del bpy.types.Object.tgr_ui_props
     del bpy.types.Object.tgr_props
     del bpy.types.Object.tgr_layer_collection
 
