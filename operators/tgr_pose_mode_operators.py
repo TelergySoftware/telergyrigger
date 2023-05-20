@@ -1,7 +1,7 @@
 import bpy
 import math
 from mathutils import Vector
-from ..utils import TGR_EditModeUtils
+from ..utils.tgr_edit_mode_utils import bone_layers_by_number
 
 
 def update_armature(context):
@@ -568,7 +568,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         for bone in mch_bones:
             bone.use_deform = False
             # Send mch bones to the appropriated layer
-            bone.layers = TGR_EditModeUtils.bone_layers_by_number(mch_layer_index)
+            bone.layers = bone_layers_by_number(mch_layer_index)
 
         # Store bones names to avoid key not found
         stretch_helper_name = stretch_helper.name

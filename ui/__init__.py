@@ -18,6 +18,8 @@ from .panels import (
     TGR_PT_View3D_Panel_Utilities_Selection,
     # Bone Layers
     TGR_PT_View3D_Panel_BoneLayers,
+    # Rig UI
+    TGR_PT_View3D_Panel_RigUI,
 )
 
 __all__ = [

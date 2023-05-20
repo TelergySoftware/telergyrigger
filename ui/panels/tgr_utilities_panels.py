@@ -21,6 +21,7 @@ class TGR_PT_View3D_Panel_Utilities(TGR_PT_BASE):
     def draw(self, context):
         pass
 
+
 # Naming Subpanel
 class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
     """

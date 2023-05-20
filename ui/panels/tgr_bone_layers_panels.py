@@ -1,4 +1,3 @@
-from pydoc import plain
 import bpy
 from .tgr_base_panel import TGR_PT_BASE
 

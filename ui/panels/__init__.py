@@ -1,13 +1,15 @@
 # Add Classes from tgr_view3d_panels
 from .tgr_base_panel import TGR_PT_BASE
-# Edit Mode Subpanels
+# Edit Mode panels
 from .tgr_edit_mode_panels import TGR_PT_View3D_Panel_EditMode, TGR_PT_View3D_Panel_EditMode_Create, TGR_PT_View3D_Panel_EditMode_Parenting, TGR_PT_View3D_Panel_EditMode_Utilities
-# Pose Mode Subpanels
+# Pose Mode panels
 from .tgr_pose_mode_panels import TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Panel_PoseMode_TGT, TGR_PT_View3D_Panel_PoseMode_Constraints
-# Utilities Subpanels
+# Utilities panels
 from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
-# Bone Layers Subpanels
+# Bone Layers panels
 from .tgr_bone_layers_panels import TGR_PT_View3D_Panel_BoneLayers
+# Rig UI panels
+from .tgr_rig_ui_panels import TGR_PT_View3D_Panel_RigUI
 
 __all__ = [
     # Base Panel

@@ -18,10 +18,7 @@ class TGR_PT_View3D_Panel_PoseMode(TGR_PT_BASE):
         return is_armature and is_pose_mode
 
     def draw(self, context):
-        layout = self.layout
-        # Pose Mode
-        row = layout.row()
-        row.label(text="Pose Mode")
+        pass
 
 
 # Pose TGT Subpanel

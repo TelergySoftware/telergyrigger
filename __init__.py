@@ -20,7 +20,7 @@ bl_info = {
     "blender": (3, 0, 0),
     "version": (0, 0, 1),
     "location": "",
-    "warning": "",
+    "warning": "Under Heavy Development",
     "category": "Rigging"
 }
 
@@ -56,24 +56,34 @@ from .operators import (TGR_OT_BindTGT,
                         TGR_OT_IsolateBoneRotation,
                         TGR_OT_UnbindTGT)
 
+from .operators import (TGR_OT_GenerateUI,
+                        TGR_OT_RIG_UI_AddComponent,
+                        TGR_OT_RIG_UI_AddNewLine,
+                        TGR_OT_RIG_UI_AddLabel,
+                        TGR_OT_RIG_UI_ModifyItem,
+                        TGR_OT_RIG_UI_RemoveItem,
+                        TGR_OT_RIG_UI_Clear,)
+
 from .operators import (TGR_OT_AddTGRArmature)
 
 from .ui import TGR_PT_View3D_Panel_EditMode, TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Panel_Utilities
-# Edit Mode Subpanels
+# Edit Mode panels
 from .ui import TGR_PT_View3D_Panel_EditMode_Create, TGR_PT_View3D_Panel_EditMode_Parenting, \
     TGR_PT_View3D_Panel_EditMode_Utilities
-# Pose Mode Subpanels
+# Pose Mode panels
 from .ui import TGR_PT_View3D_Panel_PoseMode_TGT, TGR_PT_View3D_Panel_PoseMode_Constraints
-# Utilities Subpanels
+# Utilities panel
 from .ui import TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
-# Bone Layers Subpanels
+# Bone Layers panel
 from .ui import TGR_PT_View3D_Panel_BoneLayers
+# Rig UI
+from .ui import TGR_PT_View3D_Panel_RigUI
 # Menus
 from .ui import TGR_MT_EditMode_PieMenu, TGR_MT_PoseMode_Constraints_PieMenu, TGR_MT_EditMode_AddBone, \
     TGR_MT_TrackNewLayer
 
 # Properties
-from .properties import TGR_Properties, TGR_LayerProperties
+from .properties import TGR_Properties, TGR_LayerProperties, TGR_UIProperties, TGR_UI_Components
 
 # Classes to register
 CLASSES_TO_REGISTER = (
@@ -88,20 +98,27 @@ CLASSES_TO_REGISTER = (
     TGR_OT_BoneOnPoints,
     TGR_OT_CleanNameUp,
     TGR_OT_ConnectBones,
-    TGR_OT_CreateIkFkSwichChain,
+    TGR_OT_CopyTransformsToChain,
     TGR_OT_CreateIKPoleTarget,
+    TGR_OT_CreateIkFkSwichChain,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
     TGR_OT_CreateTGT,
-    TGR_OT_CopyTransformsToChain,
     TGR_OT_EditLayer,
+    TGR_OT_GenerateUI,
     TGR_OT_IsolateBoneRotation,
     TGR_OT_LockBonesFromLayer,
     TGR_OT_ParentToRoot,
+    TGR_OT_RIG_UI_AddLabel,
+    TGR_OT_RIG_UI_AddComponent,
+    TGR_OT_RIG_UI_AddNewLine,
+    TGR_OT_RIG_UI_Clear,
+    TGR_OT_RIG_UI_ModifyItem,
+    TGR_OT_RIG_UI_RemoveItem,
     TGR_OT_RemoveLayer,
     TGR_OT_RemovePrefix,
-    TGR_OT_RemoveTGT,
     TGR_OT_RemoveSuffix,
+    TGR_OT_RemoveTGT,
     TGR_OT_SelectBonesByName,
     TGR_OT_SelectLayerBones,
     TGR_OT_SetBonesLayer,
@@ -116,6 +133,7 @@ CLASSES_TO_REGISTER = (
     TGR_PT_View3D_Panel_PoseMode,
     TGR_PT_View3D_Panel_PoseMode_Constraints,
     TGR_PT_View3D_Panel_PoseMode_TGT,
+    TGR_PT_View3D_Panel_RigUI,
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
     TGR_PT_View3D_Panel_Utilities_Selection,
@@ -127,6 +145,8 @@ CLASSES_TO_REGISTER = (
     # Properties
     TGR_LayerProperties,
     TGR_Properties,
+    TGR_UIProperties,
+    TGR_UI_Components,
 )
 
 # Keymaps reference
@@ -147,7 +167,9 @@ def register():
 
     # Add properties to the armature object
     bpy.types.Object.tgr_props = bpy.props.PointerProperty(type=TGR_Properties)
+    bpy.types.Object.tgr_ui_props = bpy.props.PointerProperty(type=TGR_UIProperties)
     bpy.types.Object.tgr_layer_collection = bpy.props.CollectionProperty(type=TGR_LayerProperties)
+    bpy.types.Object.tgr_ui_components = bpy.props.CollectionProperty(type=TGR_UI_Components)
 
     # Append the default layers
 
@@ -190,6 +212,8 @@ def unregister():
     keymaps.clear()
 
     # Remove properties from the armature object
+    del bpy.types.Object.tgr_ui_components
+    del bpy.types.Object.tgr_ui_props
     del bpy.types.Object.tgr_props
     del bpy.types.Object.tgr_layer_collection
 

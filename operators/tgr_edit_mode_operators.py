@@ -1,5 +1,6 @@
 import bpy
-from ..utils import TGR_EditModeUtils
+
+from ..utils.tgr_edit_mode_utils import change_bones_prefix, bone_layers_by_number, set_bones_deform
 
 def update_armature(context):
     # Hack to update the armature bones list
@@ -19,11 +20,11 @@ def createTGT(context):
     # Duplicate selected bones
     bpy.ops.armature.duplicate()
     # Change bone prefix to the tgt_prefix
-    TGR_EditModeUtils.change_bones_prefix(context.selected_bones, tgr_props.def_prefix, tgr_props.tgt_prefix)
+    change_bones_prefix(context.selected_bones, tgr_props.def_prefix, tgr_props.tgt_prefix)
     # Move the duplicated bones to the tgt_layer
-    layers = TGR_EditModeUtils.bone_layers_by_number(tgr_layers[1].index)
+    layers = bone_layers_by_number(tgr_layers[1].index)
     # Set bones deform to False
-    TGR_EditModeUtils.set_bones_deform(context.selected_bones, False)
+    set_bones_deform(context.selected_bones, False)
     bpy.ops.armature.bone_layers(layers=layers)
     # Make the tgt_layer visible
     armature.data.layers[tgr_layers[1].index] = True

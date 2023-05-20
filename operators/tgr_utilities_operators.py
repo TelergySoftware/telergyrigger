@@ -1,5 +1,6 @@
 import bpy
-from utils import TGR_EditModeUtils
+
+from ..utils.tgr_edit_mode_utils import bone_layers_by_number
 
 
 # ------------- ADD PREFIX OR SUFFIX -------------
@@ -24,7 +25,7 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
 
     def execute(self, context):
         tgr_props = context.object.tgr_props
-        
+
         if context.mode == 'EDIT_ARMATURE':
             # Check if there are any bones selected
             if len(edit_bones := context.selected_bones) > 0:
@@ -49,7 +50,7 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
                         bone.name = tgr_props.prefix + bone.name
         elif context.mode == 'POSE':
             # Check if there are any bones selected
-            if len(pose_bones:= context.selected_pose_bones) > 0:
+            if len(pose_bones := context.selected_pose_bones) > 0:
                 for bone in pose_bones:
                     # Root bone doesn't need a prefix
                     if bone.name == tgr_props.root_bone:
@@ -115,7 +116,7 @@ class TGR_OT_AddSuffix(bpy.types.Operator):
                         bone.name = bone.name + context.object.tgr_props.suffix
         elif context.mode == 'POSE':
             # Check if there are any bones selected
-            if len(pose_bones:= context.selected_pose_bones) > 0:
+            if len(pose_bones := context.selected_pose_bones) > 0:
                 for bone in pose_bones:
                     # Root bone does not need a suffix
                     if bone.name == context.object.tgr_props.root_bone:
@@ -177,7 +178,7 @@ class TGR_OT_RemovePrefix(bpy.types.Operator):
                         bone.name = bone.name.replace(context.object.tgr_props.prefix, "")
         elif context.mode == 'POSE':
             # Check if there are any bones selected
-            if len(pose_bones:= context.selected_pose_bones) > 0:
+            if len(pose_bones := context.selected_pose_bones) > 0:
                 for bone in pose_bones:
                     # Check if the prefix is in the name
                     if bone.name.startswith(context.object.tgr_props.prefix):
@@ -231,7 +232,7 @@ class TGR_OT_RemoveSuffix(bpy.types.Operator):
                         bone.name = bone.name.replace(context.object.tgr_props.suffix, "")
         elif context.mode == 'POSE':
             # Check if there are any bones selected
-            if len(pose_bones:= context.selected_pose_bones) > 0:
+            if len(pose_bones := context.selected_pose_bones) > 0:
                 for bone in pose_bones:
                     # Check if the suffix is in the name
                     if bone.name.endswith(context.object.tgr_props.suffix):
@@ -283,7 +284,7 @@ class TGR_OT_CleanNameUp(bpy.types.Operator):
                     bone.name = self.clean_up_name(bone.name)
         elif context.mode == 'POSE':
             # Check if there are any bones selected
-            if len(pose_bones:= context.selected_pose_bones) > 0:
+            if len(pose_bones := context.selected_pose_bones) > 0:
                 for bone in pose_bones:
                     # Clean up the name of the selected bone
                     bone.name = self.clean_up_name(bone.name)
@@ -294,7 +295,7 @@ class TGR_OT_CleanNameUp(bpy.types.Operator):
                     # Clean up the name of the selected bone
                     bone.name = self.clean_up_name(bone.name)
         return {"FINISHED"}
-    
+
     def clean_up_name(self, name) -> str:
         """
         Change the .001, .002, .003, ... suffixes to be before the .L or .R suffixes if
@@ -324,12 +325,12 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
     bl_idname = "tgr.select_bones_by_name"
     bl_label = "Select Bones By Name"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     bone_name: bpy.props.StringProperty(name="Bone Name", description="Name of bones to be selected")
-    
+
     def __init__(self):
         self.shift = False
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -339,7 +340,7 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def execute(self, context):
         if not self.shift:
             # Deselect all bones
@@ -347,7 +348,7 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
                 bpy.ops.armature.select_all(action='DESELECT')
             elif context.mode == 'POSE':
                 bpy.ops.pose.select_all(action='DESELECT')
-                
+
         if context.mode == 'EDIT_ARMATURE':
             for edit_bone in context.active_object.data.edit_bones:
                 if self.bone_name in edit_bone.name:
@@ -358,9 +359,9 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
             for pose_bone in context.active_object.pose.bones:
                 if self.bone_name in pose_bone.name:
                     pose_bone.bone.select = True
-        
+
         return {"FINISHED"}
-    
+
     def invoke(self, context, event):
         # Check if the shift key is pressed
         self.shift = event.shift
@@ -374,12 +375,12 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
     bl_idname = "tgr.select_layer_bones"
     bl_label = "Select Layer Bones"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     layer: bpy.props.IntProperty(name="Layer", default=0, min=0, max=31)
-    
+
     def __init__(self):
         self.shift = False
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -389,7 +390,7 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def execute(self, context):
         if not self.shift:
             # Deselect all bones
@@ -397,7 +398,7 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
                 bpy.ops.armature.select_all(action='DESELECT')
             elif context.mode == 'POSE':
                 bpy.ops.pose.select_all(action='DESELECT')
-        
+
         # Select all the bones of the specified layer
         if context.mode == 'EDIT_ARMATURE':
             for edit_bone in context.active_object.data.edit_bones:
@@ -409,14 +410,14 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
             for pose_bone in context.active_object.pose.bones:
                 if pose_bone.bone.layers[self.layer]:
                     pose_bone.bone.select = True
-            
+
         return {"FINISHED"}
-    
+
     def invoke(self, context, event):
         # Check if the shift key is pressed
         self.shift = event.shift
         return self.execute(context)
-    
+
 
 # ------------- LAYERS -------------
 class TGR_OT_SetBonesLayer(bpy.types.Operator):
@@ -426,9 +427,9 @@ class TGR_OT_SetBonesLayer(bpy.types.Operator):
     bl_idname = "tgr.set_bones_layer"
     bl_label = "Set Bones Layer"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     layer: bpy.props.IntProperty(name="Layer", default=0, min=0, max=31)
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -438,10 +439,10 @@ class TGR_OT_SetBonesLayer(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def execute(self, context):
-        layers = TGR_EditModeUtils.bone_layers_by_number(self.layer)
-        
+        layers = bone_layers_by_number(self.layer)
+
         if context.mode == 'EDIT_ARMATURE':
             # Set the layer of the selected bones
             for bone in context.selected_bones:
@@ -449,9 +450,10 @@ class TGR_OT_SetBonesLayer(bpy.types.Operator):
         elif context.mode == 'POSE':
             # Set the layer of the selected bones
             for bone in context.selected_pose_bones:
-                bone.bone.layers = layers if not self.shift else [old or new for old, new in zip(bone.bone.layers, layers)]
+                bone.bone.layers = layers if not self.shift else [old or new for old, new in
+                                                                  zip(bone.bone.layers, layers)]
         return {"FINISHED"}
-    
+
     def invoke(self, context, event):
         # Check if the shift key is pressed
         self.shift = event.shift
@@ -465,9 +467,9 @@ class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
     bl_idname = "tgr.lock_bones_from_layer"
     bl_label = "Lock Bones From Layer"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     layer_name: bpy.props.StringProperty(name="Layer", default="")
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -477,31 +479,31 @@ class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def execute(self, context):
         layer = context.object.tgr_layer_collection[self.layer_name]
-        
+
         # Deselect all bones
         if context.mode == 'EDIT_ARMATURE':
             bpy.ops.armature.select_all(action='DESELECT')
         elif context.mode == 'POSE':
             bpy.ops.pose.select_all(action='DESELECT')
-        
+
         # Select all the bones of the specified layer
         bpy.ops.tgr.select_layer_bones(layer=layer.index)
-        
+
         layer.lock_selection = not layer.lock_selection
-        
+
         # Lock all the selected bones
         for bone in context.selected_bones:
             bone.hide_select = layer.lock_selection
-        
+
         # Deselect all bones
         if context.mode == 'EDIT_ARMATURE':
             bpy.ops.armature.select_all(action='DESELECT')
         elif context.mode == 'POSE':
             bpy.ops.pose.select_all(action='DESELECT')
-        
+
         return {"FINISHED"}
 
 
@@ -512,14 +514,14 @@ class TGR_OT_TrackNewLayer(bpy.types.Operator):
     bl_idname = "tgr.track_new_layer"
     bl_label = "Track New Layer"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     # Layer attributes
     name: bpy.props.StringProperty(name="Name", default="Layer")
     index: bpy.props.IntProperty(name="Index", default=31, min=0, max=31)
     description: bpy.props.StringProperty(name="Description", default="")
     ui_name: bpy.props.StringProperty(name="UI Name", default="Layer")
     lock_selection: bpy.props.BoolProperty(name="Lock Selection", default=False)
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -529,11 +531,11 @@ class TGR_OT_TrackNewLayer(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
-    
+
     def execute(self, context):
         # Create a new layer
         layer = context.object.tgr_layer_collection.add()
@@ -544,7 +546,7 @@ class TGR_OT_TrackNewLayer(bpy.types.Operator):
         layer.lock_selection = self.lock_selection
         # update the view layer
         context.view_layer.update()
-        
+
         return {"FINISHED"}
 
 
@@ -555,13 +557,12 @@ class TGR_OT_RemoveLayer(bpy.types.Operator):
     bl_idname = "tgr.remove_layer"
     bl_label = "Remove Layer"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def get_layer_names(self, context):
         return [(layer.name, layer.ui_name, "") for layer in context.object.tgr_layer_collection]
-    
+
     layers: bpy.props.EnumProperty(name="Layers", items=get_layer_names)
-    
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -571,21 +572,20 @@ class TGR_OT_RemoveLayer(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
-    
+
     def draw(self, context):
-        
+
         layout = self.layout
         row = layout.row()
         row.label(text="Choose the layer to remove:")
-        
+
         row = layout.row()
-        row.prop(self, "layers", text="")        
-        
-    
+        row.prop(self, "layers", text="")
+
     def execute(self, context):
         # Remove the layer
         layer_index = -1
@@ -597,10 +597,10 @@ class TGR_OT_RemoveLayer(bpy.types.Operator):
         context.object.tgr_layer_collection.remove(layer_index)
         # update the view layer
         context.view_layer.update()
-        
+
         return {"FINISHED"}
-    
-    
+
+
 class TGR_OT_EditLayer(bpy.types.Operator):
     """
     Edit a layer.
@@ -608,13 +608,13 @@ class TGR_OT_EditLayer(bpy.types.Operator):
     bl_idname = "tgr.edit_layer"
     bl_label = "Edit Layer"
     bl_options = {"REGISTER", "UNDO"}
-    
+
     def get_layer_names(self, context):
         return [(layer.name, layer.ui_name, "") for layer in context.object.tgr_layer_collection]
-    
+
     # Layer parameters
     edit_layer_name: bpy.props.EnumProperty(name="Layer", items=get_layer_names)
-    
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -624,24 +624,24 @@ class TGR_OT_EditLayer(bpy.types.Operator):
         is_pose_mode = context.mode == 'POSE'
         # Check if the selected object is an Armature and in Edit Mode or Pose Mode
         return is_armature and (is_edit_mode or is_pose_mode)
-    
+
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
-    
+
     def draw(self, context):
         # Choose the layer to edit
         layout = self.layout
-        
+
         row = layout.row()
         row.label(text="Choose the layer to edit:")
         row = layout.row()
         row.prop(self, "edit_layer_name", text="")
-        
+
         # Return if no layer is selected
         if self.edit_layer_name == "":
             return
-        
+
         # Set the default values
         self.collection_index = -1
         for i, layer in enumerate(context.object.tgr_layer_collection):
@@ -653,7 +653,7 @@ class TGR_OT_EditLayer(bpy.types.Operator):
         # Draw the layer parameters
         row = layout.row()
         row.label(text="Layer parameters:")
-        
+
         row = layout.row()
         row.prop(self.edit_layer, "name", text="Name")
         row = layout.row()
@@ -662,7 +662,7 @@ class TGR_OT_EditLayer(bpy.types.Operator):
         row.prop(self.edit_layer, "description", text="Description")
         row = layout.row()
         row.prop(self.edit_layer, "ui_name", text="UI Name")
-    
+
     def execute(self, context):
-        
+
         return {"FINISHED"}
