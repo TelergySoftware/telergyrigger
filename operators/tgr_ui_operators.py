@@ -176,8 +176,8 @@ class TGR_OT_RIG_UI_RemoveItem(bpy.types.Operator):
         is_armature = context.active_object.type == 'ARMATURE'
         is_pose_mode = context.active_object.mode == 'POSE'
         is_edit_mode = context.active_object.mode == 'EDIT'
-        # TODO: Add condition of at least one item selected
-        return is_armature and (is_pose_mode or is_edit_mode)
+        at_least_one = any(filter(lambda x: x.selected, context.active_object.tgr_ui_components))
+        return is_armature and at_least_one and (is_pose_mode or is_edit_mode)
 
     def execute(self, context):
         components = context.active_object.tgr_ui_components
