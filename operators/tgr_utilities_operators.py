@@ -495,8 +495,19 @@ class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
         layer.lock_selection = not layer.lock_selection
 
         # Lock all the selected bones
-        for bone in context.selected_bones:
-            bone.hide_select = layer.lock_selection
+        if context.mode == "EDIT_ARMATURE":
+            selected_bones = context.selected_bones
+        elif context.mode == "POSE":
+            selected_bones = context.selected_pose_bones
+        else:
+            selected_bones = []
+
+        for bone in selected_bones:
+            if context.mode == "EDIT_ARMATURE":
+                bone.hide_select = layer.lock_selection
+            elif context.mode == "POSE":
+                bone.bone.hide_select = layer.lock_selection
+
 
         # Deselect all bones
         if context.mode == 'EDIT_ARMATURE':
