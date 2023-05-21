@@ -365,7 +365,8 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
     def invoke(self, context, event):
         # Check if the shift key is pressed
         self.shift = event.shift
-        return self.execute(context)
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
 
 
 class TGR_OT_SelectLayerBones(bpy.types.Operator):

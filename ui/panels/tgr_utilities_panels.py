@@ -94,8 +94,4 @@ class TGR_PT_View3D_Panel_Utilities_Selection(TGR_PT_BASE):
         layout = self.layout
         # Search Select
         row = layout.row()
-        row.label(text="Select by Search Match")
-        row = layout.row()
-        row.prop(tgr_props, "search_bone_name", text="Match Name")
-        row = layout.row()
-        row.operator("tgr.select_bones_by_name", text="Search and Select", icon="BORDERMOVE").bone_name = tgr_props.search_bone_name
+        row.operator("tgr.select_bones_by_name", text="Search and Select", icon="BORDERMOVE")
