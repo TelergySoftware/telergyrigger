@@ -4,6 +4,28 @@ from ..utils.tgr_edit_mode_utils import bone_layers_by_number
 
 
 # ------------- ADD PREFIX OR SUFFIX -------------
+def add_prefix_suffix(context, bones, prefix="", suffix=""):
+    tgr_props = context.active_object.tgr_props
+
+    if not prefix == "":
+        for bone in bones:
+            # Root bone doesn't need a prefix
+            if bone.name == tgr_props.root_bone:
+                continue
+            # Check if the prefix is already in the name
+            if not bone.name.startswith(prefix):
+                # Add the prefix to the name
+                bone.name = prefix + bone.name
+    if not suffix == "":
+        for bone in bones:
+            # Root bone doesn't need a prefix
+            if bone.name == tgr_props.root_bone:
+                continue
+            # Check if the suffix is already in the name
+            if not bone.name.endswith(suffix):
+                # Add the suffix to the name
+                bone.name = bone.name + suffix
+
 
 class TGR_OT_AddPrefix(bpy.types.Operator):
     """
@@ -12,6 +34,12 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
     bl_idname = "tgr.add_prefix"
     bl_label = "Add Prefix"
     bl_options = {"REGISTER", "UNDO"}
+
+    prefix: bpy.props.StringProperty(
+        name="Prefix",
+        description="Prefix to be added",
+        default=""
+    )
 
     @classmethod
     def poll(cls, context):
@@ -29,48 +57,30 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
         if context.mode == 'EDIT_ARMATURE':
             # Check if there are any bones selected
             if len(edit_bones := context.selected_bones) > 0:
-                for bone in edit_bones:
-                    # Root bone doesn't need a prefix
-                    if bone.name == tgr_props.root_bone:
-                        continue
-                    # Check if the prefix is already in the name
-                    if not bone.name.startswith(tgr_props.prefix):
-                        # Add the prefix to the name
-                        bone.name = tgr_props.prefix + bone.name
+                add_prefix_suffix(context, bones=edit_bones, prefix=self.prefix)
             else:
                 # Add the prefix to all bones
                 edit_bones = context.object.data.edit_bones
-                for bone in edit_bones:
-                    # Root bone doesn't need a prefix
-                    if bone.name == tgr_props.root_bone:
-                        continue
-                    # Check if the prefix is already in the name
-                    if not bone.name.startswith(tgr_props.prefix):
-                        # Add the prefix to the name
-                        bone.name = tgr_props.prefix + bone.name
+                add_prefix_suffix(context, bones=edit_bones, prefix=self.prefix)
         elif context.mode == 'POSE':
             # Check if there are any bones selected
             if len(pose_bones := context.selected_pose_bones) > 0:
-                for bone in pose_bones:
-                    # Root bone doesn't need a prefix
-                    if bone.name == tgr_props.root_bone:
-                        continue
-                    # Check if the prefix is already in the name
-                    if not bone.name.startswith(tgr_props.prefix):
-                        # Add the prefix to the name
-                        bone.name = tgr_props.prefix + bone.name
+                add_prefix_suffix(context, bones=pose_bones, prefix=self.prefix)
             else:
                 # Add the prefix to all bones
                 pose_bones = context.object.pose.bones
-                for bone in pose_bones:
-                    # Root bone doesn't need a prefix
-                    if bone.name == tgr_props.root_bone:
-                        continue
-                    # Check if the prefix is already in the name
-                    if not bone.name.startswith(tgr_props.prefix):
-                        # Add the prefix to the name
-                        bone.name = tgr_props.prefix + bone.name
+                add_prefix_suffix(context, bones=pose_bones, prefix=self.prefix)
         return {"FINISHED"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+
+        row.prop(self, "prefix")
 
 
 class TGR_OT_AddSuffix(bpy.types.Operator):
@@ -81,6 +91,12 @@ class TGR_OT_AddSuffix(bpy.types.Operator):
     bl_label = "Add Suffix"
     bl_options = {"REGISTER", "UNDO"}
 
+    suffix: bpy.props.StringProperty(
+        name="Suffix",
+        description="Suffix to be added",
+        default=""
+    )
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -95,51 +111,48 @@ class TGR_OT_AddSuffix(bpy.types.Operator):
         if context.mode == 'EDIT_ARMATURE':
             # Check if there are any bones selected
             if len(edit_bones := context.selected_bones) > 0:
-                for bone in edit_bones:
-                    # Root bone does not need a suffix
-                    if bone.name == context.object.tgr_props.root_bone:
-                        continue
-                    # Check if the suffix is already in the name
-                    if not bone.name.endswith(context.object.tgr_props.suffix):
-                        # Add the suffix to the name
-                        bone.name = bone.name + context.object.tgr_props.suffix
+                add_prefix_suffix(context, bones=edit_bones, suffix=self.suffix)
             else:
                 # Add the suffix to all bones
                 edit_bones = context.object.data.edit_bones
-                for bone in edit_bones:
-                    # Root bone does not need a suffix
-                    if bone.name == context.object.tgr_props.root_bone:
-                        continue
-                    # Check if the suffix is already in the name
-                    if not bone.name.endswith(context.object.tgr_props.suffix):
-                        # Add the suffix to the name
-                        bone.name = bone.name + context.object.tgr_props.suffix
+                add_prefix_suffix(context, bones=edit_bones, suffix=self.suffix)
         elif context.mode == 'POSE':
             # Check if there are any bones selected
             if len(pose_bones := context.selected_pose_bones) > 0:
-                for bone in pose_bones:
-                    # Root bone does not need a suffix
-                    if bone.name == context.object.tgr_props.root_bone:
-                        continue
-                    # Check if the suffix is already in the name
-                    if not bone.name.endswith(context.object.tgr_props.suffix):
-                        # Add the suffix to the name
-                        bone.name = bone.name + context.object.tgr_props.suffix
+                add_prefix_suffix(context, bones=pose_bones, suffix=self.suffix)
             else:
                 # Add the suffix to all bones
                 pose_bones = context.object.pose.bones
-                for bone in pose_bones:
-                    # Root bone does not need a suffix
-                    if bone.name == context.object.tgr_props.root_bone:
-                        continue
-                    # Check if the suffix is already in the name
-                    if not bone.name.endswith(context.object.tgr_props.suffix):
-                        # Add the suffix to the name
-                        bone.name = bone.name + context.object.tgr_props.suffix
+                add_prefix_suffix(context, bones=pose_bones, suffix=self.suffix)
+
         return {"FINISHED"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+
+        row.prop(self, "suffix")
 
 
 # ------------- REMOVE PREFIX OR SUFFIX -------------
+def remove_prefix_suffix(bones, prefix="", suffix=""):
+    if not prefix == "":
+        for bone in bones:
+            # Check if the prefix is already in the name
+            if bone.name.startswith(prefix):
+                # Remove the prefix to the name
+                bone.name = bone.name.replace(prefix, "")
+    if not suffix == "":
+        for bone in bones:
+            # Check if the suffix is already in the name
+            if bone.name.endswith(suffix):
+                # Remove the suffix to the name
+                bone.name = bone.name.replace(suffix, "")
+
 
 class TGR_OT_RemovePrefix(bpy.types.Operator):
     """
@@ -149,6 +162,12 @@ class TGR_OT_RemovePrefix(bpy.types.Operator):
     bl_label = "Remove Prefix"
     bl_options = {"REGISTER", "UNDO"}
 
+    prefix: bpy.props.StringProperty(
+        name="Prefix",
+        description="Prefix to be removed",
+        default=""
+    )
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -163,36 +182,30 @@ class TGR_OT_RemovePrefix(bpy.types.Operator):
         if context.mode == 'EDIT_ARMATURE':
             # Check if there are any bones selected
             if len(edit_bones := context.selected_bones) > 0:
-                for bone in edit_bones:
-                    # Check if the prefix is in the name
-                    if bone.name.startswith(context.object.tgr_props.prefix):
-                        # Remove the prefix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.prefix, "")
+                remove_prefix_suffix(bones=edit_bones, prefix=self.prefix)
             else:
                 # Remove the prefix from all bones
                 edit_bones = context.object.data.edit_bones
-                for bone in edit_bones:
-                    # Check if the prefix is in the name
-                    if bone.name.startswith(context.object.tgr_props.prefix):
-                        # Remove the prefix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.prefix, "")
+                remove_prefix_suffix(bones=edit_bones, prefix=self.prefix)
         elif context.mode == 'POSE':
             # Check if there are any bones selected
             if len(pose_bones := context.selected_pose_bones) > 0:
-                for bone in pose_bones:
-                    # Check if the prefix is in the name
-                    if bone.name.startswith(context.object.tgr_props.prefix):
-                        # Remove the prefix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.prefix, "")
+                remove_prefix_suffix(bones=pose_bones, prefix=self.prefix)
             else:
                 # Remove the prefix from all bones
                 pose_bones = context.object.pose.bones
-                for bone in pose_bones:
-                    # Check if the prefix is in the name
-                    if bone.name.startswith(context.object.tgr_props.prefix):
-                        # Remove the prefix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.prefix, "")
+                remove_prefix_suffix(bones=pose_bones, prefix=self.prefix)
         return {"FINISHED"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+
+        row.prop(self, "prefix")
 
 
 class TGR_OT_RemoveSuffix(bpy.types.Operator):
@@ -203,6 +216,12 @@ class TGR_OT_RemoveSuffix(bpy.types.Operator):
     bl_label = "Remove Suffix"
     bl_options = {"REGISTER", "UNDO"}
 
+    suffix: bpy.props.StringProperty(
+        name="Suffix",
+        description="Suffix to be removed",
+        default=""
+    )
+
     @classmethod
     def poll(cls, context):
         # Check if the selected object is an Armature
@@ -217,36 +236,30 @@ class TGR_OT_RemoveSuffix(bpy.types.Operator):
         if context.mode == 'EDIT_ARMATURE':
             # Check if there are any bones selected
             if len(edit_bones := context.selected_bones) > 0:
-                for bone in edit_bones:
-                    # Check if the suffix is in the name
-                    if bone.name.endswith(context.object.tgr_props.suffix):
-                        # Remove the suffix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.suffix, "")
+                remove_prefix_suffix(bones=edit_bones, suffix=self.suffix)
             else:
                 # Remove the suffix from all bones
                 edit_bones = context.object.data.edit_bones
-                for bone in edit_bones:
-                    # Check if the suffix is in the name
-                    if bone.name.endswith(context.object.tgr_props.suffix):
-                        # Remove the suffix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.suffix, "")
+                remove_prefix_suffix(bones=edit_bones, suffix=self.suffix)
         elif context.mode == 'POSE':
             # Check if there are any bones selected
             if len(pose_bones := context.selected_pose_bones) > 0:
-                for bone in pose_bones:
-                    # Check if the suffix is in the name
-                    if bone.name.endswith(context.object.tgr_props.suffix):
-                        # Remove the suffix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.suffix, "")
+                remove_prefix_suffix(bones=pose_bones, suffix=self.suffix)
             else:
                 # Remove the suffix from all bones
                 pose_bones = context.object.pose.bones
-                for bone in pose_bones:
-                    # Check if the suffix is in the name
-                    if bone.name.endswith(context.object.tgr_props.suffix):
-                        # Remove the suffix from the name
-                        bone.name = bone.name.replace(context.object.tgr_props.suffix, "")
+                remove_prefix_suffix(bones=pose_bones, suffix=self.suffix)
         return {"FINISHED"}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+
+        row.prop(self, "suffix")
 
 
 # ------------- CLEAN UP -------------

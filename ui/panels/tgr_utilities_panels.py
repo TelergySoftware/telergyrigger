@@ -48,12 +48,8 @@ class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
         # Add Prefix
         # - Prefix text field
         row = layout.row()
-        row.prop(context.object.tgr_props, "prefix")
-        row = layout.row()
         row.operator("tgr.add_prefix", text="Add Prefix", icon='ADD')
         # Add Suffix
-        row = layout.row()
-        row.prop(context.object.tgr_props, "suffix")
         row = layout.row()
         row.operator("tgr.add_suffix", text="Add Suffix", icon='ADD')
         # REMOVE
