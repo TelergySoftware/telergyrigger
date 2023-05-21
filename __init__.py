@@ -199,6 +199,13 @@ def register():
     kmi.active = True
     keymaps.append((km, kmi))
 
+    # Add new Keymap
+    km = wm.keyconfigs.addon.keymaps.new(name='Armature', space_type='EMPTY')
+    # Add new Keymap items to call the TGR_OT_SelectBonesByName operator
+    kmi = km.keymap_items.new('tgr.select_bones_by_name', 'F', 'PRESS', ctrl=True)
+    kmi.active = True
+    keymaps.append((km, kmi))
+
     # Append the Add TGR rig to the add menu
     bpy.types.VIEW3D_MT_add.append(object_add_draw_menu)
 
