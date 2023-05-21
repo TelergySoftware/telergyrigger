@@ -508,7 +508,6 @@ class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
             elif context.mode == "POSE":
                 bone.bone.hide_select = layer.lock_selection
 
-
         # Deselect all bones
         if context.mode == 'EDIT_ARMATURE':
             bpy.ops.armature.select_all(action='DESELECT')
