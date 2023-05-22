@@ -1,6 +1,6 @@
 import bpy
 
-from ..utils import change_bones_prefix, bone_layers_by_number, set_bones_deform
+from ..utils import change_bones_prefix, bone_layers_by_number, set_bones_deform, get_addon_name
 
 
 def update_armature(context):
@@ -8,12 +8,13 @@ def update_armature(context):
     context.active_object.data.bones.update()
 
 
-def createTGT(context):
+def create_tgt(context):
     tgr_props = context.object.tgr_props
     tgr_layers = context.object.tgr_layer_collection
+    preferences = context.preferences.addons[get_addon_name()].preferences
     # Get armature
     armature = context.object.tgr_props.armature
-    # Desselect the ROOT bone, just to be sure
+    # Deselect the ROOT bone, just to be sure
     root_bone = armature.data.edit_bones[tgr_props.root_bone]
     root_bone.select = False
     root_bone.select_head = False
@@ -21,7 +22,9 @@ def createTGT(context):
     # Duplicate selected bones
     bpy.ops.armature.duplicate()
     # Change bone prefix to the tgt_prefix
-    change_bones_prefix(context.selected_bones, tgr_props.def_prefix, tgr_props.tgt_prefix)
+    def_prefix = preferences.def_prefix + preferences.separator
+    tgt_prefix = preferences.tgt_prefix + preferences.separator
+    change_bones_prefix(context.selected_bones, def_prefix, tgt_prefix)
     # Move the duplicated bones to the tgt_layer
     layers = bone_layers_by_number(tgr_layers[1].index)
     # Set bones deform to False
@@ -32,24 +35,27 @@ def createTGT(context):
     update_armature(context)
 
 
-def createTGT_with_selection(self, context):
+def create_tgt_with_selection(self, context):
     """
     Create TGT bones strategy for selected bones.
     """
     tgr_props = context.object.tgr_props
+    preferences = context.preferences.addons[get_addon_name()].preferences
     # Get armature
     armature = context.object.tgr_props.armature
     # Create the TGT bones
-    createTGT(context)
+    create_tgt(context)
+    def_prefix = preferences.def_prefix + preferences.separator
+    tgt_prefix = preferences.tgt_prefix + preferences.separator
     # Check bones parents to see if they are all TGT bones
     # Also check the children of the TGT bones
     for bone in context.selected_bones:
         if not bone.parent:
             continue
-        if not bone.parent.name.startswith(tgr_props.tgt_prefix):
+        if not bone.parent.name.startswith(tgt_prefix):
             # Check if there is a TGT bone with the same name
             try:
-                bone_name = bone.parent.name.replace(tgr_props.def_prefix, tgr_props.tgt_prefix)
+                bone_name = bone.parent.name.replace(def_prefix, tgt_prefix)
                 new_parent = armature.data.edit_bones[bone_name]
                 bone.parent = new_parent
             except KeyError:
@@ -57,36 +63,37 @@ def createTGT_with_selection(self, context):
                 pass
         if not bone.children:
             # Check if the DEF bone has a child
-            def_bone_name = bone.name.replace(tgr_props.tgt_prefix, tgr_props.def_prefix)
+            def_bone_name = bone.name.replace(tgt_prefix, def_prefix)
             def_bone = armature.data.edit_bones[def_bone_name]
             for child in def_bone.children:
                 try:
-                    child_name = child.name.replace(tgr_props.def_prefix, tgr_props.tgt_prefix)
+                    child_name = child.name.replace(def_prefix, tgt_prefix)
                     child = armature.data.edit_bones[child_name]
                     child.parent = bone
                 except KeyError:
                     # If there is no child, then keep it as it is
                     pass
-
     return
 
 
-def createTGT_with_all(self, context):
+def create_tgt_with_all(self, context):
     """
     Create TGT bones strategy for all bones.
     """
+    preferences = context.preferences.addons[get_addon_name()].preferences
+    def_prefix = preferences.def_prefix + preferences.separator
     # Get armature
     armature = context.object.tgr_props.armature
     # Deselect all bones
     bpy.ops.armature.select_all(action='DESELECT')
     # Select all def bones
     for bone in armature.data.edit_bones:
-        if bone.name.startswith(armature.tgr_props.def_prefix):
+        if bone.name.startswith(def_prefix):
             bone.select = True
             bone.select_head = True
             bone.select_tail = True
     # Create the TGT bones
-    createTGT(context)
+    create_tgt(context)
     return
 
 
@@ -110,9 +117,9 @@ class TGR_OT_CreateTGT(bpy.types.Operator):
             self.report({"ERROR"}, "Armature not set")
             return {"CANCELLED"}
         if context.selected_bones:
-            createTGT_with_selection(self, context)
+            create_tgt_with_selection(self, context)
         else:
-            createTGT_with_all(self, context)
+            create_tgt_with_all(self, context)
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
         # Update the armature
@@ -136,6 +143,8 @@ class TGR_OT_RemoveTGT(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        tgt_prefix = preferences.tgt_prefix + preferences.separator
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
         # Select all TGT bones
@@ -145,7 +154,7 @@ class TGR_OT_RemoveTGT(bpy.types.Operator):
             return {"CANCELLED"}
         
         for bone in armature.data.edit_bones:
-            if bone.name.startswith("TGT-"):
+            if bone.name.startswith(tgt_prefix):
                 bone.select = True
                 bone.select_head = True
                 bone.select_tail = True
@@ -175,8 +184,10 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        mch_prefix = preferences.mch_prefix + preferences.separator
         if self.bone_name == "":
-            self.bone_name = f"{context.object.tgr_props.mch_prefix}BONE"
+            self.bone_name = f"{mch_prefix}BONE"
         # Add a new bone
         bpy.ops.armature.bone_primitive_add(name=self.bone_name)
         # Get the new bone
@@ -214,8 +225,10 @@ class TGR_OT_AddDeformBone(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
         # Add a new bone
-        bpy.ops.armature.bone_primitive_add(name=f"{context.object.tgr_props.mch_prefix}BONE")
+        bpy.ops.armature.bone_primitive_add(name=f"{def_prefix}BONE")
         # Get the new bone
         bone = context.object.data.edit_bones[-1]
         # Set the bone use_connect
@@ -234,7 +247,6 @@ class TGR_OT_AddDeformBone(bpy.types.Operator):
         update_armature(context)
         # Finish
         return {"FINISHED"}
-
 
 
 class TGR_OT_ParentToRoot(bpy.types.Operator):

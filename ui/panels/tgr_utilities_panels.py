@@ -4,9 +4,7 @@ from .tgr_base_panel import TGR_PT_BASE
 # ------------- UTILITIES -------------
 class TGR_PT_View3D_Panel_Utilities(TGR_PT_BASE):
     """
-    Creates the panel for the Addon in Utilities.
-    This panel is only visible when in Edit Mode or Pose Mode,
-    and only if the selected object is an Armature.
+    Creates the panel for the Addon in Utilities
     """
     bl_label = "Utilities"
     bl_idname = "TGR_PT_View3D_Panel_Utilities"
@@ -25,9 +23,7 @@ class TGR_PT_View3D_Panel_Utilities(TGR_PT_BASE):
 # Naming Subpanel
 class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
     """
-    Creates a subpanel for Utilities with the naming operators.
-    This panel is only visible when in Edit Mode or Pose Mode,
-    and only if the selected object is an Armature.
+    Creates a subpanel for Utilities with the naming operators
     """
     bl_label = "Naming"
     bl_idname = "TGR_PT_View3D_Panel_Utilities_Naming"
@@ -67,7 +63,7 @@ class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
 
         row = layout.row()
         row.operator("tgr.clean_name_up", text="Clean Name Up", icon='BRUSH_DATA')
-        
+
 
 # Selection Subpanel
 class TGR_PT_View3D_Panel_Utilities_Selection(TGR_PT_BASE):

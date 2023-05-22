@@ -1,7 +1,7 @@
 import bpy
 import math
 from mathutils import Vector
-from ..utils import bone_layers_by_number
+from ..utils import bone_layers_by_number, get_addon_name
 
 
 def update_armature(context):
@@ -30,29 +30,32 @@ class TGR_OT_BindTGT(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
+        tgt_prefix = preferences.tgt_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         # Check if there is any selected bones
-        bones_to_bind = None
         if len(context.selected_pose_bones) > 0:
             bones_to_bind = context.selected_pose_bones
         else:
             bones_to_bind = context.object.pose.bones
         # Check if there are TGT bones for each DEF bone
         for bone in bones_to_bind:
-            if bone.name.startswith('TGT-') or bone.name.startswith('CTRL-'):
+            if bone.name.startswith(tgt_prefix) or bone.name.startswith(ctrl_prefix):
                 # Check if there's a DEF bone with the same name
-                if (bone.name.replace('TGT-', 'DEF-') not in context.object.pose.bones) and (
-                        bone.name.replace('CTRL-', 'DEF-') not in context.object.pose.bones):
+                if (bone.name.replace(tgt_prefix, def_prefix) not in context.object.pose.bones) and (
+                        bone.name.replace(ctrl_prefix, def_prefix) not in context.object.pose.bones):
                     self.report({"ERROR"}, "No TGT or CTRL bone for DEF bone: " + bone.name)
                     return {"CANCELLED"}
 
         # Bind the TGT bones to the DEF bones
         for bone in bones_to_bind:
-            if bone.name.startswith('TGT-') or bone.name.startswith('DEF-'):
+            if bone.name.startswith(tgt_prefix) or bone.name.startswith(def_prefix):
                 # Get the DEF bone
                 try:
-                    def_bone = context.object.pose.bones[bone.name.replace('TGT-', 'DEF-')]
+                    def_bone = context.object.pose.bones[bone.name.replace(tgt_prefix, def_prefix)]
                 except KeyError:
-                    def_bone = context.object.pose.bones[bone.name.replace('CTRL-', 'DEF-')]
+                    def_bone = context.object.pose.bones[bone.name.replace(ctrl_prefix, def_prefix)]
                 # Bind the TGT bone to the DEF bone
                 if 'TGT' in bone.constraints:
                     def_bone.constraints['TGT'].subtarget = bone.name
@@ -71,12 +74,7 @@ class TGR_OT_BindTGT(bpy.types.Operator):
 
 class TGR_OT_UnbindTGT(bpy.types.Operator):
     """
-    Unbinds the TGT bones from the DEF bones.
-
-    conditions:
-        - Active object is an armature:
-            - Is pose mode:
-                - TGT bones exist.
+    Unbinds the TGT bones from the DEF bones
     """
     bl_idname = "tgr.unbind_tgt"
     bl_label = "Unbind TGT"
@@ -89,9 +87,11 @@ class TGR_OT_UnbindTGT(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
         # Unbind the TGT bones from the DEF bones
         for bone in context.object.pose.bones:
-            if bone.name.startswith('DEF-'):
+            if bone.name.startswith(def_prefix):
                 # Unbind the TGT bone from the DEF bone
                 if 'TGT' in bone.constraints:
                     bone.constraints.remove(bone.constraints['TGT'])
@@ -116,6 +116,10 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
+        tgt_prefix = preferences.tgt_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
         # Check if at least one bone is selected
         if not context.selected_pose_bones:
             self.report({"ERROR"}, "No bones selected")
@@ -140,8 +144,8 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
         # Replace the TGT- prefix for MCH-INT- prefix and remove the .001 suffix
         mch_int_bone_names = []
         for bone in context.selected_bones:
-            if bone.name.startswith('TGT-'):
-                bone.name = bone.name.replace('TGT-', 'MCH-INT-')
+            if bone.name.startswith(tgt_prefix):
+                bone.name = bone.name.replace(tgt_prefix, f'{mch_prefix}INT{preferences.separator}')
                 bone.name = bone.name.replace('.001', '')
                 mch_int_bone_names.append(bone.name)
 
@@ -152,15 +156,16 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
         # Replace the MCH-INT- prefix for MCH- prefix and remove the .001 suffix
         mch_bones_names = []
         for bone in context.selected_bones:
-            if bone.name.startswith('MCH-INT-'):
-                bone.name = bone.name.replace('MCH-INT-', 'MCH-')
+            if bone.name.startswith(f'{mch_prefix}INT{preferences.separator}'):
+                bone.name = bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
                 bone.name = bone.name.replace('.001', '')
                 mch_bones_names.append(bone.name)
 
         # Change the TGT- prefix for CTRL- prefix and parent them to the MCH-INT- bones
         for bone in selected_bones:
             bone.use_connect = False
-            bone.parent = context.object.data.edit_bones[bone.name.replace('TGT-', 'MCH-INT-')]
+            bone.parent = context.object.data.edit_bones[
+                bone.name.replace(tgt_prefix, f'{mch_prefix}INT{preferences.separator}')]
 
         # Parent the MCH-INT- bones to the ROOT bone
         root_bone = context.object.tgr_props.root_bone
@@ -182,39 +187,30 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
             # Add copy location constraint
             constraint = pose_bone.constraints.new('COPY_LOCATION')
             constraint.target = context.object
-            constraint.subtarget = pose_bone.name.replace('MCH-INT-', 'MCH-')
+            constraint.subtarget = pose_bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
             constraint.name = 'ISOLATE ROTATION LOC'
             # Add copy rotation constraint
             constraint = pose_bone.constraints.new('COPY_ROTATION')
             constraint.target = context.object
-            constraint.subtarget = pose_bone.name.replace('MCH-INT-', 'MCH-')
+            constraint.subtarget = pose_bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
             constraint.name = 'ISOLATE ROTATION ROT'
             constraint.influence = 0.0
             # Send the MCH-INT- and MCH- bones to the layer 2
             pose_bone.bone.layers = [i == 2 for i in range(len(pose_bone.bone.layers))]
-            mch_bone = context.object.pose.bones[bone_name.replace('MCH-INT-', 'MCH-')]
+            mch_bone = context.object.pose.bones[
+                bone_name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)]
             mch_bone.bone.layers = [i == 2 for i in range(len(mch_bone.bone.layers))]
 
         return {'FINISHED'}
 
 
-class TGR_OT_CreateIkFkSwichChain(bpy.types.Operator):
+class TGR_OT_CreateIkFkSwitchChain(bpy.types.Operator):
     """
     Create an IK/FK switch chain.
     """
     bl_idname = "tgr.create_ikfk_switch_chain"
     bl_label = "Create IK/FK Switch Chain"
     bl_options = {'REGISTER', 'UNDO'}
-
-    def get_selected_bones(self, context):
-        items = []
-        for bone in context.selected_pose_bones:
-            items.append((bone.name, bone.name, ""))
-        return items
-
-    ik_target_bone_name: bpy.props.EnumProperty(name="IK Target Bone", items=get_selected_bones)
-    ik_bone_name: bpy.props.EnumProperty(name="IK Bone Name", items=get_selected_bones)
-    ik_bones_as_ctrl: bpy.props.StringProperty(name="IK Bones as CTRL")
 
     @classmethod
     def poll(cls, context):
@@ -223,11 +219,6 @@ class TGR_OT_CreateIkFkSwichChain(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        # Check if at least one bone is selected
-        if not len(context.selected_pose_bones) > 1:
-            self.report({"ERROR"}, "Not enough bones selected. Select at least two bones.")
-            return {"CANCELLED"}
-
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -236,15 +227,6 @@ class TGR_OT_CreateIkFkSwichChain(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
-
-        row = layout.row()
-        row.label(text="Testing if this works")
-
-        row = layout.row()
-        row.prop(self, "ik_target_bone_name")
-
-        row = layout.row()
-        row.prop(self, "ik_bone_name")
 
 
 class TGR_OT_CreateRotationChain(bpy.types.Operator):
@@ -263,6 +245,8 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         tgr_props = context.object.tgr_props
         # Must not rotate DEF bones
         for bone in context.selected_pose_bones:
@@ -273,8 +257,8 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
         bpy.ops.object.mode_set(mode='EDIT')
         for bone in context.selected_bones:
             bone.use_connect = False
-            split_name = bone.name.split('-')
-            bone_name = "CTRL-"
+            split_name = bone.name.split(preferences.separator)
+            bone_name = ctrl_prefix
 
             for name_part in split_name[1:]:
                 bone_name += f"{name_part}"
@@ -284,7 +268,7 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
 
         bpy.ops.armature.duplicate()
         for bone in context.selected_bones:
-            bone.name = bone.name.replace("CTRL-", "CTRL-TWEAK-")
+            bone.name = bone.name.replace(ctrl_prefix, f"{ctrl_prefix}TWEAK{preferences.separator}")
             bone.name = bone.name.replace(".001", "")
         ctrl_tweak_bone_names = [bone.name for bone in context.selected_bones]
 
@@ -329,7 +313,7 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
 class TGR_OT_CreateStretchToChain(bpy.types.Operator):
     """
     Create a stretch to constraint chain for the selected bones.
-    The active bone will be the parent of the chain.
+    The active bone will be the parent of the chain
     """
     bl_idname = "tgr.create_stretch_to_chain"
     bl_label = "Create Stretch To Chain"
@@ -342,67 +326,13 @@ class TGR_OT_CreateStretchToChain(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        tgr_props = context.object.tgr_props
-        # Must not stretch DEF bones
-        selected_bones = [bone for bone in context.selected_pose_bones]
-        for bone in selected_bones:
-            if bone.name.startswith(tgr_props.def_prefix):
-                self.report({'ERROR'}, 'Cannot stretch DEF- bones')
-                return {'CANCELLED'}
-
-        previous_bone = None
-        for i, bone in enumerate(selected_bones):
-            # Enter edit mode
-            bpy.ops.object.mode_set(mode='EDIT')
-            edit_bone = context.object.data.edit_bones[bone.name]
-            last_bone = i == len(selected_bones) - 1
-
-            # Add a new non-deform bone
-            bpy.ops.tgr.add_non_deform_bone()
-            # Move the new bone to the first bone's head
-            new_bone = context.selected_bones[0]
-            new_bone.name = f'CTRL-TWEAK-{"-".join(bone.name.split("-")[1:])}'
-            new_bone.head = bone.head
-            new_bone.tail = new_bone.head + Vector((0, bone.length / 3, 0))
-            # Set the new bone as the parent of the first bone
-            edit_bone.parent = new_bone
-
-            if last_bone:
-                # Add a new non-deform bone
-                bpy.ops.tgr.add_non_deform_bone()
-                # Move the new bone to the first bone's head
-                new_bone = context.selected_bones[0]
-                new_bone.name = f'CTRL-TWEAK-END-{"-".join(bone.name.split("-")[1:])}'
-                new_bone.head = bone.tail
-                new_bone.tail = new_bone.head + Vector((0, bone.length / 3, 0))
-
-            if previous_bone is not None:
-                # Go back to pose mode
-                bpy.ops.object.mode_set(mode='POSE')
-                # Add the stretch to constraint to the current bone with the new bone as the target
-                tgt_name = new_bone.name
-                if last_bone:
-                    # Add the constraints to the current bone as well
-                    constraint = bone.constraints.new('STRETCH_TO')
-                    constraint.target = context.object
-                    constraint.subtarget = tgt_name
-                    constraint.name = "TGR-STRETCH"
-                    tgt_name = tgt_name.replace("END-", "")
-
-                constraint = previous_bone.constraints.new('STRETCH_TO')
-                constraint.target = context.object
-                constraint.subtarget = tgt_name
-                constraint.name = "TGR-STRETCH"
-
-            previous_bone = bone
-
         # Finish the operation 
         return {'FINISHED'}
 
 
 class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
     """
-    Create a copy transforms chain considering two given names.
+    Create a copy transforms chain considering two given names
     """
     bl_idname = "tgr.copy_transforms_to_chain"
     bl_label = "Copy Transforms To Chain"
@@ -487,10 +417,13 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         armature = context.active_object
         tgr_props = context.object.tgr_props
         mch_bones = []
-        old_cursor_location = context.scene.cursor.location[:]
+        old_cursor_location = context.scene.cursor.location
 
         # Enter edit mode
         bpy.ops.object.mode_set(mode='EDIT')
@@ -507,7 +440,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
 
         # Set the duplicated bone tail to the same location as the last bone tail
         stretch_helper = context.selected_editable_bones[0]
-        stretch_helper.name = f"{tgr_props.mch_prefix}{self.chain_name}-STRETCH-HELPER"
+        stretch_helper.name = f"{mch_prefix}{self.chain_name}{preferences.separator}STRETCH{preferences.separator}HELPER"
         last_bone = armature.data.edit_bones[self.last_bone_name]
 
         stretch_helper.tail = last_bone.tail
@@ -529,7 +462,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         # Duplicate the stretch bone and scale it to be (placement_bone_index - 1) / num_of_bones
         bpy.ops.armature.duplicate()
         int_bone = context.selected_editable_bones[0]
-        int_bone.name = f"{tgr_props.mch_prefix}{self.chain_name}-INT-HELPER"
+        int_bone.name = f"{mch_prefix}{self.chain_name}{preferences.separator}INT{preferences.separator}HELPER"
         int_bone.length *= (placement_bone_index - 1) / num_of_bones
 
         # Offset int bone to be placed on the current tail position
@@ -554,7 +487,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         # Set the parent to be the int bone
         pole_bone.parent = int_bone
         # Rename it accordingly
-        pole_bone.name = f"{tgr_props.ctrl_prefix}{self.chain_name}-POLE-TGT"
+        pole_bone.name = f"{ctrl_prefix}{self.chain_name}{preferences.separator}POLE{preferences.separator}TGT"
 
         # Remove deform from mch bones
         for layer in armature.tgr_layer_collection:
@@ -605,11 +538,11 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         # Add copy rotation and copy scale to the int bone with the root as the target
         copy_rot_constraint = int_bone.constraints.new(type="COPY_ROTATION")
         copy_rot_constraint.target = armature
-        copy_rot_constraint.subtarget = armature.tgr_props.root_bone
+        copy_rot_constraint.subtarget = tgr_props.root_bone
 
         copy_scale_constraint = int_bone.constraints.new(type="COPY_SCALE")
         copy_scale_constraint.target = armature
-        copy_scale_constraint.subtarget = armature.tgr_props.root_bone
+        copy_scale_constraint.subtarget = tgr_props.root_bone
 
         # Add pole bone as the pole target of the ik chain
         pole_bone = armature.pose.bones[pole_bone_name]

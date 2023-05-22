@@ -22,10 +22,16 @@ class TGR_Preferences(bpy.types.AddonPreferences):
         default="MCH"
     )
 
+    ctrl_prefix: bpy.props.StringProperty(
+        name="Controller Prefix",
+        description="Prefix to be used on the controller bones",
+        default="CTRL"
+    )
+
     separator: bpy.props.StringProperty(
         name="Separator",
         description="Character used to separate names of bones",
-        default="_"
+        default="-"
     )
 
     suffix_separator: bpy.props.StringProperty(
@@ -50,6 +56,9 @@ class TGR_Preferences(bpy.types.AddonPreferences):
 
         row = box.row()
         row.prop(self, "mch_prefix")
+
+        row = box.row()
+        row.prop(self, "ctrl_prefix")
 
         row = layout.row()
         row.label(text="Separator Defaults")

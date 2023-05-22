@@ -1,6 +1,6 @@
 import bpy
 
-from ..utils import bone_layers_by_number
+from ..utils import bone_layers_by_number, get_addon_name
 
 
 # ------------- ADD PREFIX OR SUFFIX -------------
@@ -52,8 +52,6 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        tgr_props = context.object.tgr_props
-
         if context.mode == 'EDIT_ARMATURE':
             # Check if there are any bones selected
             if len(edit_bones := context.selected_bones) > 0:
@@ -264,6 +262,31 @@ class TGR_OT_RemoveSuffix(bpy.types.Operator):
 
 # ------------- CLEAN UP -------------
 
+def clean_up_name(context, name: str) -> str:
+    """
+    Change the .001, .002, .003, ... suffixes to be before the .L or .R suffixes if
+    they exist and change the dots to dashs.
+    """
+    preferences = context.preferences.addons[get_addon_name()].preferences
+    suffix_separator = preferences.suffix_separator
+    separator = preferences.separator
+    # Check if the last three characters are numbers
+    if (digit := name[-3:]).isdigit():
+        # Check if the name has Left or Right suffixes in it
+        lr_suffix = ""
+        for suffix in [f"{suffix_separator}L", f"{suffix_separator}R"]:
+            if suffix in name.upper():
+                lr_suffix = suffix
+                break
+        if lr_suffix != "":
+            name = name.replace(lr_suffix, "")
+            name = name.replace(f".{digit}", "")
+            name = name + f"{separator}{digit}" + lr_suffix
+        else:
+            name = name[:-4] + f"{separator}{digit}"
+    return name
+
+
 class TGR_OT_CleanNameUp(bpy.types.Operator):
     """
     Clean up the name of the selected bone.
@@ -288,46 +311,26 @@ class TGR_OT_CleanNameUp(bpy.types.Operator):
             if len(edit_bones := context.selected_bones) > 0:
                 for bone in edit_bones:
                     # Clean up the name of the selected bone
-                    bone.name = self.clean_up_name(bone.name)
+                    bone.name = clean_up_name(context, bone.name)
             else:
                 # Clean up the name of all bones
                 edit_bones = context.object.data.edit_bones
                 for bone in edit_bones:
                     # Clean up the name of the selected bone
-                    bone.name = self.clean_up_name(bone.name)
+                    bone.name = clean_up_name(context, bone.name)
         elif context.mode == 'POSE':
             # Check if there are any bones selected
             if len(pose_bones := context.selected_pose_bones) > 0:
                 for bone in pose_bones:
                     # Clean up the name of the selected bone
-                    bone.name = self.clean_up_name(bone.name)
+                    bone.name = clean_up_name(context, bone.name)
             else:
                 # Clean up the name of all bones
                 pose_bones = context.object.pose.bones
                 for bone in pose_bones:
                     # Clean up the name of the selected bone
-                    bone.name = self.clean_up_name(bone.name)
+                    bone.name = clean_up_name(context, bone.name)
         return {"FINISHED"}
-
-    def clean_up_name(self, name) -> str:
-        """
-        Change the .001, .002, .003, ... suffixes to be before the .L or .R suffixes if
-        they exist and change the dots to dashs.
-        """
-        # Check if the last three characters are numbers
-        if (digit := name[-3:]).isdigit():
-            # Check if the name has Left or Right suffixes in it
-            lr_suffix = ""
-            for suffix in [".L", ".R", "-L", "-R", "_L", "_R"]:
-                if suffix in name:
-                    lr_suffix = suffix
-                    break
-            if lr_suffix != "":
-                name = name.replace(lr_suffix, "")
-                name = name + f"-{digit}" + lr_suffix
-            else:
-                name = name[:-4] + f"-{digit}"
-        return name
 
 
 # ------------- SELECTION -------------

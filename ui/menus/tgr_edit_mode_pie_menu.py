@@ -3,11 +3,7 @@ import bpy
 
 class TGR_MT_EditMode_PieMenu(bpy.types.Menu):
     """
-    Edit Mode Pie Menu.
-
-    conditions:
-        - Edit Mode:
-            - Armature.
+    Edit Mode Pie Menu
     """
     bl_idname = "TGR_MT_EditMode_PieMenu"
     bl_label = "Edit Mode TGR tools"
@@ -31,10 +27,10 @@ class TGR_MT_EditMode_PieMenu(bpy.types.Menu):
         pie.operator("armature.parent_clear", icon='UNLINKED')
         # - Pie Menu TOP item
         pie = layout.menu_pie()
-        pie.operator("armature.parent_set", text='Set Parent' , icon='LINKED')
+        pie.operator("armature.parent_set", text='Set Parent', icon='LINKED')
         # - Pie Menu TOP item
         pie = layout.menu_pie()
-        pie.operator("armature.select_linked", text='Select Linked' , icon='LINKED')
+        pie.operator("armature.select_linked", text='Select Linked', icon='LINKED')
         # - Pie Menu BOTTOM item
         pie = layout.menu_pie()
         pie.operator("tgr.add_non_deform_bone", icon='BONE_DATA')

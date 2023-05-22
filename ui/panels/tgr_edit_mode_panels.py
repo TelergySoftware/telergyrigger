@@ -4,9 +4,7 @@ from .tgr_base_panel import TGR_PT_BASE
 # ------------- EDIT MODE -------------
 class TGR_PT_View3D_Panel_EditMode(TGR_PT_BASE):
     """
-    Creates the panel for the Addon in Edit Mode.
-    This panel is only visible when in Edit Mode,
-    and only if the selected object is an Armature.
+    Creates the panel for the Addon in Edit Mode
     """
     bl_label = "Edit Mode"
     bl_idname = "TGR_PT_View3D_Panel_EditMode"
@@ -30,14 +28,14 @@ class TGR_PT_View3D_Panel_EditMode(TGR_PT_BASE):
         if armature is not None:
             if armature.type == 'ARMATURE':
                 row = layout.row()
-                row.prop_search(context.object.tgr_props, "root_bone", armature.data, "bones", text="Root", icon='BONE_DATA')
-        
+                row.prop_search(context.object.tgr_props, "root_bone", armature.data, "bones", text="Root",
+                                icon='BONE_DATA')
+
+
 # Edit Create Subpanel
 class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
     """
-    Creates the subpanel for the Addon in Edit Mode.
-    This panel is only visible when in Edit Mode,
-    and only if the selected object is an Armature.
+    Creates the subpanel for the Addon in Edit Mode
     """
     bl_label = "Create"
     bl_idname = "TGR_PT_View3D_Panel_EditMode_Create"
@@ -55,11 +53,11 @@ class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
         # Create Non-Deform Bone
         row = layout.row()
         row.operator("tgr.add_non_deform_bone", icon='BONE_DATA')
-        
+
         # Create Bones on Points
         row = layout.row()
         row.operator("tgr.bones_on_points", icon='BONE_DATA')
-        
+
         row = layout.row()
         row.operator("tgr.create_tgt", text="Create TGT", icon='BONE_DATA')
 
@@ -70,9 +68,7 @@ class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
 # Edit Parenting Subpanel
 class TGR_PT_View3D_Panel_EditMode_Parenting(TGR_PT_BASE):
     """
-    Creates the panel for the Addon in Edit Mode.
-    This panel is only visible when in Edit Mode,
-    and only if the selected object is an Armature.
+    Creates the panel for the Addon in Edit Mode
     """
     bl_label = "Parenting"
     bl_idname = "TGR_PT_View3D_Panel_EditMode_Parenting"
@@ -98,9 +94,7 @@ class TGR_PT_View3D_Panel_EditMode_Parenting(TGR_PT_BASE):
 # Edit Utilities Subpanel
 class TGR_PT_View3D_Panel_EditMode_Utilities(TGR_PT_BASE):
     """
-    Creates the panel for the Addon in Edit Mode.
-    This panel is only visible when in Edit Mode,
-    and only if the selected object is an Armature.
+    Creates the panel for the Addon in Edit Mode
     """
     bl_label = "Utilities"
     bl_idname = "TGR_PT_View3D_Panel_EditMode_Utilities"

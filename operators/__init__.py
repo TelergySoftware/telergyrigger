@@ -25,7 +25,7 @@ from .tgr_edit_mode_operators import (TGR_OT_AddNonDeformBone,
 # Add classes from tgr_pose_mode_operators
 from .tgr_pose_mode_operators import (TGR_OT_BindTGT,
                                       TGR_OT_CopyTransformsToChain,
-                                      TGR_OT_CreateIkFkSwichChain,
+                                      TGR_OT_CreateIkFkSwitchChain,
                                       TGR_OT_CreateIKPoleTarget,
                                       TGR_OT_CreateRotationChain,
                                       TGR_OT_CreateStretchToChain,
@@ -52,7 +52,7 @@ __all__ = [
     TGR_OT_AddTGRArmature,
     # Pose Mode Operators
     TGR_OT_BindTGT,
-    TGR_OT_CreateIkFkSwichChain,
+    TGR_OT_CreateIkFkSwitchChain,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
     TGR_OT_IsolateBoneRotation,

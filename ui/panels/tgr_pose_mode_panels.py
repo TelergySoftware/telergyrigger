@@ -4,9 +4,7 @@ from .tgr_base_panel import TGR_PT_BASE
 # ------------- POSE MODE -------------
 class TGR_PT_View3D_Panel_PoseMode(TGR_PT_BASE):
     """
-    Creates the panel for the Addon in Pose Mode.
-    This panel is only visible when in Pose Mode,
-    and only if the selected object is an Armature.
+    Creates the panel for the Addon in Pose Mode
     """
     bl_label = "Pose Mode"
     bl_idname = "TGR_PT_View3D_Panel_PoseMode"
@@ -24,9 +22,7 @@ class TGR_PT_View3D_Panel_PoseMode(TGR_PT_BASE):
 # Pose TGT Subpanel
 class TGR_PT_View3D_Panel_PoseMode_TGT(TGR_PT_BASE):
     """
-    Creates the subpanel for the Addon in Pose Mode.
-    This panel is only visible when in Pose Mode,
-    and only if the selected object is an Armature.
+    Creates the subpanel for the Addon in Pose Mode
     """
     bl_label = "TGT"
     bl_idname = "TGR_PT_View3D_Panel_PoseMode_TGT"
@@ -46,7 +42,7 @@ class TGR_PT_View3D_Panel_PoseMode_TGT(TGR_PT_BASE):
 
         row = layout.row()
         row.operator("tgr.unbind_tgt", icon='UNLOCKED')
-        
+
 
 # Pose Constraints Subpanel
 class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
@@ -72,18 +68,10 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
         row = layout.row()
         row.operator("tgr.isolate_bone_rotation", icon='UNLINKED', text="Isolate Rotation")
 
-        # # Create IK FK Switch Chain
-        # row = layout.row()
-        # row.operator("tgr.create_ikfk_switch_chain", icon='BONE_DATA')
-        
-        # # Create Stretch to Chain
-        # row = layout.row()
-        # row.operator("tgr.create_stretch_to_chain", icon='BONE_DATA')
-        
-        #Create Rotation Chain
+        # Create Rotation Chain
         row = layout.row()
         row.operator("tgr.create_rotation_chain", icon='CON_ROTLIKE')
-        
+
         row = layout.row()
         row.operator("tgr.copy_transforms_to_chain", icon='CON_TRANSFORM')
 
