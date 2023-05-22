@@ -7,7 +7,6 @@ class TGR_Properties(bpy.types.PropertyGroup):
     """
     # ---- MAIN PROPERTIES ----
     # -- Naming --
-    prefix: bpy.props.StringProperty(name="Prefix", default="")
 
     def_prefix: bpy.props.StringProperty(
         name="Prefix",
@@ -32,12 +31,6 @@ class TGR_Properties(bpy.types.PropertyGroup):
         description="Prefix to be added to the control bones.",
         default="CTRL-",
     )
-
-    suffix: bpy.props.StringProperty(
-        name="Suffix",
-        description="Suffix to be added to the name of the bone.",
-        default="",
-    )
     # ---- EDIT MODE ----
     armature: bpy.props.PointerProperty(
         name="Armature",
@@ -50,8 +43,6 @@ class TGR_Properties(bpy.types.PropertyGroup):
         description="The root bone of the armature",
         default="ROOT",
     )
-    # ---- UTILITIES ----
-    search_bone_name: bpy.props.StringProperty(name="Search Bone Name")
 
 
 class TGR_LayerProperties(bpy.types.PropertyGroup):

@@ -1,90 +1,115 @@
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 import bpy
 
-bl_info = {
-    "name": "Telergy Rigger",
-    "author": "Telergy Studio",
-    "description": "",
-    "blender": (3, 0, 0),
-    "version": (0, 0, 1),
-    "location": "",
-    "warning": "Under Heavy Development",
-    "category": "Rigging"
-}
+# ----- OPERATORS -----
+from .operators import (
+    TGR_OT_AddPrefix,
+    TGR_OT_AddSuffix,
+    TGR_OT_CleanNameUp,
+    TGR_OT_EditLayer,
+    TGR_OT_LockBonesFromLayer,
+    TGR_OT_RemoveLayer,
+    TGR_OT_RemovePrefix,
+    TGR_OT_RemoveSuffix,
+    TGR_OT_SelectBonesByName,
+    TGR_OT_SelectLayerBones,
+    TGR_OT_SetBonesLayer,
+    TGR_OT_TrackNewLayer
+)
 
-# Import operators, panels, menus and properties
-from .operators import (TGR_OT_AddPrefix,
-                        TGR_OT_AddSuffix,
-                        TGR_OT_CleanNameUp,
-                        TGR_OT_EditLayer,
-                        TGR_OT_LockBonesFromLayer,
-                        TGR_OT_RemoveLayer,
-                        TGR_OT_RemovePrefix,
-                        TGR_OT_RemoveSuffix,
-                        TGR_OT_SelectBonesByName,
-                        TGR_OT_SelectLayerBones,
-                        TGR_OT_SetBonesLayer,
-                        TGR_OT_TrackNewLayer)
+from .operators import (
+    TGR_OT_AddDeformBone,
+    TGR_OT_AddNonDeformBone,
+    TGR_OT_AlignBoneToWorld,
+    TGR_OT_BoneOnPoints,
+    TGR_OT_ConnectBones,
+    TGR_OT_CreateTGT,
+    TGR_OT_RemoveTGT,
+    TGR_OT_ParentToRoot
+)
 
-from .operators import (TGR_OT_AddDeformBone,
-                        TGR_OT_AddNonDeformBone,
-                        TGR_OT_AlignBoneToWorld,
-                        TGR_OT_BoneOnPoints,
-                        TGR_OT_ConnectBones,
-                        TGR_OT_CreateTGT,
-                        TGR_OT_RemoveTGT,
-                        TGR_OT_ParentToRoot)
+from .operators import (
+    TGR_OT_BindTGT,
+    TGR_OT_CopyTransformsToChain,
+    TGR_OT_CreateIkFkSwichChain,
+    TGR_OT_CreateIKPoleTarget,
+    TGR_OT_CreateRotationChain,
+    TGR_OT_CreateStretchToChain,
+    TGR_OT_IsolateBoneRotation,
+    TGR_OT_UnbindTGT
+)
 
-from .operators import (TGR_OT_BindTGT,
-                        TGR_OT_CopyTransformsToChain,
-                        TGR_OT_CreateIkFkSwichChain,
-                        TGR_OT_CreateIKPoleTarget,
-                        TGR_OT_CreateRotationChain,
-                        TGR_OT_CreateStretchToChain,
-                        TGR_OT_IsolateBoneRotation,
-                        TGR_OT_UnbindTGT)
+from .operators import (
+    TGR_OT_GenerateUI,
+    TGR_OT_RIG_UI_AddComponent,
+    TGR_OT_RIG_UI_ModifyItem,
+    TGR_OT_RIG_UI_RemoveItem,
+    TGR_OT_RIG_UI_Clear
+)
 
-from .operators import (TGR_OT_GenerateUI,
-                        TGR_OT_RIG_UI_AddComponent,
-                        TGR_OT_RIG_UI_ModifyItem,
-                        TGR_OT_RIG_UI_RemoveItem,
-                        TGR_OT_RIG_UI_Clear,)
+from .operators import TGR_OT_AddTGRArmature
 
-from .operators import (TGR_OT_AddTGRArmature)
 
-from .ui import TGR_PT_View3D_Panel_EditMode, TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Panel_Utilities
+# ----- UI -----
+from .ui import (
+    TGR_PT_View3D_Panel_EditMode,
+    TGR_PT_View3D_Panel_PoseMode,
+    TGR_PT_View3D_Panel_Utilities
+)
 # Edit Mode panels
-from .ui import TGR_PT_View3D_Panel_EditMode_Create, TGR_PT_View3D_Panel_EditMode_Parenting, \
+from .ui import (
+    TGR_PT_View3D_Panel_EditMode_Create,
+    TGR_PT_View3D_Panel_EditMode_Parenting,
     TGR_PT_View3D_Panel_EditMode_Utilities
+)
 # Pose Mode panels
-from .ui import TGR_PT_View3D_Panel_PoseMode_TGT, TGR_PT_View3D_Panel_PoseMode_Constraints
+from .ui import (
+    TGR_PT_View3D_Panel_PoseMode_TGT,
+    TGR_PT_View3D_Panel_PoseMode_Constraints
+)
 # Utilities panel
-from .ui import TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
+from .ui import (
+    TGR_PT_View3D_Panel_Utilities_Naming,
+    TGR_PT_View3D_Panel_Utilities_Selection
+)
 # Bone Layers panel
 from .ui import TGR_PT_View3D_Panel_BoneLayers
 # Rig UI
 from .ui import TGR_PT_View3D_Panel_RigUI
 # Menus
-from .ui import TGR_MT_EditMode_PieMenu, TGR_MT_PoseMode_Constraints_PieMenu, TGR_MT_EditMode_AddBone, \
+from .ui import (
+    TGR_MT_EditMode_PieMenu,
+    TGR_MT_PoseMode_Constraints_PieMenu,
+    TGR_MT_EditMode_AddBone,
     TGR_MT_TrackNewLayer
+)
 
-# Properties
-from .properties import TGR_Properties, TGR_LayerProperties, TGR_UI_Components
+# ----- PROPERTIES -----
+from .properties import (
+    TGR_Properties,
+    TGR_LayerProperties,
+    TGR_UI_Components
+)
+
+# ----- PREFERENCES -----
+from .tgr_preferences import TGR_Preferences
+
+
+bl_info = {
+    "name": "Telergy Rigger",
+    "author": "Telergy Studio",
+    "description": "Supercharge your rigging workflow! Accelerate the process, automate tasks, and unleash your"
+                   " creative potential like never before.",
+    "blender": (3, 0, 0),
+    "version": (0, 1, 0),
+    "location": "",
+    "warning": "Under Heavy Development",
+    "category": "Rigging"
+}
 
 # Classes to register
 CLASSES_TO_REGISTER = (
+    # Preferences
+    TGR_Preferences,
     # Operators
     TGR_OT_AddDeformBone,
     TGR_OT_AddNonDeformBone,
@@ -150,9 +175,9 @@ keymaps = []
 
 # Object Mode Add menu appendix
 def object_add_draw_menu(self, context):
-    layout = self.layout
-    layout.separator()
-    layout.operator("tgr.add_tgr_armature", text="TGR Armature", icon="OUTLINER_OB_ARMATURE")
+        layout = self.layout
+        layout.separator()
+        layout.operator("tgr.add_tgr_armature", text="TGR Armature", icon="OUTLINER_OB_ARMATURE")
 
 
 def register():
