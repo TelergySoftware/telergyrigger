@@ -1,6 +1,7 @@
 import bpy
 
-from ..utils.tgr_edit_mode_utils import change_bones_prefix, bone_layers_by_number, set_bones_deform
+from ..utils import change_bones_prefix, bone_layers_by_number, set_bones_deform
+
 
 def update_armature(context):
     # Hack to update the armature bones list

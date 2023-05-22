@@ -1,7 +1,7 @@
 import bpy
 import math
 from mathutils import Vector
-from ..utils.tgr_edit_mode_utils import bone_layers_by_number
+from ..utils import bone_layers_by_number
 
 
 def update_armature(context):

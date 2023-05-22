@@ -1,6 +1,11 @@
 """
-Edit mode function utilities
+Utility functions
 """
+import os
+
+
+def get_addon_name():
+    return os.path.basename(os.path.dirname(__file__))
 
 
 def change_bones_prefix(bones, old_prefix: str = "", prefix: str = ""):

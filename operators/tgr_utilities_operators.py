@@ -1,6 +1,6 @@
 import bpy
 
-from ..utils.tgr_edit_mode_utils import bone_layers_by_number
+from ..utils import bone_layers_by_number
 
 
 # ------------- ADD PREFIX OR SUFFIX -------------
