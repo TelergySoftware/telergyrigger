@@ -270,21 +270,31 @@ def clean_up_name(context, name: str) -> str:
     preferences = context.preferences.addons[get_addon_name()].preferences
     suffix_separator = preferences.suffix_separator
     separator = preferences.separator
-    # Check if the last three characters are numbers
-    if (digit := name[-3:]).isdigit():
-        # Check if the name has Left or Right suffixes in it
-        lr_suffix = ""
-        for suffix in [f"{suffix_separator}L", f"{suffix_separator}R"]:
-            if suffix in name.upper():
-                lr_suffix = suffix
-                break
-        if lr_suffix != "":
-            name = name.replace(lr_suffix, "")
-            name = name.replace(f".{digit}", "")
-            name = name + f"{separator}{digit}" + lr_suffix
-        else:
-            name = name[:-4] + f"{separator}{digit}"
-    return name
+    valid_symbols = ".!@#$%^&*()_-+={}[]"
+    # Check if the name has Left or Right suffixes in it
+    lr_suffix = ""
+    for suffix in [f"{suffix_separator}L", f"{suffix_separator}R"]:
+        if suffix in name.upper():
+            lr_suffix = suffix
+            break
+
+    real_name = name.replace(lr_suffix, "")
+    digit_ended = False
+    if (digit := real_name[-3:]).isdigit():
+        if real_name[-4:] == f".{digit}":
+            real_name = real_name.replace(f".{digit}", "")
+            digit_ended = True
+
+    for symbol in valid_symbols:
+        if symbol in real_name:
+            real_name = real_name.replace(f"{symbol}", separator)
+
+    if digit_ended:
+        real_name += separator + digit
+
+    real_name += lr_suffix
+
+    return real_name
 
 
 class TGR_OT_CleanNameUp(bpy.types.Operator):

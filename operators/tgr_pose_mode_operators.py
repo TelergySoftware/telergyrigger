@@ -117,7 +117,6 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
 
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
-        def_prefix = preferences.def_prefix + preferences.separator
         tgt_prefix = preferences.tgt_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         # Check if at least one bone is selected
