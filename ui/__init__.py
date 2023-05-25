@@ -20,6 +20,8 @@ from .panels import (
     TGR_PT_View3D_Panel_BoneLayers,
     # Rig UI
     TGR_PT_View3D_Panel_RigUI,
+    # Custom Properties
+    TGR_PT_View3D_Panel_CustomProperties,
 )
 
 __all__ = [

@@ -10,6 +10,8 @@ from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_P
 from .tgr_bone_layers_panels import TGR_PT_View3D_Panel_BoneLayers
 # Rig UI panels
 from .tgr_rig_ui_panels import TGR_PT_View3D_Panel_RigUI
+# Custom Properties panels
+from .tgr_custom_properties_panels import TGR_PT_View3D_Panel_CustomProperties
 
 __all__ = [
     # Base Panel

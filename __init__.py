@@ -75,6 +75,8 @@ from .ui import (
 from .ui import TGR_PT_View3D_Panel_BoneLayers
 # Rig UI
 from .ui import TGR_PT_View3D_Panel_RigUI
+# Custom Properties
+from .ui import TGR_PT_View3D_Panel_CustomProperties
 # Menus
 from .ui import (
     TGR_MT_EditMode_PieMenu,
@@ -147,6 +149,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_UnbindTGT,
     # Panels
     TGR_PT_View3D_Panel_BoneLayers,
+    TGR_PT_View3D_Panel_CustomProperties,
     TGR_PT_View3D_Panel_EditMode,
     TGR_PT_View3D_Panel_EditMode_Create,
     TGR_PT_View3D_Panel_EditMode_Parenting,

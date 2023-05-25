@@ -108,11 +108,45 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
                     f"\t\trow.label(text='{component.value}')\n"
                 )
         text.write("\n\n")
+        # Rig properties panel
+        text.write(
+            "class TGR_RIG_PT_Properties_Panel(bpy.types.Panel):\n"
+            "\tbl_label = 'Rig Properties'\n"
+            "\tbl_idname = 'TGR_RIG_PT_Properties_Panel'\n"
+            "\tbl_space_type = 'VIEW_3D'\n"
+            "\tbl_region_type = 'UI'\n"
+            f"\tbl_category = '{self.panel_name}'\n"
+            "\n"
+            "\tdef draw(self, context):\n"
+            "\t\tlayout = self.layout\n"
+            "\t\tarmature = context.active_object\n"
+            "\t\tif context.mode == 'EDIT':\n"
+            "\t\t\tbones = armature.edit_bones\n"
+            "\t\t\tbone_names = [bone.name for bone in bones]\n"
+            "\t\telif context.mode == 'POSE':\n"
+            "\t\t\tbones = armature.pose.bones\n"
+            "\t\t\tbone_names = [bone.name for bone in bones]\n"
+            "\t\telse:\n"
+            "\t\t\treturn\n"
+            "\n"
+            "\t\tfor bone_name in bone_names:\n"
+            "\t\t\tbone = bones[bone_name]\n"
+            "\t\t\tif len(bone.keys()) == 0:\n"
+            "\t\t\t\tcontinue\n"
+            "\t\t\tbox = layout.box()\n"
+            "\t\t\tbox.label(text=bone_name)\n"
+            "\t\t\tfor key in bone.keys():\n"
+            "\t\t\t\tbox.prop(bone, f'[\"{key}\"]')\n"
+        )
+        text.write("\n\n")
         # Register classes and properties
         text.write(
             "def register():\n"
             "\tbpy.utils.register_class(TGR_RIG_PT_Layers_Panel)\n"
             "\tbpy.utils.register_class(TGR_RIG_Properties)\n"
+            "\tbpy.utils.register_class(TGR_RIG_PT_Properties_Panel)\n"
+            "\n"
+            "\tbpy.types.Scene.rig_ui_properties = bpy.props.PointerProperty(type=TGR_RIG_Properties)\n"
             "\n"
             "\tbpy.types.Scene.rig_props = bpy.props.PointerProperty(type=TGR_RIG_Properties)\n"
         )
@@ -124,6 +158,7 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
             "\n"
             "\tbpy.utils.unregister_class(TGR_RIG_PT_Layers_Panel)\n"
             "\tbpy.utils.unregister_class(TGR_RIG_Properties)\n"
+            "\tbpy.utils.unregister_class(TGR_RIG_PT_Properties_Panel)\n"
         )
         text.write("\n\n")
         # Relink drivers
