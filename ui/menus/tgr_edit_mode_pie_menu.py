@@ -19,18 +19,33 @@ class TGR_MT_EditMode_PieMenu(bpy.types.Menu):
         # - Pie Menu UP item
         pie = layout.menu_pie()
         pie.operator("tgr.parent_to_root", icon='LINKED')
-        # - Pie Menu RIGHT item
+        # - Pie Menu BOTTOM item
         pie = layout.menu_pie()
-        pie.operator("tgr.connect_bones", icon='LINKED')
+        copy_transforms_op = pie.operator("tgr.copy_transforms", icon='CON_TRANSLIKE')
+        copy_transforms_op.copy_location = True
+        copy_transforms_op.copy_rotation = True
+        copy_transforms_op.copy_scale = True
         # - Pie Menu DOWN item
         pie = layout.menu_pie()
         pie.operator("armature.parent_clear", icon='UNLINKED')
         # - Pie Menu TOP item
         pie = layout.menu_pie()
         pie.operator("armature.parent_set", text='Set Parent', icon='LINKED')
-        # - Pie Menu TOP item
+        # - Pie Menu LEFT item
         pie = layout.menu_pie()
-        pie.operator("armature.select_linked", text='Select Linked', icon='LINKED')
-        # - Pie Menu BOTTOM item
+        copy_location_op = pie.operator("tgr.copy_transforms", text="Copy Location", icon='CON_LOCLIKE')
+        copy_location_op.copy_location = True
+        copy_location_op.copy_rotation = False
+        copy_location_op.copy_scale = False
+        # - Pie Menu RIGHT item
         pie = layout.menu_pie()
-        pie.operator("tgr.add_non_deform_bone", icon='BONE_DATA')
+        copy_rotation_op = pie.operator("tgr.copy_transforms", text="Copy Rotation", icon='CON_ROTLIKE')
+        copy_rotation_op.copy_location = False
+        copy_rotation_op.copy_rotation = True
+        copy_location_op.copy_scale = False
+        # - Pie Menu CENTER item
+        pie = layout.menu_pie()
+        copy_scale_op = pie.operator("tgr.copy_transforms", text="Copy Scale", icon='CON_SIZELIKE')
+        copy_scale_op.copy_location = False
+        copy_scale_op.copy_rotation = False
+        copy_scale_op.copy_scale = True

@@ -36,4 +36,3 @@ class TGR_PT_View3D_Panel_CustomProperties(TGR_PT_BASE):
             box.label(text=bone_name)
             for prop in bone.keys():
                 box.prop(bone, f'["{prop}"]')
-
