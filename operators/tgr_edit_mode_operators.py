@@ -152,13 +152,13 @@ class TGR_OT_RemoveTGT(bpy.types.Operator):
         if not armature:
             self.report({"ERROR"}, "Armature not set")
             return {"CANCELLED"}
-        
+
         for bone in armature.data.edit_bones:
             if bone.name.startswith(tgt_prefix):
                 bone.select = True
                 bone.select_head = True
                 bone.select_tail = True
-        
+
         # Delete the selected bones
         bpy.ops.armature.delete()
         # Update the armature
@@ -174,7 +174,7 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
     bl_idname = "tgr.add_non_deform_bone"
     bl_label = "Add Non-Deform Bone"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     bone_name: bpy.props.StringProperty(name="Bone Name", default="")
 
     @classmethod
@@ -208,7 +208,7 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
         update_armature(context)
         # Finish
         return {"FINISHED"}
-    
+
 
 class TGR_OT_AddDeformBone(bpy.types.Operator):
     """
@@ -351,7 +351,7 @@ class TGR_OT_AlignBoneToWorld(bpy.types.Operator):
             return {'FINISHED'}
         else:
             return {'CANCELLED'}
-        
+
 
 class TGR_OT_BoneOnPoints(bpy.types.Operator):
     """
@@ -360,8 +360,9 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
     bl_idname = "tgr.bones_on_points"
     bl_label = "Bones on Points"
     bl_options = {'REGISTER', 'UNDO'}
-    
-    bone_scale: bpy.props.FloatProperty(name="Bone Scale", description="Bone Scale to be applied to each added bone.", default=1.0)
+
+    bone_scale: bpy.props.FloatProperty(name="Bone Scale", description="Bone Scale to be applied to each added bone.",
+                                        default=1.0)
     deform: bpy.props.BoolProperty(name="Deform", description="Choose wether the added bones are deform or not.")
 
     @classmethod
@@ -379,12 +380,12 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
                     bpy.ops.tgr.add_deform_bone()
                 else:
                     bpy.ops.tgr.add_non_deform_bone()
-                
+
                 added_bone = context.selected_editable_bones[0]
                 added_bone.length = self.bone_scale
-                
+
                 is_children_in_selection = any([child in selected_bones for child in bone.children])
-                
+
                 if not is_children_in_selection:
                     context.scene.cursor.location = bone.tail
                     if self.deform:
@@ -393,9 +394,55 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
                         bpy.ops.tgr.add_non_deform_bone()
                     added_bone = context.selected_editable_bones[0]
                     added_bone.length = self.bone_scale
-            
+
             context.scene.cursor.location = current_3d_cursor_pos
             return {'FINISHED'}
-        
+
+        else:
+            return {'CANCELLED'}
+
+
+class TGR_OT_CopyTransforms(bpy.types.Operator):
+    """Copy the active bone transforms to the selected bones"""
+    bl_idname = "tgr.copy_transforms"
+    bl_label = "Copy Transforms"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    copy_location: bpy.props.BoolProperty(name="Copy Location",
+                                          description=
+                                          "Choose whether the location of the active bone will be copied or not.",
+                                          default=True)
+    copy_rotation: bpy.props.BoolProperty(name="Copy Rotation",
+                                          description=
+                                          "Choose whether the rotation of the active bone will be copied or not.",
+                                          default=True)
+    copy_scale: bpy.props.BoolProperty(name="Copy Scale",
+                                       description=
+                                       "Choose whether the scale of the active bone will be copied or not.",
+                                       default=True)
+
+    @classmethod
+    def poll(cls, context):
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_edit_mode = context.active_object.mode == 'EDIT'
+        return is_armature and is_edit_mode
+
+    def execute(self, context):
+        if len(selected_bones := context.selected_editable_bones) > 0:
+            active_bone = context.active_bone
+            for bone in selected_bones:
+                if bone == active_bone:
+                    continue
+                if self.copy_location:
+                    distance_vector = (bone.head - active_bone.head)
+                    bone.head -= distance_vector
+                    bone.tail -= distance_vector
+                if self.copy_rotation:
+                    active_head_tail_vector = (active_bone.head - active_bone.tail).normalized()
+                    bone.tail = bone.head - active_head_tail_vector * bone.length
+                    bone.roll = active_bone.roll
+                if self.copy_scale:
+                    bone.length = active_bone.length
+            return {'FINISHED'}
         else:
             return {'CANCELLED'}

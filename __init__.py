@@ -24,7 +24,8 @@ from .operators import (
     TGR_OT_ConnectBones,
     TGR_OT_CreateTGT,
     TGR_OT_RemoveTGT,
-    TGR_OT_ParentToRoot
+    TGR_OT_ParentToRoot,
+    TGR_OT_CopyTransforms,
 )
 
 from .operators import (
@@ -47,7 +48,6 @@ from .operators import (
 )
 
 from .operators import TGR_OT_AddTGRArmature
-
 
 # ----- UI -----
 from .ui import (
@@ -95,7 +95,6 @@ from .properties import (
 # ----- PREFERENCES -----
 from .tgr_preferences import TGR_Preferences
 
-
 bl_info = {
     "name": "Telergy Rigger",
     "author": "Telergy Studio",
@@ -123,6 +122,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_BoneOnPoints,
     TGR_OT_CleanNameUp,
     TGR_OT_ConnectBones,
+    TGR_OT_CopyTransforms,
     TGR_OT_CopyTransformsToChain,
     TGR_OT_CreateIKPoleTarget,
     TGR_OT_CreateIkFkSwitchChain,
@@ -178,9 +178,9 @@ keymaps = []
 
 # Object Mode Add menu appendix
 def object_add_draw_menu(self, context):
-        layout = self.layout
-        layout.separator()
-        layout.operator("tgr.add_tgr_armature", text="TGR Armature", icon="OUTLINER_OB_ARMATURE")
+    layout = self.layout
+    layout.separator()
+    layout.operator("tgr.add_tgr_armature", text="TGR Armature", icon="OUTLINER_OB_ARMATURE")
 
 
 def register():

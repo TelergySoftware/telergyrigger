@@ -21,7 +21,8 @@ from .tgr_edit_mode_operators import (TGR_OT_AddNonDeformBone,
                                       TGR_OT_CreateTGT,
                                       TGR_OT_RemoveTGT,
                                       TGR_OT_ParentToRoot,
-                                      TGR_OT_AddDeformBone)
+                                      TGR_OT_AddDeformBone,
+                                      TGR_OT_CopyTransforms)
 # Add classes from tgr_pose_mode_operators
 from .tgr_pose_mode_operators import (TGR_OT_BindTGT,
                                       TGR_OT_CopyTransformsToChain,
