@@ -1,26 +1,29 @@
-<h1>Telergy Rigger</h1>
+# Telergy Rigger
+
 Our advanced toolset empowers riggers with an array of specialized features and shortcuts, significantly accelerating
 the rigging workflow.
 
 Harness the power of automated rigging processes, intuitive controls, and a comprehensive set of tools, all designed to
 optimize efficiency and precision. Say goodbye to repetitive tasks and welcome a seamless rigging experience.
 
-<h2>For whom is it for?</h2>
+## For whom is it for?
+
 It was designed for more experienced Blender riggers to automate tasks such as copying the
 transforms of a chain of bones to another chain. It doesn't mean that less experienced riggers can't use the power of
 our addon. It also comes with tools to help with the more basic parts of rigging such as parenting and creating simple
 constraints.
 
-<h2>Manual</h2>
+## Manual
+
 Here you'll find all the explanations of every functionality of this addon
 
-1. <h3>How to install</h3>
+1. ### How to install
    To install this addon you'll need to go to the Blender edit menu on the top toolbar, select Preferences, navigate to
    the
    Add-ons tab, click the install button on the top right and find your .zip file containing this addon. After
    installing
    it, you'll need to mark the check-box to enable it.
-2. <h3>Creating a TGR rig</h3>
+2. ### Creating a TGR rig
    If you didn't yet creat an Armature object, the easiest way to start with the **TelergyRigger** addon is to add an
    armature using the `SHIFT+A` command and choosing the **TGR Armature** option, it should be one of last in the add
    menu.
@@ -37,7 +40,7 @@ Here you'll find all the explanations of every functionality of this addon
    the N-Panel, there you will find a field to choose your armature and when you do, it will open another field to
    choose a
    bone to be used as the root. After that you're all set to use all the functionalities of this addon.
-3. <h3>Prefixes (DEF, TGT, MCH, CTRL)</h3>
+3. ### Prefixes (DEF, TGT, MCH, CTRL)
    This addon depends heavily on bones prefixes, so it's really important to understand what they mean:
     * **DEF:** Bones with this prefix are the only bones that are capable of deforming the mesh, they're not meant to be
       controlled directly;
@@ -48,17 +51,17 @@ Here you'll find all the explanations of every functionality of this addon
     * **CTRL:** Bones with this prefix are the only bones that should be able to be controlled by the end user.
 
    These prefixes can be changed in the addon's preferences.
-4. <h3>Edit Mode</h3>
+4. ### Edit Mode
    While in edit mode, the operators shown in the *Telergy Rigger* tab and the operators that are available will be
    different from the ones shown in pose mode. In this section we'll take a look at all the operators and panels
    available in this mode.
-    1. <h4>Adding a bone</h4>
+    1. #### Adding a bone
        While using this addon, when you press `SHIFT-A` it won't create a bone directly, instead it will show an add
        menu with two options: *Deform Bone* and *Non-Deform Bone*. As the name says, the first one will create a bone
        with the option *deform* of the bone turned on, and it will also spawn the bone aligned with the world, another
        thing is that it will already be parented with the root bone. The second will do the same thing, but this time
        with the *deform* option turned off.
-    2. <h4>Pie Menu</h4>
+    2. #### Pie Menu
        <img src="images/EditMode_PieMenu.png">
 
        In edit mode you'll have a new pie menu that will be spawned when pressing the letter `D` by default. This pie
@@ -82,7 +85,7 @@ Here you'll find all the explanations of every functionality of this addon
           and location and will be oriented in the same way as the active bone;
         * **Copy Scale:** It copies the scale of the active bone to the selected bones, selected bones will maintain
           orientation and location and will be scaled to be the same size as the active bone.
-    3. <h4>Create Sub-Panel</h4>
+    3. #### Create Sub-Panel
        In the *Telergy Rigger* panel you'll find a sub-panel called **Create**, inside this panel there are a few
        buttons to trigger some operators:
         * **Bones on Points:** Creates bones on every joint of the selected bones, the new bones are parented to the
@@ -90,20 +93,20 @@ Here you'll find all the explanations of every functionality of this addon
         * **Create TGT:** Makes a copy of all the DEF bones, rename them to be TGT and send them to the TGT layer. TGT
           bones are non-deform.
         * **Remove TGT:** Deletes all TGT bones.
-    4. <h4>Parenting Sub-Panel</h4>
+    4. #### Parenting Sub-Panel
        The parenting sub-panel comes with two buttons:
         * **Parent to Root:** Parents the selected bone with the root bone;
         * **Connect Bones:** Connects the selected bones, but instead of making the tail of the parent bone go to the
           head of the child bone, the head of the child bone goes to the tail of the parent bone.
-5. <h3>Pose Mode</h3>
+5. ### Pose Mode
    In this section you'll see the operators and panels that are exclusive to the pose mode.
-    1. <h4>Custom Properties</h4>
+    1. #### Custom Properties
        When first creating the DEF and TGT bones, this panel should be empty. It shows all the custom properties added
        to all the bones separated by bone names, so you can access these properties faster without having to select a
        particular bone and search for its custom properties.
-    2. <h4>Pie Menu</h4>
-       <img src="images/PoseMode_PieMenu.png">
-   
+    2. #### Pie Menu
+       <img src="images/PoseMode_PieMenu.png" alt="Edit Mode Pie Menu">
+
        Ind pose mode you'll have a new pie menu that will be spawned when pressing the letter `D` by default. This pie
        menu contains some frequent used constraints to be accessed in a faster way. It comes with the following
        constraints:
@@ -118,7 +121,7 @@ Here you'll find all the explanations of every functionality of this addon
         * **Limit Scale**;
         * **Damped Track**;
         * **Stretch To**.
-    3. <h4>Constraints</h4>
+    3. #### Constraints
        This one is a sub-panel containing operators that end up creating constraints in one or more bones, these
        properties are:
         * **Isolate Rotation:** Isolates the rotation of the selected bones from their parent. When the parent rotates,
@@ -135,14 +138,14 @@ Here you'll find all the explanations of every functionality of this addon
           to be made. The *Pole Distance* parameter dictates the distance that the pole target will be from the
           *Placement
           Bone*'s head and *Pole Angle* is the same as we see in the *IK* constraint.
-    4. <h4>TGT</h4>
+    4. #### TGT
        This sub-panel shows operators that are related to the **TGT** bones, at the moment only operators are available:
         * **Bind TGT:** Creates a copy transforms to all the DEF bones targeting their TGT pairs. E.g. DEF_PELVIS and
           TGT_PELVIS;
         * **Unbind TGT:** Removes all the copy transforms from the DEF bones targeting their TGT pairs.
-6. <h3>Utilities</h3>
+6. ### Utilities
    The utilities panel is available in both edit and pose modes, it comes with some naming and selecting utilities.
-    1. <h4>Naming</h4>
+    1. #### Naming
        This sub-panel contains some operators that will change the name of one or more bones, if no bones are selected
        the effect will be done on all the bones. The operators are:
         * **Add Prefix:** Adds a prefix to the bones names;
@@ -151,11 +154,11 @@ Here you'll find all the explanations of every functionality of this addon
         * **Remove Suffix:** Removes a suffix from the bones names;
         * **Clean Name Up:** Moves numbered suffixes to before the left and right suffixes if they exist and change the
           separators to the one default from the preferences.
-    2. <h4>Selection</h4>
+    2. #### Selection
        This sub-panel has for now a single operator, the **Search and Select**. Just like the name says, it will search
        and select the bones that match the value given. E.g. Searching DEF will select all the bones with the DEF piece
        in their name.
-7. <h3>Bone Layers</h3>
+7. ### Bone Layers
    In this panel you'll find by default three layers, **DEF**, **TGT** and **MCH** these are the layers that the addon
    use to organise the bones. Using the *Track New* button you'll be able to track a new layer and add some data to it,
    like name, description, index and UI name. UI name is the name that will be shown in the panel. Using the *Edit*
@@ -167,33 +170,34 @@ Here you'll find all the explanations of every functionality of this addon
    layer and also keep in the current ones. The second icon, a filled arrow, allows you to select all the bones from
    that layer, with the `SHIFT` key pressed, it will keep the current selections and add the new ones. The last one, a
    lock icon, allows you to block the selection of the bones from that layer.
-8. <h3>Rig UI</h3>
+8. ### Rig UI
    In this panel you'll be able to create your own rig ui and generate the script to be sent to with the blend file. To
    do so, first you'll need layers tracked in the *Bone Layers* panel, you can only add layers that are already tracked.
-    1. <h4>Creating the Rig UI</h4>
+    1. #### Creating the Rig UI
        To start adding elements to the rig ui, you'll need to press the '+' button. In the menu popped-up you can
        choose the type of element that you want to add to the rig ui. If you choose 'LABEL' you'll only need to add a
        value/text and choose in which line you want it to be placed at. If you choose 'LAYER', you'll need to add a
        value, this will be the name that will show on your Layer toggle button, you'll also need to choose the layer
        name, this is the name that you gave to the tracked layer, and at last, the line that you'd like it to be placed
        at.
-    2. <h4>Editing the elements</h4>
+    2. #### Editing the elements
        When adding the elements you might have noticed that you can click on them, even the labels, and when you click
        on them two new options appear: *Remove Item* and *Modify Item*. If you select one or multiple elements and
        click the remove item button, the selected items will be deleted. If you select the modify item button, you'll
        be able to alter the elements type, value, line and layer that it represents.
-    3. <h4>Clear</h4>
+    3. #### Clear
        This one is quite straight forward, if you click it you'll be prompted with a dialog asking you if you really
        want to clear all the elements, if you click okay, all the elements will be deleted.
-    4. <h4>Generate UI</h4>
+    4. #### Generate UI
        Clicking it will generate a python file that if you run, it will add a panel with a rig UI just like what you've
-       created. It will also add the **Custom Properties** panel so you can access those parameters easily even without
+       created. It will also add the **Custom Properties** panel, so you can access those parameters easily even without
        the *Telergy Rigger* addon.
 
-<h2>Python API</h2>
+## Python API
+
 If you'd like to use the operators from this addon in your blender scripts, here's the place for you!
 
-<h3>Operators</h3>
+### Operators
 
 ```Python
 # Adds a deform bone to the 3D cursor location
