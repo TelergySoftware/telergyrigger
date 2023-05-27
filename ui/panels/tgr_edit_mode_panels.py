@@ -50,10 +50,6 @@ class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
     def draw(self, context):
         layout = self.layout
 
-        # Create Non-Deform Bone
-        row = layout.row()
-        row.operator("tgr.add_non_deform_bone", icon='BONE_DATA')
-
         # Create Bones on Points
         row = layout.row()
         row.operator("tgr.bones_on_points", icon='BONE_DATA')

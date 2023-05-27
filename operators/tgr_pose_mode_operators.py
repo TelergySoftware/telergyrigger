@@ -13,11 +13,6 @@ def update_armature(context):
 class TGR_OT_BindTGT(bpy.types.Operator):
     """
     Binds the TGT bones to the DEF bones.
-
-    conditions:
-        - Active object is an armature:
-            - Is pose mode:
-                - TGT bones exist.
     """
     bl_idname = "tgr.bind_tgt"
     bl_label = "Bind TGT"
@@ -405,10 +400,6 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
                                                  description="Distance from the pole bole to the placement bone",
                                                  default=[0.0, -0.5, 0.0])
     pole_angle: bpy.props.FloatProperty(name="Pole Angle", min=-180, max=180)
-    adjust_pole: bpy.props.BoolProperty(name="Adjust Pole")
-    offset_pole: bpy.props.FloatVectorProperty(name="Offset Pole Position",
-                                               description="Offset the pole position to the place of your liking")
-
     @classmethod
     def poll(cls, context):
         is_armature = context.active_object.type == 'ARMATURE'

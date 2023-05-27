@@ -363,7 +363,7 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
 
     bone_scale: bpy.props.FloatProperty(name="Bone Scale", description="Bone Scale to be applied to each added bone.",
                                         default=1.0)
-    deform: bpy.props.BoolProperty(name="Deform", description="Choose wether the added bones are deform or not.")
+    deform: bpy.props.BoolProperty(name="Deform", description="Choose whether the added bones are deform or not.")
 
     @classmethod
     def poll(cls, context):
