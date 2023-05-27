@@ -59,6 +59,8 @@ Here you'll find all the explanations of every functionality of this addon
        thing is that it will already be parented with the root bone. The second will do the same thing, but this time
        with the *deform* option turned off.
     2. <h4>Pie Menu</h4>
+       <img src="images/EditMode_PieMenu.png">
+
        In edit mode you'll have a new pie menu that will be spawned when pressing the letter `D` by default. This pie
        menu
        contains some operators to keep things organized in a simple and intuitive place. It comes with the following
@@ -100,6 +102,8 @@ Here you'll find all the explanations of every functionality of this addon
        to all the bones separated by bone names, so you can access these properties faster without having to select a
        particular bone and search for its custom properties.
     2. <h4>Pie Menu</h4>
+       <img src="images/PoseMode_PieMenu.png">
+   
        Ind pose mode you'll have a new pie menu that will be spawned when pressing the letter `D` by default. This pie
        menu contains some frequent used constraints to be accessed in a faster way. It comes with the following
        constraints:
@@ -164,116 +168,131 @@ Here you'll find all the explanations of every functionality of this addon
    that layer, with the `SHIFT` key pressed, it will keep the current selections and add the new ones. The last one, a
    lock icon, allows you to block the selection of the bones from that layer.
 8. <h3>Rig UI</h3>
-    In this panel you'll be able to create your own rig ui and generate the script to be sent to with the blend file. To
-    do so, first you'll need layers tracked in the *Bone Layers* panel, you can only add layers that are already tracked.
+   In this panel you'll be able to create your own rig ui and generate the script to be sent to with the blend file. To
+   do so, first you'll need layers tracked in the *Bone Layers* panel, you can only add layers that are already tracked.
     1. <h4>Creating the Rig UI</h4>
-        To start adding elements to the rig ui, you'll need to press the '+' button. In the menu popped-up you can
-        choose the type of element that you want to add to the rig ui. If you choose 'LABEL' you'll only need to add a
-        value/text and choose in which line you want it to be placed at. If you choose 'LAYER', you'll need to add a
-        value, this will be the name that will show on your Layer toggle button, you'll also need to choose the layer
-        name, this is the name that you gave to the tracked layer, and at last, the line that you'd like it to be placed
-        at.
-   2. <h4>Editing the elements</h4>
-        When adding the elements you might have noticed that you can click on them, even the labels, and when you click
-        on them two new options appear: *Remove Item* and *Modify Item*. If you select one or multiple elements and
-        click the remove item button, the selected items will be deleted. If you select the modify item button, you'll
-        be able to alter the elements type, value, line and layer that it represents. 
-   3. <h4>Clear</h4>
-        This one is quite straight forward, if you click it you'll be prompted with a dialog asking you if you really
-        want to clear all the elements, if you click okay, all the elements will be deleted.
-   4. <h4>Generate UI</h4>
-        Clicking it will generate a python file that if you run, it will add a panel with a rig UI just like what you've
-        created. It will also add the **Custom Properties** panel so you can access those parameters easily even without
-        the *Telergy Rigger* addon.
+       To start adding elements to the rig ui, you'll need to press the '+' button. In the menu popped-up you can
+       choose the type of element that you want to add to the rig ui. If you choose 'LABEL' you'll only need to add a
+       value/text and choose in which line you want it to be placed at. If you choose 'LAYER', you'll need to add a
+       value, this will be the name that will show on your Layer toggle button, you'll also need to choose the layer
+       name, this is the name that you gave to the tracked layer, and at last, the line that you'd like it to be placed
+       at.
+    2. <h4>Editing the elements</h4>
+       When adding the elements you might have noticed that you can click on them, even the labels, and when you click
+       on them two new options appear: *Remove Item* and *Modify Item*. If you select one or multiple elements and
+       click the remove item button, the selected items will be deleted. If you select the modify item button, you'll
+       be able to alter the elements type, value, line and layer that it represents.
+    3. <h4>Clear</h4>
+       This one is quite straight forward, if you click it you'll be prompted with a dialog asking you if you really
+       want to clear all the elements, if you click okay, all the elements will be deleted.
+    4. <h4>Generate UI</h4>
+       Clicking it will generate a python file that if you run, it will add a panel with a rig UI just like what you've
+       created. It will also add the **Custom Properties** panel so you can access those parameters easily even without
+       the *Telergy Rigger* addon.
 
 <h2>Python API</h2>
 If you'd like to use the operators from this addon in your blender scripts, here's the place for you!
 
 <h3>Operators</h3>
+
 ```Python
 # Adds a deform bone to the 3D cursor location
 # Must be in Edit Mode
 bpy.ops.tgr.add_deform_bone()
 ```
+
 ```Python
 # Adds a non deform bone to the 3D cursor location
 # Must be in Edit Mode
 bpy.ops.tgr.add_non_deform_bone()
 ```
+
 ```Python
 # Adds a prefix to the selected bones, default prefix is empty
 # Must be in Edit or Pose mode
-bpy.ops.tgr.add_prefix(prefix: str="")
+bpy.ops.tgr.add_prefix(prefix: str = "")
 ```
+
 ```Python
 # Adds a suffix to the selected bones, default suffix is empty
 # Must be in Edit or Pose mode
-bpy.ops.tgr.add_suffix(suffix: str="")
+bpy.ops.tgr.add_suffix(suffix: str = "")
 ```
+
 ```Python
 # Adds an armature and a bone aligned with the world as the root bone
 # Must be in Object mode
 bpy.ops.tgr.add_tgr_armature()
 ```
+
 ```Python
 # Aligns the bone to the world
 # Must be in Edit Mode
 bpy.ops.tgr.align_bone_to_world()
 ```
+
 ```Python
 # Add copy transform constraints to the pairs of TGT and DEF bones
 # Must be in Pose Mode
 bpy.ops.tgr.bind_tgt()
 ```
+
 ```Python
 # Create bones on every joint of the selected bones
 # Must be in Edit Mode
 # You can choose the created bones scale and if they deform or not
-bpy.ops.tgr.bones_on_points(bone_scale: float=1.0, deform: bool=False)
+bpy.ops.tgr.bones_on_points(bone_scale: float = 1.0, deform: bool = False)
 ```
+
 ```Python
 # Cleans the selected bones names see section 6.1 for more
 # Must be in Edit or Pose mode
 bpy.ops.tgr.clean_name_up()
 ```
+
 ```Python
 # Connect the head of the child bone to the tail of the parent bone
 # Works on selected bones
 # Must be in Edit Mdde
 bpy.ops.tgr.connect_bones()
 ```
+
 ```Python
 # Copy the transforms of the active bone to the selected ones
 # Must be in Edit Mode
 # Can choose to copy the location, rotation and scale
-bpy.ops.tgr.copy_transforms(copy_location: bool=True, copy_rotation: bool=True, copy_scale: bool=True)
+bpy.ops.tgr.copy_transforms(copy_location: bool = True, copy_rotation: bool = True, copy_scale: bool = True)
 ```
+
 ```Python
 # Copy the transforms of a chain of bones to another chain of bones
 # from_prefix describes the prefix of the target chain
 # to_prefix describes the prefix of the selected chain
 # constraint_name is the name that will be given to the copy transforms constraint
 # Must be in Pose Mode
-bpy.ops.tgr.copy_transforms_to_chain(from_prefix: str="", to_prefix: str="", constraint_name: str="")
+bpy.ops.tgr.copy_transforms_to_chain(from_prefix: str = "", to_prefix: str = "", constraint_name: str = "")
 ```
+
 ```Python
 # Creates the pole target to the specified IK chain
 # For more see section 5.3
 # Must be in Pose Mode
 bpy.ops.tgr.create_ik_pole_target(
-    first_bone_name: str="",
-    last_bone_name: str="",
-    placement_bone_name: str="",
-    pole_distance: list[float, float, float]=[0.0, -0.5, 0.0],
-    pole_angle: float=0
+    first_bone_name: str = "",
+last_bone_name: str = "",
+placement_bone_name: str = "",
+pole_distance: list[float, float, float] = [0.0, -0.5, 0.0],
+pole_angle: float = 0
 )
 ```
+
 ```Python
 # Creates a rotation chain with the selected bones
 # For more see section 5.3
 # Must be in Pose Mode
 bpy.ops.tgr.create_rotation_chain()
 ```
+
 ```Python
 # Creates a duplicate of the DEF bones and rename them to TGT
 # Also send them to the TGT layer
@@ -281,48 +300,57 @@ bpy.ops.tgr.create_rotation_chain()
 # Must be in Edit Mode
 bpy.ops.tgr.create_tgt()
 ```
+
 ```Python
 # Isolate the selected bones rotation from their parent
 # Must be in Pose Mode
 bpy.ops.tgr.isolate_bone_rotation()
 ```
+
 ```Python
 # Parent selected bones to the root bone
 # Must be in Edit Mode
 bpy.ops.tgr.parent_to_root()
 ```
+
 ```Python
 # Removes the specified prefix from the bones names
 # Must be in Edit or Pose Mode
-bpy.ops.tgr.remove_prefix(prefix: str="")
+bpy.ops.tgr.remove_prefix(prefix: str = "")
 ```
+
 ```Python
 # Removes the specified suffix from the bones names
 # Must be in Edit or Pose Mode
-bpy.ops.tgr.remove_suffix(suffix: str="")
+bpy.ops.tgr.remove_suffix(suffix: str = "")
 ```
+
 ```Python
 # Deletes all bones that starts with the TGT prefix
 # Must be in Edit Mode
 bpy.ops.tgr.remove_tgt()
 ```
+
 ```Python
 # Select all the bones that has the bone_name value in their names
 # Must be in Edit or Pose Mode
-bpy.ops.tgr.select_bones_by_name(bone_name: str="")
+bpy.ops.tgr.select_bones_by_name(bone_name: str = "")
 ```
+
 ```Python
 # Select all the bones that are in the specified layer
 # min value is 0 and max is 31
 # Must be in Edit or Pose Mode
-bpy.ops.tgr.select_layer_bones(layer: int=0)
+bpy.ops.tgr.select_layer_bones(layer: int = 0)
 ```
+
 ```Python
 # Set the layer of the selected bones
 # min value is 0 and max is 31
 # Must be in Edit or Pose Mode
-bpy.ops.tgr.set_bones_layer(layer: int=0)
+bpy.ops.tgr.set_bones_layer(layer: int = 0)
 ```
+
 ```Python
 # Deletes all the copy transforms constraints from the DEF bones targeting the TGT bones
 # Must be in Pose Mode
