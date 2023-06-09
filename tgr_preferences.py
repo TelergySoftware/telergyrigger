@@ -31,7 +31,7 @@ class TGR_Preferences(bpy.types.AddonPreferences):
     separator: bpy.props.StringProperty(
         name="Separator",
         description="Character used to separate names of bones",
-        default="-"
+        default="_"
     )
 
     suffix_separator: bpy.props.StringProperty(
