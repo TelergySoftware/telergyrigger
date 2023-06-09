@@ -82,7 +82,6 @@ class TGR_PT_View3D_Panel_Utilities_Selection(TGR_PT_BASE):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def draw(self, context):
-        tgr_props = context.object.tgr_props
         layout = self.layout
         # Search Select
         row = layout.row()
