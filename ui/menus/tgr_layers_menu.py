@@ -7,7 +7,8 @@ class TGR_MT_TrackNewLayer(bpy.types.Menu):
 
     @classmethod
     def poll(cls, context):
-        return context.mode in {'POSE', 'EDIT_ARMATURE'}
+        is_armature = context.object is not None and context.object.type == 'ARMATURE'
+        return context.mode in {'POSE', 'EDIT_ARMATURE'} and is_armature
 
     def draw(self, context):
         layout = self.layout

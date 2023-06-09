@@ -7,7 +7,9 @@ class TGR_MT_EditMode_AddBone(bpy.types.Menu):
     
     @classmethod
     def poll(cls, context):
-        return context.mode == 'EDIT_ARMATURE'
+        is_armature = context.object is not None and context.object.type == 'ARMATURE'
+        is_edit_mode = context.mode == 'EDIT_ARMATURE'
+        return is_armature and is_edit_mode
 
     def draw(self, context):
         layout = self.layout
