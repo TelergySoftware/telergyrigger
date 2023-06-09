@@ -44,15 +44,22 @@ class TGR_OT_BindTGT(bpy.types.Operator):
                     return {"CANCELLED"}
 
         # Bind the TGT bones to the DEF bones
+        failed_bones = []
         for bone in bones_to_bind:
-            if bone.name.startswith(tgt_prefix) or bone.name.startswith(def_prefix):
+            if bone.name.startswith(tgt_prefix) or bone.name.startswith(def_prefix) or \
+                    (bone.name.startswith(ctrl_prefix) and not bone.name.startswith(f"{ctrl_prefix}TWEAK")):
                 # Get the DEF bone
                 try:
                     def_bone = context.object.pose.bones[bone.name.replace(tgt_prefix, def_prefix)]
+                    def_bone = context.object.pose.bones[def_bone.name.replace(ctrl_prefix, def_prefix)]
                 except KeyError:
-                    def_bone = context.object.pose.bones[bone.name.replace(ctrl_prefix, def_prefix)]
+                    failed_bone = bone.name.replace(tgt_prefix, def_prefix)
+                    failed_bone = failed_bone.replace(ctrl_prefix, def_prefix)
+                    failed_bones.append(failed_bone)
+                    continue
+
                 # Bind the TGT bone to the DEF bone
-                if 'TGT' in bone.constraints:
+                if 'TGT' in def_bone.constraints:
                     def_bone.constraints['TGT'].subtarget = bone.name
                 else:
                     constraint = def_bone.constraints.new('COPY_TRANSFORMS')
@@ -64,6 +71,11 @@ class TGR_OT_BindTGT(bpy.types.Operator):
 
         # Update the view layer
         update_armature(context)
+        if len(failed_bones) > 0:
+            self.report(
+                {"WARNING"},
+                "The following bones could not be bound: " + ", ".join(failed_bones)
+            )
         return {'FINISHED'}
 
 
@@ -252,10 +264,10 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
         for bone in context.selected_bones:
             bone.use_connect = False
             split_name = bone.name.split(preferences.separator)
-            bone_name = ctrl_prefix
+            bone_name = ctrl_prefix[:-1]
 
             for name_part in split_name[1:]:
-                bone_name += f"{name_part}"
+                bone_name += f"{preferences.separator}{name_part}"
 
             bone.name = bone_name
         ctrl_bone_names = [bone.name for bone in context.selected_bones]
