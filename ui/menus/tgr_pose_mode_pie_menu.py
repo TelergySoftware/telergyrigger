@@ -28,10 +28,10 @@ class TGR_MT_PoseMode_Constraints_PieMenu(bpy.types.Menu):
         col.operator("pose.constraint_add_with_targets", text="Copy Transforms",
                      icon='CON_TRANSLIKE').type = 'COPY_TRANSFORMS'
         col.separator()
-        col.operator("pose.constraint_add_with_targets", text="Copy Rotation",
-                     icon='CON_ROTLIKE').type = 'COPY_ROTATION'
         col.operator("pose.constraint_add_with_targets", text="Copy Location",
                      icon='CON_LOCLIKE').type = 'COPY_LOCATION'
+        col.operator("pose.constraint_add_with_targets", text="Copy Rotation",
+                     icon='CON_ROTLIKE').type = 'COPY_ROTATION'
         col.operator("pose.constraint_add_with_targets", text="Copy Scale", icon='CON_SIZELIKE').type = 'COPY_SCALE'
         # - Pie menu RIGHT
         pie = layout.menu_pie()
