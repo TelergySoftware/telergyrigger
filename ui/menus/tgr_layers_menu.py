@@ -23,4 +23,4 @@ class TGR_MT_TrackNewLayer(bpy.types.Menu):
         col.prop(context.object.tgr_layer_collection[-1], "ui_name")
         col.prop(context.object.tgr_layer_collection[-1], "lock_selection")
 
-        layout.operator("tgr.track_new_layer", text="Track New Layer")
+        layout.operator("tgr.new_collection", text="Track New Layer")

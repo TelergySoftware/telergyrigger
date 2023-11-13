@@ -10,7 +10,7 @@ def update_armature(context):
 
 def create_tgt(context):
     tgr_props = context.object.tgr_props
-    tgr_layers = context.object.tgr_layer_collection
+    collections = context.object.tgr_props.armature.data.collections
     preferences = context.preferences.addons[get_addon_name()].preferences
     # Get armature
     armature = context.object.tgr_props.armature
@@ -26,12 +26,10 @@ def create_tgt(context):
     tgt_prefix = preferences.tgt_prefix + preferences.separator
     change_bones_prefix(context.selected_bones, def_prefix, tgt_prefix)
     # Move the duplicated bones to the tgt_layer
-    layers = bone_layers_by_number(tgr_layers[1].index)
+    tgt_collection = collections[preferences.tgt_prefix]
     # Set bones deform to False
     set_bones_deform(context.selected_bones, False)
-    bpy.ops.armature.bone_layers(layers=layers)
-    # Make the tgt_layer visible
-    armature.data.layers[tgr_layers[1].index] = True
+    bpy.ops.armature.move_to_collection(collection=tgt_collection.name)
     update_armature(context)
 
 
@@ -39,7 +37,6 @@ def create_tgt_with_selection(self, context):
     """
     Create TGT bones strategy for selected bones.
     """
-    tgr_props = context.object.tgr_props
     preferences = context.preferences.addons[get_addon_name()].preferences
     # Get armature
     armature = context.object.tgr_props.armature
@@ -98,9 +95,8 @@ def create_tgt_with_all(self, context):
 
 
 class TGR_OT_CreateTGT(bpy.types.Operator):
-    """
-    Create the TGT bones for the selected armature.
-    """
+    """Create the TGT bones for the selected armature"""
+    
     bl_idname = "tgr.create_tgt"
     bl_label = "Create TGT"
     bl_options = {'REGISTER', 'UNDO'}
@@ -372,7 +368,14 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
+        
         if len(selected_bones := context.selected_editable_bones) > 0:
+            # Check if the active bone colection is visible and store its current state
+            active_collection = context.object.tgr_props.armature.data.collections.active
+            active_collection_state = active_collection.is_visible
+            # Set it to visible
+            active_collection.is_visible = True
+            
             current_3d_cursor_pos = context.scene.cursor.location
             for bone in selected_bones:
                 context.scene.cursor.location = bone.head
@@ -396,6 +399,10 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
                     added_bone.length = self.bone_scale
 
             context.scene.cursor.location = current_3d_cursor_pos
+            
+            # Restore the active collection state
+            active_collection.is_visible = active_collection_state
+            
             return {'FINISHED'}
 
         else:

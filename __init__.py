@@ -5,15 +5,15 @@ from .operators import (
     TGR_OT_AddPrefix,
     TGR_OT_AddSuffix,
     TGR_OT_CleanNameUp,
-    TGR_OT_EditLayer,
-    TGR_OT_LockBonesFromLayer,
-    TGR_OT_RemoveLayer,
+    TGR_OT_RenameCollection,
+    TGR_OT_LockBonesFromCollection,
+    TGR_OT_RemoveCollection,
     TGR_OT_RemovePrefix,
     TGR_OT_RemoveSuffix,
     TGR_OT_SelectBonesByName,
-    TGR_OT_SelectLayerBones,
-    TGR_OT_SetBonesLayer,
-    TGR_OT_TrackNewLayer
+    TGR_OT_SelectCollectionBones,
+    TGR_OT_AssignBonesToCollection,
+    TGR_OT_NewCollection
 )
 
 from .operators import (
@@ -72,9 +72,9 @@ from .ui import (
     TGR_PT_View3D_Panel_Utilities_Selection
 )
 # Bone Layers panel
-from .ui import TGR_PT_View3D_Panel_BoneLayers
+from .ui import TGR_PT_View3D_Panel_BoneCollections
 # Rig UI
-from .ui import TGR_PT_View3D_Panel_RigUI
+# from .ui import TGR_PT_View3D_Panel_RigUI
 # Custom Properties
 from .ui import TGR_PT_View3D_Panel_CustomProperties
 # Menus
@@ -88,7 +88,6 @@ from .ui import (
 # ----- PROPERTIES -----
 from .properties import (
     TGR_Properties,
-    TGR_LayerProperties,
     TGR_UI_Components
 )
 
@@ -129,26 +128,26 @@ CLASSES_TO_REGISTER = (
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
     TGR_OT_CreateTGT,
-    TGR_OT_EditLayer,
+    TGR_OT_RenameCollection,
     TGR_OT_GenerateUI,
     TGR_OT_IsolateBoneRotation,
-    TGR_OT_LockBonesFromLayer,
+    TGR_OT_LockBonesFromCollection,
     TGR_OT_ParentToRoot,
     TGR_OT_RIG_UI_AddComponent,
     TGR_OT_RIG_UI_Clear,
     TGR_OT_RIG_UI_ModifyItem,
     TGR_OT_RIG_UI_RemoveItem,
-    TGR_OT_RemoveLayer,
+    TGR_OT_RemoveCollection,
     TGR_OT_RemovePrefix,
     TGR_OT_RemoveSuffix,
     TGR_OT_RemoveTGT,
     TGR_OT_SelectBonesByName,
-    TGR_OT_SelectLayerBones,
-    TGR_OT_SetBonesLayer,
-    TGR_OT_TrackNewLayer,
+    TGR_OT_SelectCollectionBones,
+    TGR_OT_AssignBonesToCollection,
+    TGR_OT_NewCollection,
     TGR_OT_UnbindTGT,
     # Panels
-    TGR_PT_View3D_Panel_BoneLayers,
+    TGR_PT_View3D_Panel_BoneCollections,
     TGR_PT_View3D_Panel_CustomProperties,
     TGR_PT_View3D_Panel_EditMode,
     TGR_PT_View3D_Panel_EditMode_Create,
@@ -157,7 +156,7 @@ CLASSES_TO_REGISTER = (
     TGR_PT_View3D_Panel_PoseMode,
     TGR_PT_View3D_Panel_PoseMode_Constraints,
     TGR_PT_View3D_Panel_PoseMode_TGT,
-    TGR_PT_View3D_Panel_RigUI,
+    # TGR_PT_View3D_Panel_RigUI,
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
     TGR_PT_View3D_Panel_Utilities_Selection,
@@ -167,7 +166,6 @@ CLASSES_TO_REGISTER = (
     TGR_MT_TrackNewLayer,
     TGR_MT_PoseMode_Constraints_PieMenu,
     # Properties
-    TGR_LayerProperties,
     TGR_Properties,
     TGR_UI_Components,
 )
@@ -190,7 +188,6 @@ def register():
 
     # Add properties to the armature object
     bpy.types.Object.tgr_props = bpy.props.PointerProperty(type=TGR_Properties)
-    bpy.types.Object.tgr_layer_collection = bpy.props.CollectionProperty(type=TGR_LayerProperties)
     bpy.types.Object.tgr_ui_components = bpy.props.CollectionProperty(type=TGR_UI_Components)
 
     # Append the default layers
@@ -250,7 +247,6 @@ def unregister():
     # Remove properties from the armature object
     del bpy.types.Object.tgr_ui_components
     del bpy.types.Object.tgr_props
-    del bpy.types.Object.tgr_layer_collection
 
     # Unregister classes
     for cls in CLASSES_TO_REGISTER:

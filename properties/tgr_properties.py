@@ -45,37 +45,6 @@ class TGR_Properties(bpy.types.PropertyGroup):
     )
 
 
-class TGR_LayerProperties(bpy.types.PropertyGroup):
-    """
-    Properties of a layer.
-    """
-    name: bpy.props.StringProperty(
-        name="Name",
-        description="Name of the layer",
-        default="Layer",
-    )
-    index: bpy.props.IntProperty(
-        name="Index",
-        description="Index of the layer",
-        default=0,
-    )
-    description: bpy.props.StringProperty(
-        name="Description",
-        description="Description of the layer",
-        default="",
-    )
-    ui_name: bpy.props.StringProperty(
-        name="UI Name",
-        description="Name of the layer as it appears in the UI",
-        default="Layer",
-    )
-    lock_selection: bpy.props.BoolProperty(
-        name="Lock Selection",
-        description="Lock the selection of the layer",
-        default=False,
-    )
-
-
 class TGR_UI_Components(bpy.types.PropertyGroup):
     """Components used to create the generated UI"""
 

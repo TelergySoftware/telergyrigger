@@ -182,12 +182,10 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
 
 
 class TGR_OT_RIG_UI_AddComponent(bpy.types.Operator):
-    """
-    Generate the UI python script
-    """
+    """Add a new component to the RIG UI"""
 
     bl_idname = "tgr.ui_add_component"
-    bl_label = "Add Layer"
+    bl_label = "Add Component"
     bl_options = {'REGISTER', 'UNDO'}
 
     component_type: bpy.props.EnumProperty(
@@ -231,17 +229,16 @@ class TGR_OT_RIG_UI_AddComponent(bpy.types.Operator):
 
     def execute(self, context):
         components = context.active_object.tgr_ui_components
-        layers = context.active_object.tgr_layer_collection
+        collections = context.active_object.tgr_props.armature.data.collections
         components.add()
         components[-1].component_type = self.component_type
         components[-1].value = self.value
         components[-1].line = self.line
-        for layer in layers:
-            if layer.name == self.layer_name:
+        for collection in collections:
+            if collection.name == self.layer_name:
                 components[-1].layer_index = layer.index
                 break
         sort_components(context)
-        print("New Layer Added")
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -262,7 +259,7 @@ class TGR_OT_RIG_UI_AddComponent(bpy.types.Operator):
             row.label(text="Choose a layer:")
 
             row = layout.row()
-            row.prop_search(self, "layer_name", context.active_object, "tgr_layer_collection")
+            row.prop_search(self, "layer_name", context.object.tgr_props.armature.data, "collections")
 
         row = layout.row()
         row.prop(self, "line")

@@ -395,7 +395,7 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
 
-class TGR_OT_SelectLayerBones(bpy.types.Operator):
+class TGR_OT_SelectCollectionBones(bpy.types.Operator):
     """
     Select all the bones of the specified layer.
     """
@@ -403,7 +403,7 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
     bl_label = "Select Layer Bones"
     bl_options = {"REGISTER", "UNDO"}
 
-    layer: bpy.props.IntProperty(name="Layer", default=0, min=0, max=31)
+    name: bpy.props.StringProperty(name="Collection Name", default="")
 
     def __init__(self):
         self.shift = False
@@ -426,17 +426,22 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
             elif context.mode == 'POSE':
                 bpy.ops.pose.select_all(action='DESELECT')
 
-        # Select all the bones of the specified layer
-        if context.mode == 'EDIT_ARMATURE':
-            for edit_bone in context.active_object.data.edit_bones:
-                if edit_bone.layers[self.layer]:
-                    edit_bone.select = True
-                    edit_bone.select_head = True
-                    edit_bone.select_tail = True
-        elif context.mode == 'POSE':
-            for pose_bone in context.active_object.pose.bones:
-                if pose_bone.bone.layers[self.layer]:
-                    pose_bone.bone.select = True
+        # Select all the bones of the specified collection
+        # Hack for now, try something else later
+        # Store current armature mode
+        current_mode = context.mode
+        # BoneCollection.bones doesn't work in Edit Mode, change to Pose Mode
+        if not current_mode == 'POSE':
+            bpy.ops.object.mode_set(mode='POSE')
+        # Select all the bones of the specified collection
+        for bone in context.object.tgr_props.armature.data.collections[self.name].bones:
+            bone.select = True
+        
+        # Restore the previous armature mode
+        if not current_mode == 'POSE':
+            mode = 'EDIT' if current_mode == 'EDIT_ARMATURE' else 'OBJECT'
+            bpy.ops.object.mode_set(mode=mode)
+        
 
         return {"FINISHED"}
 
@@ -447,15 +452,13 @@ class TGR_OT_SelectLayerBones(bpy.types.Operator):
 
 
 # ------------- LAYERS -------------
-class TGR_OT_SetBonesLayer(bpy.types.Operator):
-    """
-    Set the layer of the selected bones.
-    """
-    bl_idname = "tgr.set_bones_layer"
-    bl_label = "Set Bones Layer"
+class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
+    """Assign the selected bones to the specified collection, press shift to keep the previous collections"""
+    bl_idname = "tgr.assign_bones_to_collection"
+    bl_label = "Assign Bones to Collection"
     bl_options = {"REGISTER", "UNDO"}
 
-    layer: bpy.props.IntProperty(name="Layer", default=0, min=0, max=31)
+    name: bpy.props.StringProperty(name="Collection Name", default="")
 
     @classmethod
     def poll(cls, context):
@@ -468,17 +471,28 @@ class TGR_OT_SetBonesLayer(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        layers = bone_layers_by_number(self.layer)
+        collections = context.object.tgr_props.armature.data.collections
 
         if context.mode == 'EDIT_ARMATURE':
             # Set the layer of the selected bones
             for bone in context.selected_bones:
-                bone.layers = layers if not self.shift else [old or new for old, new in zip(bone.layers, layers)]
+                collections[self.name].assign(bone)
+                if not self.shift:
+                    for collection in collections:
+                        if collection.name == self.name:
+                            continue
+                        collection.unassign(bone)
+                
         elif context.mode == 'POSE':
             # Set the layer of the selected bones
             for bone in context.selected_pose_bones:
-                bone.bone.layers = layers if not self.shift else [old or new for old, new in
-                                                                  zip(bone.bone.layers, layers)]
+                collections[self.name].assign(bone.bone)
+                if not self.shift:
+                    for collection in collections:
+                        if collection.name == self.name:
+                            continue
+                        collection.unassign(bone)
+                        
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -487,15 +501,13 @@ class TGR_OT_SetBonesLayer(bpy.types.Operator):
         return self.execute(context)
 
 
-class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
-    """
-    Lock all bones that belongs to the specified layer.
-    """
-    bl_idname = "tgr.lock_bones_from_layer"
+class TGR_OT_LockBonesFromCollection(bpy.types.Operator):
+    """Lock all bones that belongs to the specified collection"""
+    bl_idname = "tgr.lock_bones_from_collection"
     bl_label = "Lock Bones From Layer"
     bl_options = {"REGISTER", "UNDO"}
 
-    layer_name: bpy.props.StringProperty(name="Layer", default="")
+    collection_name: bpy.props.StringProperty(name="Collection Name", default="")
 
     @classmethod
     def poll(cls, context):
@@ -508,43 +520,42 @@ class TGR_OT_LockBonesFromLayer(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        layer = context.object.tgr_layer_collection[self.layer_name]
+        collection = context.object.tgr_props.armature.data.collections[self.collection_name]
 
-        # Deselect all bones
-        if context.mode == 'EDIT_ARMATURE':
-            bones = [bone for bone in context.object.data.edit_bones if bone.layers[layer.index]]
-        elif context.mode == 'POSE':
-            bones = [bone.bone for bone in context.object.pose.bones if bone.bone.layers[layer.index]]
-        else:
-            bones = []
+        # Get bones to lock
+        # Hack for now, try something else later
+        # Store current armature mode
+        current_mode = context.mode
+        # BoneCollection.bones doesn't work in Edit Mode, change to Pose Mode
+        if not current_mode == 'POSE':
+            bpy.ops.object.mode_set(mode='POSE')
+        # Select all the bones of the specified collection
+        bones = collection.bones
 
-        layer.lock_selection = not layer.lock_selection
+        collection["locked"] = not collection["locked"]
 
         for bone in bones:
-            bone.hide_select = layer.lock_selection
+            bone.hide_select = collection["locked"]
 
         # Deselect all bones
-        if context.mode == 'EDIT_ARMATURE':
-            bpy.ops.armature.select_all(action='DESELECT')
-        elif context.mode == 'POSE':
-            bpy.ops.pose.select_all(action='DESELECT')
+        bpy.ops.pose.select_all(action='DESELECT')
+        
+        # Restore the previous armature mode
+        if not current_mode == 'POSE':
+            mode = 'EDIT' if current_mode == 'EDIT_ARMATURE' else 'OBJECT'
+            bpy.ops.object.mode_set(mode=mode)
 
         return {"FINISHED"}
 
 
-class TGR_OT_TrackNewLayer(bpy.types.Operator):
-    """
-    Track a new layer.
-    """
-    bl_idname = "tgr.track_new_layer"
-    bl_label = "Track New Layer"
+class TGR_OT_NewCollection(bpy.types.Operator):
+    """Create a new bone collection with the specified name"""
+    bl_idname = "tgr.new_collection"
+    bl_label = "New Collection"
     bl_options = {"REGISTER", "UNDO"}
 
     # Layer attributes
-    name: bpy.props.StringProperty(name="Name", default="Layer")
-    index: bpy.props.IntProperty(name="Index", default=31, min=0, max=31)
-    description: bpy.props.StringProperty(name="Description", default="")
-    ui_name: bpy.props.StringProperty(name="UI Name", default="Layer")
+    name: bpy.props.StringProperty(name="Name", default="Bones")
     lock_selection: bpy.props.BoolProperty(name="Lock Selection", default=False)
 
     @classmethod
@@ -562,31 +573,26 @@ class TGR_OT_TrackNewLayer(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        # Create a new layer
-        layer = context.object.tgr_layer_collection.add()
-        layer.name = self.name
-        layer.index = self.index
-        layer.description = self.description
-        layer.ui_name = self.ui_name
-        layer.lock_selection = self.lock_selection
+        # Create a new collection
+        collection = context.object.tgr_props.armature.data.collections.new(self.name)
+        collection["locked"] = self.lock_selection
         # update the view layer
         context.view_layer.update()
 
         return {"FINISHED"}
 
 
-class TGR_OT_RemoveLayer(bpy.types.Operator):
-    """
-    Remove a layer.
-    """
-    bl_idname = "tgr.remove_layer"
-    bl_label = "Remove Layer"
+class TGR_OT_RemoveCollection(bpy.types.Operator):
+    """Remove the selected collection"""
+
+    bl_idname = "tgr.remove_collection"
+    bl_label = "Remove Collection"
     bl_options = {"REGISTER", "UNDO"}
 
-    def get_layer_names(self, context):
-        return [(layer.name, layer.ui_name, "") for layer in context.object.tgr_layer_collection]
+    def get_collection_names(self, context):
+        return [(collection.name, collection.name, "") for collection in context.object.tgr_props.armature.data.collections]
 
-    layers: bpy.props.EnumProperty(name="Layers", items=get_layer_names)
+    collections: bpy.props.EnumProperty(name="Collections", items=get_collection_names)
 
     @classmethod
     def poll(cls, context):
@@ -606,39 +612,32 @@ class TGR_OT_RemoveLayer(bpy.types.Operator):
 
         layout = self.layout
         row = layout.row()
-        row.label(text="Choose the layer to remove:")
+        row.label(text="Choose the collection to remove:")
 
         row = layout.row()
-        row.prop(self, "layers", text="")
+        row.prop(self, "collections", text="")
 
     def execute(self, context):
-        # Remove the layer
-        layer_index = -1
-        for i, layer in enumerate(context.object.tgr_layer_collection):
-            if layer.name == self.layers:
-                layer_index = i
-                break
-
-        context.object.tgr_layer_collection.remove(layer_index)
+        # Remove the collection
+        collections = context.object.tgr_props.armature.data.collections
+        collections.remove(collections[self.collections])
         # update the view layer
         context.view_layer.update()
 
         return {"FINISHED"}
 
 
-class TGR_OT_EditLayer(bpy.types.Operator):
-    """
-    Edit a layer.
-    """
+class TGR_OT_RenameCollection(bpy.types.Operator):
+    """Rename the selected collection"""
     bl_idname = "tgr.edit_layer"
     bl_label = "Edit Layer"
     bl_options = {"REGISTER", "UNDO"}
 
-    def get_layer_names(self, context):
-        return [(layer.name, layer.ui_name, "") for layer in context.object.tgr_layer_collection]
+    def get_collection_names(self, context):
+        return [(collection.name, collection.name, "") for collection in context.object.tgr_props.armature.data.collections]
 
     # Layer parameters
-    edit_layer_name: bpy.props.EnumProperty(name="Layer", items=get_layer_names)
+    collections: bpy.props.EnumProperty(name="Layer", items=get_collection_names)
 
     @classmethod
     def poll(cls, context):
@@ -655,38 +654,27 @@ class TGR_OT_EditLayer(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        # Choose the layer to edit
+        # Choose the collection to edit
         layout = self.layout
 
         row = layout.row()
-        row.label(text="Choose the layer to edit:")
+        row.label(text="Choose the collection to rename:")
         row = layout.row()
-        row.prop(self, "edit_layer_name", text="")
+        row.prop(self, "collections", text="")
 
         # Return if no layer is selected
-        if self.edit_layer_name == "":
+        if self.collections == "":
             return
+        
+        # Get the selected collection
+        collection = context.object.tgr_props.armature.data.collections[self.collections]
 
-        # Set the default values
-        self.collection_index = -1
-        for i, layer in enumerate(context.object.tgr_layer_collection):
-            if layer.name == self.edit_layer_name:
-                self.collection_index = i
-                break
-        self.edit_layer = context.object.tgr_layer_collection[self.collection_index]
+        # Draw the collection rename parameters
+        row = layout.row()
+        row.label(text="New name:")
+        row = layout.row()
+        row.prop(collection, "name", text="Name")
 
-        # Draw the layer parameters
-        row = layout.row()
-        row.label(text="Layer parameters:")
-
-        row = layout.row()
-        row.prop(self.edit_layer, "name", text="Name")
-        row = layout.row()
-        row.prop(self.edit_layer, "index", text="Index")
-        row = layout.row()
-        row.prop(self.edit_layer, "description", text="Description")
-        row = layout.row()
-        row.prop(self.edit_layer, "ui_name", text="UI Name")
 
     def execute(self, context):
 

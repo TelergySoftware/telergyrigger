@@ -352,7 +352,7 @@ bpy.ops.tgr.select_layer_bones(layer: int = 0)
 # Set the layer of the selected bones
 # min value is 0 and max is 31
 # Must be in Edit or Pose Mode
-bpy.ops.tgr.set_bones_layer(layer: int = 0)
+bpy.ops.tgr.assign_bones_to_collection(layer: int = 0)
 ```
 
 ```Python

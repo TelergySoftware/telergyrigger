@@ -109,9 +109,8 @@ class TGR_OT_UnbindTGT(bpy.types.Operator):
 
 
 class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
-    """
-    Isolate the rotation of the selected bone.
-    """
+    """Isolate the rotation of the selected bones"""
+    
     bl_idname = "tgr.isolate_bone_rotation"
     bl_label = "Isolate Bone Rotation"
     bl_options = {'REGISTER', 'UNDO'}
@@ -126,6 +125,7 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
         preferences = context.preferences.addons[get_addon_name()].preferences
         tgt_prefix = preferences.tgt_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
+        collections = context.object.tgr_props.armature.data.collections
         # Check if at least one bone is selected
         if not context.selected_pose_bones:
             self.report({"ERROR"}, "No bones selected")
@@ -185,6 +185,8 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
 
         # Change back to pose mode
         bpy.ops.object.mode_set(mode='POSE')
+        
+        mch_collection = collections[preferences.mch_prefix]
 
         # Add copy location and rotation constraints to the MCH-INT- bones, and set the target to the MCH- bones
         for bone_name in mch_int_bone_names:
@@ -201,11 +203,14 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
             constraint.subtarget = pose_bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
             constraint.name = 'ISOLATE ROTATION ROT'
             constraint.influence = 0.0
-            # Send the MCH-INT- and MCH- bones to the layer 2
-            pose_bone.bone.layers = [i == 2 for i in range(len(pose_bone.bone.layers))]
+            # Send the MCH-INT- and MCH- bones to the MCH collection
+            bpy.ops.pose.select_all(action='DESELECT')
+            pose_bone.bone.select = True
             mch_bone = context.object.pose.bones[
                 bone_name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)]
-            mch_bone.bone.layers = [i == 2 for i in range(len(mch_bone.bone.layers))]
+            mch_bone.bone.select = True
+            bpy.ops.armature.move_to_collection(collection=mch_collection.name)
+            bpy.ops.pose.select_all(action='DESELECT')
 
         return {'FINISHED'}
 
@@ -396,15 +401,16 @@ class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
 
 
 class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
-    """
-    Create the IK Pole target by selecting the IK chain first and last bone, and choosing a bone to place the Pole bone.
-    """
+    """Create the IK Pole target by selecting the IK chain first and last bone, and choosing a bone to place the Pole bone"""
     bl_idname = "tgr.create_ik_pole_target"
     bl_label = "Create IK Pole target "
     bl_options = {'REGISTER', 'UNDO'}
 
-    first_bone_name: bpy.props.StringProperty(name="First Bone", description="First bone of the IK chain")
-    last_bone_name: bpy.props.StringProperty(name="To Prefix", description="Last bone of the IK chain")
+    def get_collection_names(self, context):
+        return [(collection.name, collection.name, "") for collection in context.object.tgr_props.armature.data.collections]
+    
+    last_bone_name: bpy.props.StringProperty(name="First Bone", description="Last bone of the IK chain")
+    ik_bone_name: bpy.props.StringProperty(name="To Prefix", description="Bone containing the IK constraint")
     placement_bone_name: bpy.props.StringProperty(name="Constraint Name",
                                                   description="Bone used to get the pole placement")
     chain_name: bpy.props.StringProperty(name="Chain Name", description="Name of this IK chain")
@@ -412,6 +418,8 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
                                                  description="Distance from the pole bole to the placement bone",
                                                  default=[0.0, -0.5, 0.0])
     pole_angle: bpy.props.FloatProperty(name="Pole Angle", min=-180, max=180)
+    collections: bpy.props.EnumProperty(name="Collections", items=get_collection_names)
+    
     @classmethod
     def poll(cls, context):
         is_armature = context.active_object.type == 'ARMATURE'
@@ -426,13 +434,19 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         tgr_props = context.object.tgr_props
         mch_bones = []
         old_cursor_location = context.scene.cursor.location
+        
+        # Check if the active bone colection is visible and store its current state
+        active_collection = armature.data.collections.active
+        active_collection_state = active_collection.is_visible
+        # Set it to visible
+        active_collection.is_visible = True
 
         # Enter edit mode
         bpy.ops.object.mode_set(mode='EDIT')
         # Deselect all bones
         bpy.ops.armature.select_all(action="DESELECT")
         # Duplicate de first bone of the chain to be used as the stretch helper
-        first_bone = armature.data.edit_bones[self.first_bone_name]
+        first_bone = armature.data.edit_bones[self.last_bone_name]
 
         first_bone.select = True
         first_bone.select_head = True
@@ -443,7 +457,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         # Set the duplicated bone tail to the same location as the last bone tail
         stretch_helper = context.selected_editable_bones[0]
         stretch_helper.name = f"{mch_prefix}{self.chain_name}{preferences.separator}STRETCH{preferences.separator}HELPER"
-        last_bone = armature.data.edit_bones[self.last_bone_name]
+        last_bone = armature.data.edit_bones[self.ik_bone_name]
 
         stretch_helper.tail = last_bone.tail
         # Add it to the mch_bones list
@@ -490,21 +504,19 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         pole_bone.parent = int_bone
         # Rename it accordingly
         pole_bone.name = f"{ctrl_prefix}{self.chain_name}{preferences.separator}POLE{preferences.separator}TGT"
-
-        # Remove deform from mch bones
-        for layer in armature.tgr_layer_collection:
-            if layer.ui_name == "MCH":
-                mch_layer_index = layer.index
-                break
-        else:
-            self.report({'ERROR'}, 'MCH layer not found')
-            return {'CANCELLED'}
-
+        
+        # Set MCH bones use_deform to False and send them to the MCH collection
+        mch_collection = armature.data.collections[preferences.mch_prefix]
+        bpy.ops.armature.select_all(action="DESELECT")
         for bone in mch_bones:
             bone.use_deform = False
-            # Send mch bones to the appropriated layer
-            bone.layers = bone_layers_by_number(mch_layer_index)
-
+            # Send mch bones to the appropriated collection
+            bone.select = True
+            bone.select_head = True
+            bone.select_tail = True
+        bpy.ops.armature.move_to_collection(collection=mch_collection.name)
+        bpy.ops.armature.select_all(action="DESELECT")
+        
         # Store bones names to avoid key not found
         stretch_helper_name = stretch_helper.name
         pole_bone_name = pole_bone.name
@@ -515,7 +527,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
 
         # Add stretch to constraint to the stretch helper with the last bone tail as the target
         stretch_helper = armature.pose.bones[stretch_helper_name]
-        last_bone = armature.pose.bones[self.last_bone_name]
+        last_bone = armature.pose.bones[self.ik_bone_name]
 
         for constraint in last_bone.constraints:
             if constraint.type == "IK":
@@ -552,8 +564,17 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         ik_constraint.pole_target = armature
         ik_constraint.pole_subtarget = pole_bone.name
         ik_constraint.pole_angle = math.radians(self.pole_angle)
+        
+        # Send the pole bone to the selected collection
+        bpy.ops.pose.select_all(action="DESELECT")
+        pole_bone.bone.select = True
+        bpy.ops.armature.move_to_collection(collection=self.collections)
+        bpy.ops.pose.select_all(action="DESELECT")
 
         context.scene.cursor.location = old_cursor_location
+        
+        # Set the active collection to its previous state
+        active_collection.is_visible = active_collection_state
 
         return {"FINISHED"}
 
@@ -572,10 +593,10 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         row.label(text="Bones Info:")
 
         row = layout.row()
-        row.prop_search(self, "first_bone_name", armature.data, "bones", text="First Bone", icon='BONE_DATA')
+        row.prop_search(self, "last_bone_name", armature.data, "bones", text="Last Bone", icon='BONE_DATA')
 
         row = layout.row()
-        row.prop_search(self, "last_bone_name", armature.data, "bones", text="Last Bone", icon='BONE_DATA')
+        row.prop_search(self, "ik_bone_name", armature.data, "bones", text="IK Bone", icon='BONE_DATA')
 
         row = layout.row()
         row.prop_search(self, "placement_bone_name", armature.data, "bones", text="Placement Bone", icon='BONE_DATA')
@@ -588,3 +609,9 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
 
         row = layout.row()
         row.prop(self, "pole_angle", text="Pole Angle")
+        
+        row = layout.row()
+        row.label(text="Target Collection:")
+        
+        row = layout.row()
+        row.prop(self, "collections")

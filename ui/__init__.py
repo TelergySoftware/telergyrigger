@@ -17,7 +17,7 @@ from .panels import (
     TGR_PT_View3D_Panel_Utilities_Naming,
     TGR_PT_View3D_Panel_Utilities_Selection,
     # Bone Layers
-    TGR_PT_View3D_Panel_BoneLayers,
+    TGR_PT_View3D_Panel_BoneCollections,
     # Rig UI
     TGR_PT_View3D_Panel_RigUI,
     # Custom Properties
@@ -44,5 +44,5 @@ __all__ = [
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
     # - BONE LAYERS PANELS -
-    TGR_PT_View3D_Panel_BoneLayers,
+    TGR_PT_View3D_Panel_BoneCollections,
 ]

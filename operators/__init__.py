@@ -4,15 +4,15 @@ from .tgr_object_mode_operators import (TGR_OT_AddTGRArmature)
 from .tgr_utilities_operators import (TGR_OT_AddPrefix,
                                       TGR_OT_AddSuffix,
                                       TGR_OT_CleanNameUp,
-                                      TGR_OT_EditLayer,
-                                      TGR_OT_RemoveLayer,
+                                      TGR_OT_RenameCollection,
+                                      TGR_OT_RemoveCollection,
                                       TGR_OT_RemovePrefix,
                                       TGR_OT_RemoveSuffix,
                                       TGR_OT_SelectBonesByName,
-                                      TGR_OT_SelectLayerBones,
-                                      TGR_OT_SetBonesLayer,
-                                      TGR_OT_LockBonesFromLayer,
-                                      TGR_OT_TrackNewLayer)
+                                      TGR_OT_SelectCollectionBones,
+                                      TGR_OT_AssignBonesToCollection,
+                                      TGR_OT_LockBonesFromCollection,
+                                      TGR_OT_NewCollection)
 # Add classes from tgr_edit_mode_operators
 from .tgr_edit_mode_operators import (TGR_OT_AddNonDeformBone,
                                       TGR_OT_AlignBoneToWorld,
@@ -62,12 +62,12 @@ __all__ = [
     TGR_OT_AddPrefix,
     TGR_OT_AddSuffix,
     TGR_OT_CleanNameUp,
-    TGR_OT_EditLayer,
-    TGR_OT_LockBonesFromLayer,
-    TGR_OT_RemoveLayer,
+    TGR_OT_RenameCollection,
+    TGR_OT_LockBonesFromCollection,
+    TGR_OT_RemoveCollection,
     TGR_OT_RemovePrefix,
     TGR_OT_RemoveSuffix,
-    TGR_OT_SelectLayerBones,
-    TGR_OT_SetBonesLayer,
-    TGR_OT_TrackNewLayer
+    TGR_OT_SelectCollectionBones,
+    TGR_OT_AssignBonesToCollection,
+    TGR_OT_NewCollection
 ]
