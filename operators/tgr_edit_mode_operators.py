@@ -370,6 +370,9 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
     def execute(self, context):
         
         if len(selected_bones := context.selected_editable_bones) > 0:
+            # Set active bone collection active
+            active_bone = context.active_bone
+            context.object.tgr_props.armature.data.collections.active_name = active_bone.collections[0].name
             # Check if the active bone colection is visible and store its current state
             active_collection = context.object.tgr_props.armature.data.collections.active
             active_collection_state = active_collection.is_visible
