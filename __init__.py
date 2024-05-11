@@ -99,7 +99,7 @@ bl_info = {
     "author": "Telergy Studio",
     "description": "Supercharge your rigging workflow! Accelerate the process, automate tasks, and unleash your"
                    " creative potential like never before.",
-    "blender": (3, 0, 0),
+    "blender": (4, 0, 0),
     "version": (0, 1, 0),
     "location": "",
     "warning": "Under Heavy Development",
