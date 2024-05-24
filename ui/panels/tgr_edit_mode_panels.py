@@ -53,12 +53,15 @@ class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
         # Create Bones on Points
         row = layout.row()
         row.operator("tgr.bones_on_points", icon='BONE_DATA')
+        
+        row = layout.row()
+        row.operator("tgr.create_switch_chains", icon='BONE_DATA')
 
         row = layout.row()
-        row.operator("tgr.create_tgt", text="Create TGT", icon='BONE_DATA')
+        row.operator("tgr.create_ogr", text="Create OGR", icon='BONE_DATA')
 
         row = layout.row()
-        row.operator("tgr.remove_tgt", text="Remove TGT", icon='BONE_DATA')
+        row.operator("tgr.remove_ogr", text="Remove OGR", icon='BONE_DATA')
 
 
 # Edit Parenting Subpanel

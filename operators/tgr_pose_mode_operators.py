@@ -10,12 +10,12 @@ def update_armature(context):
     context.scene.view_layers.update()
 
 
-class TGR_OT_BindTGT(bpy.types.Operator):
+class TGR_OT_BindOGR(bpy.types.Operator):
     """
-    Binds the TGT bones to the DEF bones.
+    Binds the OGR bones to the DEF bones.
     """
-    bl_idname = "tgr.bind_tgt"
-    bl_label = "Bind TGT"
+    bl_idname = "tgr.bind_ogr"
+    bl_label = "Bind OGR"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -27,45 +27,45 @@ class TGR_OT_BindTGT(bpy.types.Operator):
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
         def_prefix = preferences.def_prefix + preferences.separator
-        tgt_prefix = preferences.tgt_prefix + preferences.separator
+        ogr_prefix = preferences.ogr_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         # Check if there is any selected bones
         if len(context.selected_pose_bones) > 0:
             bones_to_bind = context.selected_pose_bones
         else:
             bones_to_bind = context.object.pose.bones
-        # Check if there are TGT bones for each DEF bone
+        # Check if there are OGR bones for each DEF bone
         for bone in bones_to_bind:
-            if bone.name.startswith(tgt_prefix) or bone.name.startswith(ctrl_prefix):
+            if bone.name.startswith(ogr_prefix) or bone.name.startswith(ctrl_prefix):
                 # Check if there's a DEF bone with the same name
-                if (bone.name.replace(tgt_prefix, def_prefix) not in context.object.pose.bones) and (
+                if (bone.name.replace(ogr_prefix, def_prefix) not in context.object.pose.bones) and (
                         bone.name.replace(ctrl_prefix, def_prefix) not in context.object.pose.bones):
-                    self.report({"ERROR"}, "No TGT or CTRL bone for DEF bone: " + bone.name)
+                    self.report({"ERROR"}, "No OGR or CTRL bone for DEF bone: " + bone.name)
                     return {"CANCELLED"}
 
-        # Bind the TGT bones to the DEF bones
+        # Bind the OGR bones to the DEF bones
         failed_bones = []
         for bone in bones_to_bind:
-            if bone.name.startswith(tgt_prefix) or bone.name.startswith(def_prefix) or \
+            if bone.name.startswith(ogr_prefix) or bone.name.startswith(def_prefix) or \
                     (bone.name.startswith(ctrl_prefix) and not bone.name.startswith(f"{ctrl_prefix}TWEAK")):
                 # Get the DEF bone
                 try:
-                    def_bone = context.object.pose.bones[bone.name.replace(tgt_prefix, def_prefix)]
+                    def_bone = context.object.pose.bones[bone.name.replace(ogr_prefix, def_prefix)]
                     def_bone = context.object.pose.bones[def_bone.name.replace(ctrl_prefix, def_prefix)]
                 except KeyError:
-                    failed_bone = bone.name.replace(tgt_prefix, def_prefix)
+                    failed_bone = bone.name.replace(ogr_prefix, def_prefix)
                     failed_bone = failed_bone.replace(ctrl_prefix, def_prefix)
                     failed_bones.append(failed_bone)
                     continue
 
-                # Bind the TGT bone to the DEF bone
-                if 'TGT' in def_bone.constraints:
-                    def_bone.constraints['TGT'].subtarget = bone.name
+                # Bind the OGR bone to the DEF bone
+                if 'OGR' in def_bone.constraints:
+                    def_bone.constraints['OGR'].subtarget = bone.name
                 else:
                     constraint = def_bone.constraints.new('COPY_TRANSFORMS')
                     constraint.target = context.object.tgr_props.armature
                     constraint.subtarget = bone.name
-                    constraint.name = 'TGT'
+                    constraint.name = 'OGR'
                     # Ensure this constraint is the first one
                     def_bone.constraints.move(len(def_bone.constraints) - 1, 0)
 
@@ -79,12 +79,12 @@ class TGR_OT_BindTGT(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TGR_OT_UnbindTGT(bpy.types.Operator):
+class TGR_OT_UnbindOGR(bpy.types.Operator):
     """
-    Unbinds the TGT bones from the DEF bones
+    Unbinds the OGR bones from the DEF bones
     """
-    bl_idname = "tgr.unbind_tgt"
-    bl_label = "Unbind TGT"
+    bl_idname = "tgr.unbind_ogr"
+    bl_label = "Unbind OGR"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -96,12 +96,12 @@ class TGR_OT_UnbindTGT(bpy.types.Operator):
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
         def_prefix = preferences.def_prefix + preferences.separator
-        # Unbind the TGT bones from the DEF bones
+        # Unbind the OGR bones from the DEF bones
         for bone in context.object.pose.bones:
             if bone.name.startswith(def_prefix):
-                # Unbind the TGT bone from the DEF bone
-                if 'TGT' in bone.constraints:
-                    bone.constraints.remove(bone.constraints['TGT'])
+                # Unbind the OGR bone from the DEF bone
+                if 'OGR' in bone.constraints:
+                    bone.constraints.remove(bone.constraints['OGR'])
 
         # Update the view layer
         update_armature(context)
@@ -123,7 +123,7 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
 
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
-        tgt_prefix = preferences.tgt_prefix + preferences.separator
+        ogr_prefix = preferences.ogr_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         collections = context.object.tgr_props.armature.data.collections
         # Check if at least one bone is selected
@@ -147,11 +147,11 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
         bpy.ops.armature.duplicate()
         bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
 
-        # Replace the TGT- prefix for MCH-INT- prefix and remove the .001 suffix
+        # Replace the OGR- prefix for MCH-INT- prefix and remove the .001 suffix
         mch_int_bone_names = []
         for bone in context.selected_bones:
-            if bone.name.startswith(tgt_prefix):
-                bone.name = bone.name.replace(tgt_prefix, f'{mch_prefix}INT{preferences.separator}')
+            if bone.name.startswith(ogr_prefix):
+                bone.name = bone.name.replace(ogr_prefix, f'{mch_prefix}INT{preferences.separator}')
                 bone.name = bone.name.replace('.001', '')
                 mch_int_bone_names.append(bone.name)
 
@@ -167,11 +167,11 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
                 bone.name = bone.name.replace('.001', '')
                 mch_bones_names.append(bone.name)
 
-        # Change the TGT- prefix for CTRL- prefix and parent them to the MCH-INT- bones
+        # Change the OGR- prefix for CTRL- prefix and parent them to the MCH-INT- bones
         for bone in selected_bones:
             bone.use_connect = False
             bone.parent = context.object.data.edit_bones[
-                bone.name.replace(tgt_prefix, f'{mch_prefix}INT{preferences.separator}')]
+                bone.name.replace(ogr_prefix, f'{mch_prefix}INT{preferences.separator}')]
 
         # Parent the MCH-INT- bones to the ROOT bone
         root_bone = context.object.tgr_props.root_bone
@@ -209,7 +209,7 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
             mch_bone = context.object.pose.bones[
                 bone_name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)]
             mch_bone.bone.select = True
-            bpy.ops.armature.move_to_collection(collection=mch_collection.name)
+            bpy.ops.armature.collection_assign(name=mch_collection.name)
             bpy.ops.pose.select_all(action='DESELECT')
 
         return {'FINISHED'}

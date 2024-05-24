@@ -6,31 +6,6 @@ class TGR_Properties(bpy.types.PropertyGroup):
     General properties to be used by the addon.
     """
     # ---- MAIN PROPERTIES ----
-    # -- Naming --
-
-    def_prefix: bpy.props.StringProperty(
-        name="Prefix",
-        description="Prefix to be added to the deform bones.",
-        default="DEF-",
-    )
-
-    tgt_prefix: bpy.props.StringProperty(
-        name="Prefix",
-        description="Prefix to be added to the target bones.",
-        default="TGT-",
-    )
-
-    mch_prefix: bpy.props.StringProperty(
-        name="Prefix",
-        description="Prefix to be added to the mechanism bones.",
-        default="MCH-",
-    )
-
-    ctrl_prefix: bpy.props.StringProperty(
-        name="Prefix",
-        description="Prefix to be added to the control bones.",
-        default="CTRL-",
-    )
     # ---- EDIT MODE ----
     armature: bpy.props.PointerProperty(
         name="Armature",

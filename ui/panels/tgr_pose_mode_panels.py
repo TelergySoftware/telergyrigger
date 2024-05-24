@@ -19,13 +19,13 @@ class TGR_PT_View3D_Panel_PoseMode(TGR_PT_BASE):
         pass
 
 
-# Pose TGT Subpanel
-class TGR_PT_View3D_Panel_PoseMode_TGT(TGR_PT_BASE):
+# Pose OGR Subpanel
+class TGR_PT_View3D_Panel_PoseMode_OGR(TGR_PT_BASE):
     """
     Creates the subpanel for the Addon in Pose Mode
     """
-    bl_label = "TGT"
-    bl_idname = "TGR_PT_View3D_Panel_PoseMode_TGT"
+    bl_label = "OGR"
+    bl_idname = "TGR_PT_View3D_Panel_PoseMode_OGR"
     bl_parent_id = "TGR_PT_View3D_Panel_PoseMode"
 
     @classmethod
@@ -36,12 +36,12 @@ class TGR_PT_View3D_Panel_PoseMode_TGT(TGR_PT_BASE):
 
     def draw(self, context):
         layout = self.layout
-        # Bind and Unbind TGT bones
+        # Bind and Unbind OGR bones
         row = layout.row()
-        row.operator("tgr.bind_tgt", icon='LOCKED')
+        row.operator("tgr.bind_ogr", icon='LOCKED')
 
         row = layout.row()
-        row.operator("tgr.unbind_tgt", icon='UNLOCKED')
+        row.operator("tgr.unbind_ogr", icon='UNLOCKED')
 
 
 # Pose Constraints Subpanel
@@ -64,7 +64,7 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
     def draw(self, context):
         layout = self.layout
 
-        # Isolate TGT bone rotation
+        # Isolate OGR bone rotation
         row = layout.row()
         row.operator("tgr.isolate_bone_rotation", icon='UNLINKED', text="Isolate Rotation")
 

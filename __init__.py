@@ -22,21 +22,22 @@ from .operators import (
     TGR_OT_AlignBoneToWorld,
     TGR_OT_BoneOnPoints,
     TGR_OT_ConnectBones,
-    TGR_OT_CreateTGT,
-    TGR_OT_RemoveTGT,
+    TGR_OT_CreateSwitchChains,
+    TGR_OT_CreateOGR,
+    TGR_OT_RemoveOGR,
     TGR_OT_ParentToRoot,
     TGR_OT_CopyTransforms,
 )
 
 from .operators import (
-    TGR_OT_BindTGT,
+    TGR_OT_BindOGR,
     TGR_OT_CopyTransformsToChain,
     TGR_OT_CreateIkFkSwitchChain,
     TGR_OT_CreateIKPoleTarget,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
     TGR_OT_IsolateBoneRotation,
-    TGR_OT_UnbindTGT
+    TGR_OT_UnbindOGR
 )
 
 from .operators import (
@@ -63,7 +64,7 @@ from .ui import (
 )
 # Pose Mode panels
 from .ui import (
-    TGR_PT_View3D_Panel_PoseMode_TGT,
+    TGR_PT_View3D_Panel_PoseMode_OGR,
     TGR_PT_View3D_Panel_PoseMode_Constraints
 )
 # Utilities panel
@@ -117,7 +118,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_AddSuffix,
     TGR_OT_AddTGRArmature,
     TGR_OT_AlignBoneToWorld,
-    TGR_OT_BindTGT,
+    TGR_OT_BindOGR,
     TGR_OT_BoneOnPoints,
     TGR_OT_CleanNameUp,
     TGR_OT_ConnectBones,
@@ -127,7 +128,8 @@ CLASSES_TO_REGISTER = (
     TGR_OT_CreateIkFkSwitchChain,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
-    TGR_OT_CreateTGT,
+    TGR_OT_CreateSwitchChains,
+    TGR_OT_CreateOGR,
     TGR_OT_RenameCollection,
     TGR_OT_GenerateUI,
     TGR_OT_IsolateBoneRotation,
@@ -140,12 +142,12 @@ CLASSES_TO_REGISTER = (
     TGR_OT_RemoveCollection,
     TGR_OT_RemovePrefix,
     TGR_OT_RemoveSuffix,
-    TGR_OT_RemoveTGT,
+    TGR_OT_RemoveOGR,
     TGR_OT_SelectBonesByName,
     TGR_OT_SelectCollectionBones,
     TGR_OT_AssignBonesToCollection,
     TGR_OT_NewCollection,
-    TGR_OT_UnbindTGT,
+    TGR_OT_UnbindOGR,
     # Panels
     TGR_PT_View3D_Panel_BoneCollections,
     TGR_PT_View3D_Panel_CustomProperties,
@@ -155,7 +157,7 @@ CLASSES_TO_REGISTER = (
     TGR_PT_View3D_Panel_EditMode_Utilities,
     TGR_PT_View3D_Panel_PoseMode,
     TGR_PT_View3D_Panel_PoseMode_Constraints,
-    TGR_PT_View3D_Panel_PoseMode_TGT,
+    TGR_PT_View3D_Panel_PoseMode_OGR,
     # TGR_PT_View3D_Panel_RigUI,
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,

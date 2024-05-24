@@ -1,4 +1,5 @@
 import bpy
+from mathutils import Vector
 
 from ..utils import change_bones_prefix, bone_layers_by_number, set_bones_deform, get_addon_name
 
@@ -8,7 +9,7 @@ def update_armature(context):
     context.active_object.data.bones.update()
 
 
-def create_tgt(context):
+def create_ogr(context):
     tgr_props = context.object.tgr_props
     collections = context.object.tgr_props.armature.data.collections
     preferences = context.preferences.addons[get_addon_name()].preferences
@@ -21,50 +22,50 @@ def create_tgt(context):
     root_bone.select_tail = False
     # Duplicate selected bones
     bpy.ops.armature.duplicate()
-    # Change bone prefix to the tgt_prefix
+    # Change bone prefix to the ogr_prefix
     def_prefix = preferences.def_prefix + preferences.separator
-    tgt_prefix = preferences.tgt_prefix + preferences.separator
-    change_bones_prefix(context.selected_bones, def_prefix, tgt_prefix)
-    # Move the duplicated bones to the tgt_layer
-    tgt_collection = collections[preferences.tgt_prefix]
+    ogr_prefix = preferences.ogr_prefix + preferences.separator
+    change_bones_prefix(context.selected_bones, def_prefix, ogr_prefix)
+    # Move the duplicated bones to the ogr_layer
+    ogr_collection = collections[preferences.ogr_prefix]
     # Set bones deform to False
     set_bones_deform(context.selected_bones, False)
-    bpy.ops.armature.move_to_collection(collection=tgt_collection.name)
+    bpy.ops.armature.collection_assign(name=ogr_collection.name)
     update_armature(context)
 
 
-def create_tgt_with_selection(self, context):
+def create_ogr_with_selection(self, context):
     """
-    Create TGT bones strategy for selected bones.
+    Create OGR bones strategy for selected bones.
     """
     preferences = context.preferences.addons[get_addon_name()].preferences
     # Get armature
     armature = context.object.tgr_props.armature
-    # Create the TGT bones
-    create_tgt(context)
+    # Create the OGR bones
+    create_ogr(context)
     def_prefix = preferences.def_prefix + preferences.separator
-    tgt_prefix = preferences.tgt_prefix + preferences.separator
-    # Check bones parents to see if they are all TGT bones
-    # Also check the children of the TGT bones
+    ogr_prefix = preferences.ogr_prefix + preferences.separator
+    # Check bones parents to see if they are all OGR bones
+    # Also check the children of the OGR bones
     for bone in context.selected_bones:
         if not bone.parent:
             continue
-        if not bone.parent.name.startswith(tgt_prefix):
-            # Check if there is a TGT bone with the same name
+        if not bone.parent.name.startswith(ogr_prefix):
+            # Check if there is a OGR bone with the same name
             try:
-                bone_name = bone.parent.name.replace(def_prefix, tgt_prefix)
+                bone_name = bone.parent.name.replace(def_prefix, ogr_prefix)
                 new_parent = armature.data.edit_bones[bone_name]
                 bone.parent = new_parent
             except KeyError:
-                # If there is no TGT bone with the same name, then keep the original parent
+                # If there is no OGR bone with the same name, then keep the original parent
                 pass
         if not bone.children:
             # Check if the DEF bone has a child
-            def_bone_name = bone.name.replace(tgt_prefix, def_prefix)
+            def_bone_name = bone.name.replace(ogr_prefix, def_prefix)
             def_bone = armature.data.edit_bones[def_bone_name]
             for child in def_bone.children:
                 try:
-                    child_name = child.name.replace(def_prefix, tgt_prefix)
+                    child_name = child.name.replace(def_prefix, ogr_prefix)
                     child = armature.data.edit_bones[child_name]
                     child.parent = bone
                 except KeyError:
@@ -73,9 +74,9 @@ def create_tgt_with_selection(self, context):
     return
 
 
-def create_tgt_with_all(self, context):
+def create_ogr_with_all(self, context):
     """
-    Create TGT bones strategy for all bones.
+    Create OGR bones strategy for all bones.
     """
     preferences = context.preferences.addons[get_addon_name()].preferences
     def_prefix = preferences.def_prefix + preferences.separator
@@ -89,16 +90,16 @@ def create_tgt_with_all(self, context):
             bone.select = True
             bone.select_head = True
             bone.select_tail = True
-    # Create the TGT bones
-    create_tgt(context)
+    # Create the OGR bones
+    create_ogr(context)
     return
 
 
-class TGR_OT_CreateTGT(bpy.types.Operator):
-    """Create the TGT bones for the selected armature"""
+class TGR_OT_CreateOGR(bpy.types.Operator):
+    """Create the OGR bones for the selected armature"""
     
-    bl_idname = "tgr.create_tgt"
-    bl_label = "Create TGT"
+    bl_idname = "tgr.create_ogr"
+    bl_label = "Create OGR"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -113,9 +114,9 @@ class TGR_OT_CreateTGT(bpy.types.Operator):
             self.report({"ERROR"}, "Armature not set")
             return {"CANCELLED"}
         if context.selected_bones:
-            create_tgt_with_selection(self, context)
+            create_ogr_with_selection(self, context)
         else:
-            create_tgt_with_all(self, context)
+            create_ogr_with_all(self, context)
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
         # Update the armature
@@ -124,12 +125,12 @@ class TGR_OT_CreateTGT(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class TGR_OT_RemoveTGT(bpy.types.Operator):
+class TGR_OT_RemoveOGR(bpy.types.Operator):
     """
-    Remove the TGT bones from the selected armature.
+    Remove the OGR bones from the selected armature.
     """
-    bl_idname = "tgr.remove_tgt"
-    bl_label = "Remove TGT"
+    bl_idname = "tgr.remove_ogr"
+    bl_label = "Remove OGR"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -140,17 +141,17 @@ class TGR_OT_RemoveTGT(bpy.types.Operator):
 
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
-        tgt_prefix = preferences.tgt_prefix + preferences.separator
+        ogr_prefix = preferences.ogr_prefix + preferences.separator
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
-        # Select all TGT bones
+        # Select all OGR bones
         armature = context.object.tgr_props.armature
         if not armature:
             self.report({"ERROR"}, "Armature not set")
             return {"CANCELLED"}
 
         for bone in armature.data.edit_bones:
-            if bone.name.startswith(tgt_prefix):
+            if bone.name.startswith(ogr_prefix):
                 bone.select = True
                 bone.select_head = True
                 bone.select_tail = True
@@ -456,3 +457,96 @@ class TGR_OT_CopyTransforms(bpy.types.Operator):
             return {'FINISHED'}
         else:
             return {'CANCELLED'}
+
+
+class TGR_OT_CreateSwitchChains(bpy.types.Operator):
+    """
+    Create switch chains for the selected bones.
+    """
+    bl_idname = "tgr.create_switch_chains"
+    bl_label = "Create Switch Chains"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    separation: bpy.props.FloatVectorProperty(name="Separation", description="Separation between the bones",
+                                              default=(1.0, 0, 0), size=3)
+    
+    @classmethod
+    def poll(cls, context):
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_edit_mode = context.active_object.mode == 'EDIT'
+        return is_armature and is_edit_mode
+
+    def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        ogr_prefix = preferences.ogr_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        
+        separation = Vector(self.separation)
+
+        # Get the selected bones
+        selected_bones = context.selected_bones
+        # Check if there are at least two bones selected
+        if len(selected_bones) < 2:
+            self.report({"ERROR"}, "Select at least two bones")
+            return {"CANCELLED"}
+        # Loop through the selected bones
+        for bone in selected_bones:
+            # Check if the bone is a DEF bone
+            if bone.name.startswith(def_prefix):
+                self.report({"ERROR"}, "Cannot create switch chains for DEF bones")
+                return {"CANCELLED"}
+        
+        # Duplicate the selected bones
+        bpy.ops.armature.duplicate()
+        # Change bone prefix to the mch_prefix + "SWITCH" and move them using the separation
+        for bone in context.selected_bones:
+            if bone.name.startswith(ogr_prefix):
+                bone.name = bone.name.replace(ogr_prefix, mch_prefix + "SWITCH" + preferences.separator)
+            elif bone.name.startswith(ctrl_prefix):
+                bone.name = bone.name.replace(ctrl_prefix, mch_prefix + "SWITCH" + preferences.separator)
+            elif bone.name.startswith(mch_prefix):
+                bone.name = bone.name.replace(mch_prefix, mch_prefix + "SWITCH" + preferences.separator)
+            
+            # Remove the .### from the bone name
+            bone.name = bone.name[:-4]
+            
+            bone.head += separation
+            if len(bone.children) == 0 or not bone.children[0].use_connect:
+                bone.tail += separation 
+        
+        # Duplicate the selected bones
+        bpy.ops.armature.duplicate()
+        # Change bone prefix to the ctrl_prefix + "FK" and move them using the separation
+        for bone in context.selected_bones:
+           
+            bone.name = bone.name.replace(mch_prefix + "SWITCH", ctrl_prefix + "FK")
+            
+            # Remove the .### from the bone name
+            bone.name = bone.name[:-4]
+            
+            bone.head += separation
+            if len(bone.children) == 0 or not bone.children[0].use_connect:
+                bone.tail += separation
+        
+        # Duplicate the selected bones
+        bpy.ops.armature.duplicate()
+        # Change bone prefix to the mch_prefix + "IK" and move them using the separation
+        for bone in context.selected_bones:
+            bone.name = bone.name.replace(ctrl_prefix + "FK", mch_prefix + "IK")
+            
+            # Remove the .### from the bone name
+            bone.name = bone.name[:-4]
+            
+            bone.head += separation
+            if len(bone.children) == 0 or not bone.children[0].use_connect:
+                bone.tail += separation
+            
+        
+        # Update the armature
+        update_armature(context)
+        # Finish
+        return {"FINISHED"}
+        
+        
