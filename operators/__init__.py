@@ -31,7 +31,7 @@ from .tgr_pose_mode_operators import (TGR_OT_BindOGR,
                                       TGR_OT_CreateIKPoleTarget,
                                       TGR_OT_CreateRotationChain,
                                       TGR_OT_CreateStretchToChain,
-                                      TGR_OT_IsolateBoneRotation,
+                                      TGR_OT_IsolateBone,
                                       TGR_OT_UnbindOGR)
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (TGR_OT_GenerateUI,
@@ -57,7 +57,7 @@ __all__ = [
     TGR_OT_CreateIkFkSwitchChain,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
-    TGR_OT_IsolateBoneRotation,
+    TGR_OT_IsolateBone,
     TGR_OT_UnbindOGR,
     # Utilities Operators
     TGR_OT_AddPrefix,

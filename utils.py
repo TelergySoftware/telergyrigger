@@ -2,6 +2,17 @@
 Utility functions
 """
 import os
+import bpy
+
+def get_collection_index(name: str) -> tuple[int, bool]:
+    """
+    Return the index of a collection by name.
+    """
+    try:
+        collection = bpy.context.active_object.data.collections_all[name]
+        return collection.index, True
+    except KeyError:
+        return -1, False
 
 
 def get_addon_name():
@@ -41,17 +52,3 @@ def set_bones_deform(bones, deform: bool):
     """
     for bone in bones:
         bone.use_deform = deform
-
-
-def bone_layers_by_number(layer_number: int) -> list:
-    """
-    Return a list of boolean values, representing the layers of a bone.
-    """
-    if layer_number < 0 or layer_number > 31:
-        raise ValueError("Layer number must be between 0 and 31.")
-
-    layers = []
-    for i in range(32):
-        layers.append(bool(layer_number == i))
-
-    return layers

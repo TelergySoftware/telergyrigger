@@ -66,7 +66,7 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
 
         # Isolate OGR bone rotation
         row = layout.row()
-        row.operator("tgr.isolate_bone_rotation", icon='UNLINKED', text="Isolate Rotation")
+        row.operator("tgr.isolate_bone", icon='UNLINKED', text="Isolate Bone")
 
         # Create Rotation Chain
         row = layout.row()

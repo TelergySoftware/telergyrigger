@@ -1,6 +1,6 @@
 import bpy
 
-from ..utils import bone_layers_by_number, get_addon_name
+from ..utils import get_addon_name
 
 
 # ------------- ADD PREFIX OR SUFFIX -------------

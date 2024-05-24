@@ -36,7 +36,7 @@ from .operators import (
     TGR_OT_CreateIKPoleTarget,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateStretchToChain,
-    TGR_OT_IsolateBoneRotation,
+    TGR_OT_IsolateBone,
     TGR_OT_UnbindOGR
 )
 
@@ -132,7 +132,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_CreateOGR,
     TGR_OT_RenameCollection,
     TGR_OT_GenerateUI,
-    TGR_OT_IsolateBoneRotation,
+    TGR_OT_IsolateBone,
     TGR_OT_LockBonesFromCollection,
     TGR_OT_ParentToRoot,
     TGR_OT_RIG_UI_AddComponent,

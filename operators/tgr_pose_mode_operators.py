@@ -1,7 +1,7 @@
 import bpy
 import math
 from mathutils import Vector
-from ..utils import bone_layers_by_number, get_addon_name
+from ..utils import get_addon_name, get_collection_index
 
 
 def update_armature(context):
@@ -108,12 +108,16 @@ class TGR_OT_UnbindOGR(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
-    """Isolate the rotation of the selected bones"""
+class TGR_OT_IsolateBone(bpy.types.Operator):
+    """Isolate the selected bones from their parent transforms"""
     
-    bl_idname = "tgr.isolate_bone_rotation"
-    bl_label = "Isolate Bone Rotation"
+    bl_idname = "tgr.isolate_bone"
+    bl_label = "Isolate Bones"
     bl_options = {'REGISTER', 'UNDO'}
+    
+    isolate_location: bpy.props.BoolProperty(name="Isolate Location", default=False)
+    isolate_rotation: bpy.props.BoolProperty(name="Isolate Rotation", default=True)
+    isolate_scale: bpy.props.BoolProperty(name="Isolate Scale", default=True)
 
     @classmethod
     def poll(cls, context):
@@ -124,11 +128,12 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
         ogr_prefix = preferences.ogr_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         collections = context.object.tgr_props.armature.data.collections
         # Check if at least one bone is selected
         if not context.selected_pose_bones:
-            self.report({"ERROR"}, "No bones selected")
+            self.report({"WARNING"}, "No bones selected")
             return {"CANCELLED"}
 
         # Change the mode to edit mode
@@ -140,77 +145,69 @@ class TGR_OT_IsolateBoneRotation(bpy.types.Operator):
         # Set the mirror mode to off
         bpy.context.object.data.use_mirror_x = False
 
-        # Get the selected bones
-        selected_bones = context.selected_bones
-
         # Duplicate the selected bones and resize them to 50%
         bpy.ops.armature.duplicate()
         bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
 
-        # Replace the OGR- prefix for MCH-INT- prefix and remove the .001 suffix
-        mch_int_bone_names = []
+        bone_pair_names = []
         for bone in context.selected_bones:
+            # Get the parent bone
+            ctrl_bone = context.object.data.edit_bones[bone.name[:-4]]
+            parent = ctrl_bone.parent
+            # Replace the OGR or CTRL prefix for MCH-INT- prefix and remove the .001 suffix,
             if bone.name.startswith(ogr_prefix):
                 bone.name = bone.name.replace(ogr_prefix, f'{mch_prefix}INT{preferences.separator}')
                 bone.name = bone.name.replace('.001', '')
-                mch_int_bone_names.append(bone.name)
-
-        # Duplicate the selected bones and resize them to 50%
-        bpy.ops.armature.duplicate()
-        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
-
-        # Replace the MCH-INT- prefix for MCH- prefix and remove the .001 suffix
-        mch_bones_names = []
-        for bone in context.selected_bones:
-            if bone.name.startswith(f'{mch_prefix}INT{preferences.separator}'):
-                bone.name = bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
+            elif bone.name.startswith(ctrl_prefix):
+                bone.name = bone.name.replace(ctrl_prefix, f'{mch_prefix}INT{preferences.separator}')
                 bone.name = bone.name.replace('.001', '')
-                mch_bones_names.append(bone.name)
-
-        # Change the OGR- prefix for CTRL- prefix and parent them to the MCH-INT- bones
-        for bone in selected_bones:
-            bone.use_connect = False
-            bone.parent = context.object.data.edit_bones[
-                bone.name.replace(ogr_prefix, f'{mch_prefix}INT{preferences.separator}')]
-
-        # Parent the MCH-INT- bones to the ROOT bone
-        root_bone = context.object.tgr_props.root_bone
-        for bone_name in mch_int_bone_names:
-            bone = context.object.data.edit_bones[bone_name]
-            bone.use_connect = False
-            bone.parent = context.object.data.edit_bones[root_bone]
-
-        # Change mirror mode to the original value
+                
+            # Add the bone pair to the list
+            bone_pair_names.append({'mch': bone.name, 'parent': parent.name})
+            
+            # Set the parent of the MCH-INT- bone to be the root bone
+            bpy.ops.tgr.parent_to_root()
+            # Move the MCH-INT- bone to the tail of the parent bone
+            distance_vector = bone.head - parent.tail
+            bone.head -= distance_vector
+            bone.tail -= distance_vector
+            # Align the bone to the parent bone
+            parent_head_tail_vector = (parent.head - parent.tail).normalized()
+            bone.tail = bone.head - parent_head_tail_vector * bone.length
+            bone.roll = parent.roll
+            # Set the current bone as the partent of the ctrl bone
+            ctrl_bone.use_connect = False
+            ctrl_bone.parent = bone
+            # Send the bone to the MCH collection
+            collection_index, _ = get_collection_index(preferences.mch_prefix)
+            bpy.ops.armature.move_to_collection(collection_index=collection_index)
+        
+        # Set mirror mode back to the original state
         bpy.context.object.data.use_mirror_x = mirror_mode
-
-        # Change back to pose mode
+        # Change the mode to pose mode
         bpy.ops.object.mode_set(mode='POSE')
         
-        mch_collection = collections[preferences.mch_prefix]
-
-        # Add copy location and rotation constraints to the MCH-INT- bones, and set the target to the MCH- bones
-        for bone_name in mch_int_bone_names:
-            # Get the pose bone
-            pose_bone = context.object.pose.bones[bone_name]
-            # Add copy location constraint
-            constraint = pose_bone.constraints.new('COPY_LOCATION')
+        # Add the constraints to the MCH-INT- bones
+        for bone_pair in bone_pair_names:
+            mch_bone = context.object.pose.bones[bone_pair['mch']]
+            parent = context.object.pose.bones[bone_pair['parent']]
+            
+            # Add the copy location constraint
+            constraint = mch_bone.constraints.new('COPY_LOCATION')
             constraint.target = context.object
-            constraint.subtarget = pose_bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
-            constraint.name = 'ISOLATE ROTATION LOC'
-            # Add copy rotation constraint
-            constraint = pose_bone.constraints.new('COPY_ROTATION')
+            constraint.subtarget = parent.name
+            constraint.head_tail = 1
+            constraint.influence = 1 if not self.isolate_location else 0
+            # Add the copy rotation constraint
+            constraint = mch_bone.constraints.new('COPY_ROTATION')
             constraint.target = context.object
-            constraint.subtarget = pose_bone.name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)
-            constraint.name = 'ISOLATE ROTATION ROT'
-            constraint.influence = 0.0
-            # Send the MCH-INT- and MCH- bones to the MCH collection
-            bpy.ops.pose.select_all(action='DESELECT')
-            pose_bone.bone.select = True
-            mch_bone = context.object.pose.bones[
-                bone_name.replace(f'{mch_prefix}INT{preferences.separator}', mch_prefix)]
-            mch_bone.bone.select = True
-            bpy.ops.armature.collection_assign(name=mch_collection.name)
-            bpy.ops.pose.select_all(action='DESELECT')
+            constraint.subtarget = parent.name
+            constraint.influence = 1 if not self.isolate_rotation else 0
+            # Add the copy scale constraint
+            constraint = mch_bone.constraints.new('COPY_SCALE')
+            constraint.target = context.object
+            constraint.subtarget = parent.name
+            constraint.influence = 1 if not self.isolate_scale else 0
 
         return {'FINISHED'}
 
