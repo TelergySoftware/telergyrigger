@@ -10,12 +10,12 @@ def update_armature(context):
     context.scene.view_layers.update()
 
 
-class TGR_OT_BindOGR(bpy.types.Operator):
+class TGR_OT_BindORG(bpy.types.Operator):
     """
-    Binds the OGR bones to the DEF bones.
+    Binds the ORG bones to the DEF bones.
     """
-    bl_idname = "tgr.bind_ogr"
-    bl_label = "Bind OGR"
+    bl_idname = "tgr.bind_org"
+    bl_label = "Bind ORG"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -27,45 +27,45 @@ class TGR_OT_BindOGR(bpy.types.Operator):
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
         def_prefix = preferences.def_prefix + preferences.separator
-        ogr_prefix = preferences.ogr_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         # Check if there is any selected bones
         if len(context.selected_pose_bones) > 0:
             bones_to_bind = context.selected_pose_bones
         else:
             bones_to_bind = context.object.pose.bones
-        # Check if there are OGR bones for each DEF bone
+        # Check if there are ORG bones for each DEF bone
         for bone in bones_to_bind:
-            if bone.name.startswith(ogr_prefix) or bone.name.startswith(ctrl_prefix):
+            if bone.name.startswith(org_prefix) or bone.name.startswith(ctrl_prefix):
                 # Check if there's a DEF bone with the same name
-                if (bone.name.replace(ogr_prefix, def_prefix) not in context.object.pose.bones) and (
+                if (bone.name.replace(org_prefix, def_prefix) not in context.object.pose.bones) and (
                         bone.name.replace(ctrl_prefix, def_prefix) not in context.object.pose.bones):
-                    self.report({"ERROR"}, "No OGR or CTRL bone for DEF bone: " + bone.name)
+                    self.report({"ERROR"}, "No ORG or CTRL bone for DEF bone: " + bone.name)
                     return {"CANCELLED"}
 
-        # Bind the OGR bones to the DEF bones
+        # Bind the ORG bones to the DEF bones
         failed_bones = []
         for bone in bones_to_bind:
-            if bone.name.startswith(ogr_prefix) or bone.name.startswith(def_prefix) or \
+            if bone.name.startswith(org_prefix) or bone.name.startswith(def_prefix) or \
                     (bone.name.startswith(ctrl_prefix) and not bone.name.startswith(f"{ctrl_prefix}TWEAK")):
                 # Get the DEF bone
                 try:
-                    def_bone = context.object.pose.bones[bone.name.replace(ogr_prefix, def_prefix)]
+                    def_bone = context.object.pose.bones[bone.name.replace(org_prefix, def_prefix)]
                     def_bone = context.object.pose.bones[def_bone.name.replace(ctrl_prefix, def_prefix)]
                 except KeyError:
-                    failed_bone = bone.name.replace(ogr_prefix, def_prefix)
+                    failed_bone = bone.name.replace(org_prefix, def_prefix)
                     failed_bone = failed_bone.replace(ctrl_prefix, def_prefix)
                     failed_bones.append(failed_bone)
                     continue
 
-                # Bind the OGR bone to the DEF bone
-                if 'OGR' in def_bone.constraints:
-                    def_bone.constraints['OGR'].subtarget = bone.name
+                # Bind the ORG bone to the DEF bone
+                if 'ORG' in def_bone.constraints:
+                    def_bone.constraints['ORG'].subtarget = bone.name
                 else:
                     constraint = def_bone.constraints.new('COPY_TRANSFORMS')
                     constraint.target = context.object.tgr_props.armature
                     constraint.subtarget = bone.name
-                    constraint.name = 'OGR'
+                    constraint.name = 'ORG'
                     # Ensure this constraint is the first one
                     def_bone.constraints.move(len(def_bone.constraints) - 1, 0)
 
@@ -79,12 +79,12 @@ class TGR_OT_BindOGR(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TGR_OT_UnbindOGR(bpy.types.Operator):
+class TGR_OT_UnbindORG(bpy.types.Operator):
     """
-    Unbinds the OGR bones from the DEF bones
+    Unbinds the ORG bones from the DEF bones
     """
-    bl_idname = "tgr.unbind_ogr"
-    bl_label = "Unbind OGR"
+    bl_idname = "tgr.unbind_org"
+    bl_label = "Unbind ORG"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -96,12 +96,12 @@ class TGR_OT_UnbindOGR(bpy.types.Operator):
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
         def_prefix = preferences.def_prefix + preferences.separator
-        # Unbind the OGR bones from the DEF bones
+        # Unbind the ORG bones from the DEF bones
         for bone in context.object.pose.bones:
             if bone.name.startswith(def_prefix):
-                # Unbind the OGR bone from the DEF bone
-                if 'OGR' in bone.constraints:
-                    bone.constraints.remove(bone.constraints['OGR'])
+                # Unbind the ORG bone from the DEF bone
+                if 'ORG' in bone.constraints:
+                    bone.constraints.remove(bone.constraints['ORG'])
 
         # Update the view layer
         update_armature(context)
@@ -127,7 +127,7 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
 
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
-        ogr_prefix = preferences.ogr_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         collections = context.object.tgr_props.armature.data.collections
@@ -154,9 +154,9 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
             # Get the parent bone
             ctrl_bone = context.object.data.edit_bones[bone.name[:-4]]
             parent = ctrl_bone.parent
-            # Replace the OGR or CTRL prefix for MCH-INT- prefix and remove the .001 suffix,
-            if bone.name.startswith(ogr_prefix):
-                bone.name = bone.name.replace(ogr_prefix, f'{mch_prefix}INT{preferences.separator}')
+            # Replace the ORG or CTRL prefix for MCH-INT- prefix and remove the .001 suffix,
+            if bone.name.startswith(org_prefix):
+                bone.name = bone.name.replace(org_prefix, f'{mch_prefix}INT{preferences.separator}')
                 bone.name = bone.name.replace('.001', '')
             elif bone.name.startswith(ctrl_prefix):
                 bone.name = bone.name.replace(ctrl_prefix, f'{mch_prefix}INT{preferences.separator}')

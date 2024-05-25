@@ -58,10 +58,10 @@ class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
         row.operator("tgr.create_switch_chains", icon='BONE_DATA')
 
         row = layout.row()
-        row.operator("tgr.create_ogr", text="Create OGR", icon='BONE_DATA')
+        row.operator("tgr.create_org", text="Create ORG", icon='BONE_DATA')
 
         row = layout.row()
-        row.operator("tgr.remove_ogr", text="Remove OGR", icon='BONE_DATA')
+        row.operator("tgr.remove_org", text="Remove ORG", icon='BONE_DATA')
 
 
 # Edit Parenting Subpanel

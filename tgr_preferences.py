@@ -10,10 +10,10 @@ class TGR_Preferences(bpy.types.AddonPreferences):
         default="DEF"
     )
 
-    ogr_prefix: bpy.props.StringProperty(
+    org_prefix: bpy.props.StringProperty(
         name="Target Prefix",
         description="Prefix to be used on the target bones",
-        default="OGR"
+        default="ORG"
     )
 
     mch_prefix: bpy.props.StringProperty(
@@ -52,7 +52,7 @@ class TGR_Preferences(bpy.types.AddonPreferences):
         row.prop(self, "def_prefix")
 
         row = box.row()
-        row.prop(self, "ogr_prefix")
+        row.prop(self, "org_prefix")
 
         row = box.row()
         row.prop(self, "mch_prefix")

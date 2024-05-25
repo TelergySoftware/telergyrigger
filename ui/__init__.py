@@ -10,7 +10,7 @@ from .panels import (
     TGR_PT_View3D_Panel_EditMode_Utilities,
     # Pose Mode
     TGR_PT_View3D_Panel_PoseMode,
-    TGR_PT_View3D_Panel_PoseMode_OGR,
+    TGR_PT_View3D_Panel_PoseMode_ORG,
     TGR_PT_View3D_Panel_PoseMode_Constraints,
     # Utilities
     TGR_PT_View3D_Panel_Utilities,
@@ -39,7 +39,7 @@ __all__ = [
     TGR_PT_View3D_Panel_EditMode_Utilities,
     # - POSE MODE PANELS -
     TGR_PT_View3D_Panel_PoseMode,
-    TGR_PT_View3D_Panel_PoseMode_OGR,
+    TGR_PT_View3D_Panel_PoseMode_ORG,
     # - UTILITIES PANELS -
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,

@@ -9,7 +9,7 @@ def update_armature(context):
     context.active_object.data.bones.update()
 
 
-def create_ogr(context):
+def create_org(context):
     tgr_props = context.object.tgr_props
     collections = context.object.tgr_props.armature.data.collections
     preferences = context.preferences.addons[get_addon_name()].preferences
@@ -22,50 +22,50 @@ def create_ogr(context):
     root_bone.select_tail = False
     # Duplicate selected bones
     bpy.ops.armature.duplicate()
-    # Change bone prefix to the ogr_prefix
+    # Change bone prefix to the org_prefix
     def_prefix = preferences.def_prefix + preferences.separator
-    ogr_prefix = preferences.ogr_prefix + preferences.separator
-    change_bones_prefix(context.selected_bones, def_prefix, ogr_prefix)
-    # Move the duplicated bones to the ogr_layer
-    ogr_collection = collections[preferences.ogr_prefix]
+    org_prefix = preferences.org_prefix + preferences.separator
+    change_bones_prefix(context.selected_bones, def_prefix, org_prefix)
+    # Move the duplicated bones to the org_layer
+    org_collection = collections[preferences.org_prefix]
     # Set bones deform to False
     set_bones_deform(context.selected_bones, False)
-    bpy.ops.armature.collection_assign(name=ogr_collection.name)
+    bpy.ops.armature.collection_assign(name=org_collection.name)
     update_armature(context)
 
 
-def create_ogr_with_selection(self, context):
+def create_org_with_selection(self, context):
     """
-    Create OGR bones strategy for selected bones.
+    Create ORG bones strategy for selected bones.
     """
     preferences = context.preferences.addons[get_addon_name()].preferences
     # Get armature
     armature = context.object.tgr_props.armature
-    # Create the OGR bones
-    create_ogr(context)
+    # Create the ORG bones
+    create_org(context)
     def_prefix = preferences.def_prefix + preferences.separator
-    ogr_prefix = preferences.ogr_prefix + preferences.separator
-    # Check bones parents to see if they are all OGR bones
-    # Also check the children of the OGR bones
+    org_prefix = preferences.org_prefix + preferences.separator
+    # Check bones parents to see if they are all ORG bones
+    # Also check the children of the ORG bones
     for bone in context.selected_bones:
         if not bone.parent:
             continue
-        if not bone.parent.name.startswith(ogr_prefix):
-            # Check if there is a OGR bone with the same name
+        if not bone.parent.name.startswith(org_prefix):
+            # Check if there is a ORG bone with the same name
             try:
-                bone_name = bone.parent.name.replace(def_prefix, ogr_prefix)
+                bone_name = bone.parent.name.replace(def_prefix, org_prefix)
                 new_parent = armature.data.edit_bones[bone_name]
                 bone.parent = new_parent
             except KeyError:
-                # If there is no OGR bone with the same name, then keep the original parent
+                # If there is no ORG bone with the same name, then keep the original parent
                 pass
         if not bone.children:
             # Check if the DEF bone has a child
-            def_bone_name = bone.name.replace(ogr_prefix, def_prefix)
+            def_bone_name = bone.name.replace(org_prefix, def_prefix)
             def_bone = armature.data.edit_bones[def_bone_name]
             for child in def_bone.children:
                 try:
-                    child_name = child.name.replace(def_prefix, ogr_prefix)
+                    child_name = child.name.replace(def_prefix, org_prefix)
                     child = armature.data.edit_bones[child_name]
                     child.parent = bone
                 except KeyError:
@@ -74,9 +74,9 @@ def create_ogr_with_selection(self, context):
     return
 
 
-def create_ogr_with_all(self, context):
+def create_org_with_all(self, context):
     """
-    Create OGR bones strategy for all bones.
+    Create ORG bones strategy for all bones.
     """
     preferences = context.preferences.addons[get_addon_name()].preferences
     def_prefix = preferences.def_prefix + preferences.separator
@@ -90,16 +90,16 @@ def create_ogr_with_all(self, context):
             bone.select = True
             bone.select_head = True
             bone.select_tail = True
-    # Create the OGR bones
-    create_ogr(context)
+    # Create the ORG bones
+    create_org(context)
     return
 
 
-class TGR_OT_CreateOGR(bpy.types.Operator):
-    """Create the OGR bones for the selected armature"""
+class TGR_OT_CreateORG(bpy.types.Operator):
+    """Create the ORG bones for the selected armature"""
     
-    bl_idname = "tgr.create_ogr"
-    bl_label = "Create OGR"
+    bl_idname = "tgr.create_org"
+    bl_label = "Create ORG"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -114,9 +114,9 @@ class TGR_OT_CreateOGR(bpy.types.Operator):
             self.report({"ERROR"}, "Armature not set")
             return {"CANCELLED"}
         if context.selected_bones:
-            create_ogr_with_selection(self, context)
+            create_org_with_selection(self, context)
         else:
-            create_ogr_with_all(self, context)
+            create_org_with_all(self, context)
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
         # Update the armature
@@ -125,12 +125,12 @@ class TGR_OT_CreateOGR(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class TGR_OT_RemoveOGR(bpy.types.Operator):
+class TGR_OT_RemoveORG(bpy.types.Operator):
     """
-    Remove the OGR bones from the selected armature.
+    Remove the ORG bones from the selected armature.
     """
-    bl_idname = "tgr.remove_ogr"
-    bl_label = "Remove OGR"
+    bl_idname = "tgr.remove_org"
+    bl_label = "Remove ORG"
     bl_options = {'REGISTER', 'UNDO'}
 
     @classmethod
@@ -141,17 +141,17 @@ class TGR_OT_RemoveOGR(bpy.types.Operator):
 
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
-        ogr_prefix = preferences.ogr_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
-        # Select all OGR bones
+        # Select all ORG bones
         armature = context.object.tgr_props.armature
         if not armature:
             self.report({"ERROR"}, "Armature not set")
             return {"CANCELLED"}
 
         for bone in armature.data.edit_bones:
-            if bone.name.startswith(ogr_prefix):
+            if bone.name.startswith(org_prefix):
                 bone.select = True
                 bone.select_head = True
                 bone.select_tail = True
@@ -480,7 +480,7 @@ class TGR_OT_CreateSwitchChains(bpy.types.Operator):
         preferences = context.preferences.addons[get_addon_name()].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
-        ogr_prefix = preferences.ogr_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         
         separation = Vector(self.separation)
@@ -502,8 +502,8 @@ class TGR_OT_CreateSwitchChains(bpy.types.Operator):
         bpy.ops.armature.duplicate()
         # Change bone prefix to the mch_prefix + "SWITCH" and move them using the separation
         for bone in context.selected_bones:
-            if bone.name.startswith(ogr_prefix):
-                bone.name = bone.name.replace(ogr_prefix, mch_prefix + "SWITCH" + preferences.separator)
+            if bone.name.startswith(org_prefix):
+                bone.name = bone.name.replace(org_prefix, mch_prefix + "SWITCH" + preferences.separator)
             elif bone.name.startswith(ctrl_prefix):
                 bone.name = bone.name.replace(ctrl_prefix, mch_prefix + "SWITCH" + preferences.separator)
             elif bone.name.startswith(mch_prefix):

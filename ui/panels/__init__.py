@@ -3,7 +3,7 @@ from .tgr_base_panel import TGR_PT_BASE
 # Edit Mode panels
 from .tgr_edit_mode_panels import TGR_PT_View3D_Panel_EditMode, TGR_PT_View3D_Panel_EditMode_Create, TGR_PT_View3D_Panel_EditMode_Parenting, TGR_PT_View3D_Panel_EditMode_Utilities
 # Pose Mode panels
-from .tgr_pose_mode_panels import TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Panel_PoseMode_OGR, TGR_PT_View3D_Panel_PoseMode_Constraints
+from .tgr_pose_mode_panels import TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Panel_PoseMode_ORG, TGR_PT_View3D_Panel_PoseMode_Constraints
 # Utilities panels
 from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
 # Bone Layers panels
@@ -23,7 +23,7 @@ __all__ = [
     TGR_PT_View3D_Panel_EditMode_Utilities,
     # Pose Mode Panels
     TGR_PT_View3D_Panel_PoseMode,
-    TGR_PT_View3D_Panel_PoseMode_OGR,
+    TGR_PT_View3D_Panel_PoseMode_ORG,
     # Utilities Panels
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
