@@ -40,6 +40,11 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
         description="Prefix to be added",
         default=""
     )
+    instant: bpy.props.BoolProperty(
+        name="Instant",
+        description="Instantly add the prefix to the bones",
+        default=False
+    )
 
     @classmethod
     def poll(cls, context):
@@ -72,6 +77,9 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
+        if self.instant:
+            return self.execute(context)
+        
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
@@ -93,6 +101,12 @@ class TGR_OT_AddSuffix(bpy.types.Operator):
         name="Suffix",
         description="Suffix to be added",
         default=""
+    )
+    
+    instant: bpy.props.BoolProperty(
+        name="Instant",
+        description="Instantly add the suffix to the bones",
+        default=False
     )
 
     @classmethod
@@ -127,6 +141,9 @@ class TGR_OT_AddSuffix(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
+        if self.instant:
+            return self.execute(context)
+        
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):

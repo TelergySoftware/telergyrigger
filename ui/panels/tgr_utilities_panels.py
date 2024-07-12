@@ -45,9 +45,23 @@ class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
         # - Prefix text field
         row = layout.row()
         row.operator("tgr.add_prefix", text="Add Prefix", icon='ADD')
+        
+        row = layout.row()
+        row.separator(factor=0.5)
         # Add Suffix
         row = layout.row()
-        row.operator("tgr.add_suffix", text="Add Suffix", icon='ADD')
+        col = row.column(align=True)
+        col.operator("tgr.add_suffix", text="Add Suffix", icon='ADD')
+        
+        row = col.row(align=True)
+        # Add .L and .R suffixes buttons
+        left_operator = row.operator("tgr.add_suffix", text="Left", icon='ADD')
+        left_operator.suffix = ".L"
+        left_operator.instant = True
+        right_operator = row.operator("tgr.add_suffix", text="Right", icon='ADD')
+        right_operator.suffix = ".R"
+        right_operator.instant = True
+        
         # REMOVE
         row = layout.row()
         row.label(text="Remove Prefix or Suffix")

@@ -35,6 +35,11 @@ class TGR_OT_AddTGRArmature(bpy.types.Operator):
         bpy.context.object.data.show_names = True
         bpy.context.object.data.show_axes = True
         
+        # Set pivot point to individual origins
+        bpy.context.scene.tool_settings.transform_pivot_point = 'INDIVIDUAL_ORIGINS'
+        # Set orientation to normal
+        bpy.context.scene.transform_orientation_slots[0].type = 'NORMAL'
+        
         # Update the armature
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.editmode_toggle()
