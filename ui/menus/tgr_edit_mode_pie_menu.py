@@ -16,36 +16,39 @@ class TGR_MT_EditMode_PieMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        # - Pie Menu UP item
+        # - Pie Menu LEFT item
         pie = layout.menu_pie()
         pie.operator("tgr.parent_to_root", icon='LINKED')
-        # - Pie Menu BOTTOM item
+        # - Pie Menu RIGHT item
         pie = layout.menu_pie()
         copy_transforms_op = pie.operator("tgr.copy_transforms", icon='CON_TRANSLIKE')
         copy_transforms_op.copy_location = True
         copy_transforms_op.copy_rotation = True
         copy_transforms_op.copy_scale = True
-        # - Pie Menu DOWN item
+        # - Pie Menu BOTTOM item
         pie = layout.menu_pie()
         pie.operator("armature.parent_clear", icon='UNLINKED')
         # - Pie Menu TOP item
         pie = layout.menu_pie()
         pie.operator("armature.parent_set", text='Set Parent', icon='LINKED')
-        # - Pie Menu LEFT item
+        # - Pie Menu TOP LEFT item
         pie = layout.menu_pie()
         copy_location_op = pie.operator("tgr.copy_transforms", text="Copy Location", icon='CON_LOCLIKE')
         copy_location_op.copy_location = True
         copy_location_op.copy_rotation = False
         copy_location_op.copy_scale = False
-        # - Pie Menu RIGHT item
+        # - Pie Menu TOP RIGHT item
         pie = layout.menu_pie()
         copy_rotation_op = pie.operator("tgr.copy_transforms", text="Copy Rotation", icon='CON_ROTLIKE')
         copy_rotation_op.copy_location = False
         copy_rotation_op.copy_rotation = True
         copy_location_op.copy_scale = False
-        # - Pie Menu CENTER item
+        # - Pie Menu BOTTOM LEFT item
         pie = layout.menu_pie()
         copy_scale_op = pie.operator("tgr.copy_transforms", text="Copy Scale", icon='CON_SIZELIKE')
         copy_scale_op.copy_location = False
         copy_scale_op.copy_rotation = False
         copy_scale_op.copy_scale = True
+        # - Pie Menu BOTTOM RIGHT item
+        pie = layout.menu_pie()
+        pie.operator("tgr.align_bone_to_world", icon='WORLD_DATA')
