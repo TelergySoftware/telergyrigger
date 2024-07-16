@@ -1,6 +1,21 @@
 import bpy
 
 
+def init_tgr_collections():
+    """ Initialize the TGR collections """
+    armature = bpy.context.active_object
+    collections = armature.data.collections
+    
+    # Change the name of the default collection to "DEF"
+    # and set the locked property to False
+    collections[0].name = "DEF"
+    collections[0]["locked"] = False
+    
+    # Create the "ORG" and "MCH" collections
+    collections.new(name="ORG")["locked"] = False
+    collections.new(name="MCH")["locked"] = False
+    
+
 class TGR_OT_AddTGRArmature(bpy.types.Operator):
     """
     Add a TGR Armature to the scene.
@@ -24,6 +39,9 @@ class TGR_OT_AddTGRArmature(bpy.types.Operator):
         root = context.selected_editable_bones[0]
         root.name = 'ROOT'
         root.use_deform = False
+        
+        # Initialize the TGR collections
+        init_tgr_collections()
         
         # Set up the tgr armature
         tgr_props = context.object.tgr_props

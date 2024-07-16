@@ -14,13 +14,13 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         super().__init__()
         # If the tgr_layer_collection is empty,
         # add the default layers: "DEF", "ORG" and "MCH"
-        # TODO: Create a prefences panel for default layers
-        collections = bpy.context.active_object.data.collections
-        if len(collections) == 1 and collections[0].name == "Bones":
-            collections[0].name = "DEF"
-            collections[0]["locked"] = False
-            collections.new(name="ORG")["locked"] = False
-            collections.new(name="MCH")["locked"] = False
+        # TODO: Remove this piece of code
+        # collections = bpy.context.active_object.data.collections
+        # if len(collections) == 1 and collections[0].name == "Bones":
+        #     collections[0].name = "DEF"
+        #     collections[0]["locked"] = False
+        #     collections.new(name="ORG")["locked"] = False
+        #     collections.new(name="MCH")["locked"] = False
 
     @classmethod
     def poll(cls, context):
