@@ -18,6 +18,16 @@ class TGR_Properties(bpy.types.PropertyGroup):
         description="The root bone of the armature",
         default="ROOT",
     )
+    
+
+class TGR_Collection_Properties(bpy.types.PropertyGroup):
+    """ Properties to be used by the collections """
+    
+    edit_mode: bpy.props.BoolProperty(
+        name="Edit Mode",
+        description="Toggle edit mode",
+        default=False
+    )
 
 
 class TGR_UI_Components(bpy.types.PropertyGroup):

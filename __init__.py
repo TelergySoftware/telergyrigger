@@ -89,7 +89,8 @@ from .ui import (
 # ----- PROPERTIES -----
 from .properties import (
     TGR_Properties,
-    TGR_UI_Components
+    TGR_UI_Components,
+    TGR_Collection_Properties,
 )
 
 # ----- PREFERENCES -----
@@ -170,6 +171,7 @@ CLASSES_TO_REGISTER = (
     # Properties
     TGR_Properties,
     TGR_UI_Components,
+    TGR_Collection_Properties,
 )
 
 # Keymaps reference
@@ -190,7 +192,7 @@ def register():
 
     # Add properties to the armature object
     bpy.types.Object.tgr_props = bpy.props.PointerProperty(type=TGR_Properties)
-    bpy.types.Object.tgr_ui_components = bpy.props.CollectionProperty(type=TGR_UI_Components)
+    bpy.types.Object.tgr_collections = bpy.props.PointerProperty(type=TGR_Collection_Properties)
 
     # Append the default layers
 
@@ -247,7 +249,7 @@ def unregister():
     keymaps.clear()
 
     # Remove properties from the armature object
-    del bpy.types.Object.tgr_ui_components
+    del bpy.types.Object.tgr_collections
     del bpy.types.Object.tgr_props
 
     # Unregister classes

@@ -9,18 +9,32 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
 
     bl_label = "Bone Collections"
     bl_idname = "TGR_PT_View3D_Panel_BoneCollections"
-
-    def __init__(self) -> None:
-        super().__init__()
-        # If the tgr_layer_collection is empty,
-        # add the default layers: "DEF", "ORG" and "MCH"
-        # TODO: Remove this piece of code
-        # collections = bpy.context.active_object.data.collections
-        # if len(collections) == 1 and collections[0].name == "Bones":
-        #     collections[0].name = "DEF"
-        #     collections[0]["locked"] = False
-        #     collections.new(name="ORG")["locked"] = False
-        #     collections.new(name="MCH")["locked"] = False
+    
+    def draw_collection(self, layout, collection, edit_mode, left_margin=0):
+        
+        row = layout.row(align=True)
+        # Create a split layout to simulate a left margin
+        split = row.split(factor=left_margin / 100 if left_margin else 0.001, align=True)
+        # Use the first part of the split for the separator (margin)
+        split.separator()
+        # Use the second part of the split for your properties
+        main_row = split.row(align=True)
+            
+        main_row.prop(collection, "is_visible", toggle=True, text=collection.name)
+        if not edit_mode:
+            main_row.operator('tgr.assign_bones_to_collection', icon='REC', text="").name = collection.name
+            main_row.operator('tgr.select_layer_bones', icon='RESTRICT_SELECT_OFF', text="").name = collection.name
+            try:
+                lock_icon = ('UNLOCKED', 'LOCKED')[collection["locked"]]
+            except KeyError:
+                # collection["locked"] = False
+                lock_icon = 'UNLOCKED'
+            # main_row.operator('tgr.lock_bones_from_collection', icon=lock_icon, text="",
+            #                 depress=collection["locked"]).collection_name = collection.name
+        if edit_mode:
+            main_row.operator('tgr.rename_collection', icon='GREASEPENCIL', text="").collection = collection.name
+            main_row.operator("tgr.remove_collection", text="", icon='TRASH').collection = collection.name
+        main_row.operator('tgr.new_collection', icon='ADD', text="").parent = collection.name
 
     @classmethod
     def poll(cls, context):
@@ -33,28 +47,22 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         layout = self.layout
         armature = context.object.tgr_props.armature
         collections = armature.data.collections
-
+        
         row = layout.row(align=True)
-        for i, collection in enumerate(collections):
-            if i % 2 == 0:
-                row = layout.row(align=True)
+        row.prop(context.object.tgr_collections, "edit_mode", toggle=True, text="Edit Mode", icon='EDITMODE_HLT')
+        
+        edit_mode = context.object.tgr_collections.edit_mode
 
-            row.prop(collection, "is_visible", toggle=True, text=collection.name)
-            row.operator('tgr.assign_bones_to_collection', icon='REC', text="").name = collection.name
-            row.operator('tgr.select_layer_bones', icon='RESTRICT_SELECT_OFF', text="").name = collection.name
-            try:
-                lock_icon = ('UNLOCKED', 'LOCKED')[collection["locked"]]
-            except KeyError:
-                collection["locked"] = False
-                lock_icon = 'UNLOCKED'
-            row.operator('tgr.lock_bones_from_collection', icon=lock_icon, text="",
-                         depress=collection["locked"]).collection_name = collection.name
-            row.separator()
+        for collection in collections:
+            self.draw_collection(layout, collection, edit_mode)
+            if collection.is_visible:
+                if len(children := collection.children) > 0:
+                    for child in children:
+                        self.draw_collection(layout, child, edit_mode, left_margin=8)
+                    
 
         # TRACK NEW LAYER OPERATOR
         row = layout.row(align=True)
-        row.alignment = 'CENTER'
         # Call the track new layer menu
         row.operator("tgr.new_collection", text="New", icon='ADD')
-        row.operator("tgr.edit_layer", text="Rename", icon='GREASEPENCIL')
-        row.operator("tgr.remove_collection", text="Remove", icon='REMOVE')
+        

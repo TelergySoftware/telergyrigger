@@ -488,7 +488,7 @@ class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        collections = context.object.tgr_props.armature.data.collections
+        collections = context.object.tgr_props.armature.data.collections_all
 
         if context.mode == 'EDIT_ARMATURE':
             # Set the layer of the selected bones
@@ -537,7 +537,7 @@ class TGR_OT_LockBonesFromCollection(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        collection = context.object.tgr_props.armature.data.collections[self.collection_name]
+        collection = context.object.tgr_props.armature.data.collections_all[self.collection_name]
 
         # Get bones to lock
         # Hack for now, try something else later
@@ -573,6 +573,7 @@ class TGR_OT_NewCollection(bpy.types.Operator):
 
     # Layer attributes
     name: bpy.props.StringProperty(name="Name", default="Bones")
+    parent: bpy.props.StringProperty(name="Parent", default="")
     lock_selection: bpy.props.BoolProperty(name="Lock Selection", default=False)
 
     @classmethod
@@ -588,10 +589,19 @@ class TGR_OT_NewCollection(bpy.types.Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        row.prop(self, "name")
+        row = layout.row()
+        row.prop(self, "lock_selection")
 
     def execute(self, context):
         # Create a new collection
         collection = context.object.tgr_props.armature.data.collections.new(self.name)
+        if not self.parent == "":
+            collection.parent = context.object.tgr_props.armature.data.collections_all[self.parent]
         collection["locked"] = self.lock_selection
         # update the view layer
         context.view_layer.update()
@@ -606,10 +616,7 @@ class TGR_OT_RemoveCollection(bpy.types.Operator):
     bl_label = "Remove Collection"
     bl_options = {"REGISTER", "UNDO"}
 
-    def get_collection_names(self, context):
-        return [(collection.name, collection.name, "") for collection in context.object.tgr_props.armature.data.collections]
-
-    collections: bpy.props.EnumProperty(name="Collections", items=get_collection_names)
+    collection: bpy.props.StringProperty(name="Collection Name", default="")
 
     @classmethod
     def poll(cls, context):
@@ -629,15 +636,13 @@ class TGR_OT_RemoveCollection(bpy.types.Operator):
 
         layout = self.layout
         row = layout.row()
-        row.label(text="Choose the collection to remove:")
-
-        row = layout.row()
-        row.prop(self, "collections", text="")
+        row.label(text="Remove This Collection?")
 
     def execute(self, context):
         # Remove the collection
         collections = context.object.tgr_props.armature.data.collections
-        collections.remove(collections[self.collections])
+        removed_collection = context.object.tgr_props.armature.data.collections_all[self.collection]
+        collections.remove(removed_collection)
         # update the view layer
         context.view_layer.update()
 
@@ -646,15 +651,12 @@ class TGR_OT_RemoveCollection(bpy.types.Operator):
 
 class TGR_OT_RenameCollection(bpy.types.Operator):
     """Rename the selected collection"""
-    bl_idname = "tgr.edit_layer"
-    bl_label = "Edit Layer"
+    bl_idname = "tgr.rename_collection"
+    bl_label = "Rename Collection"
     bl_options = {"REGISTER", "UNDO"}
 
-    def get_collection_names(self, context):
-        return [(collection.name, collection.name, "") for collection in context.object.tgr_props.armature.data.collections]
-
     # Layer parameters
-    collections: bpy.props.EnumProperty(name="Layer", items=get_collection_names)
+    collection: bpy.props.StringProperty(name="Collection Name", default="")
 
     @classmethod
     def poll(cls, context):
@@ -667,32 +669,21 @@ class TGR_OT_RenameCollection(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def invoke(self, context, event):
+        self.renamed_collection = context.object.tgr_props.armature.data.collections_all[self.collection]
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        # Choose the collection to edit
+        # Set the new name to the current collection
         layout = self.layout
-
-        row = layout.row()
-        row.label(text="Choose the collection to rename:")
-        row = layout.row()
-        row.prop(self, "collections", text="")
-
-        # Return if no layer is selected
-        if self.collections == "":
-            return
-        
-        # Get the selected collection
-        collection = context.object.tgr_props.armature.data.collections[self.collections]
-
         # Draw the collection rename parameters
         row = layout.row()
-        row.label(text="New name:")
-        row = layout.row()
-        row.prop(collection, "name", text="Name")
+        row.prop(self, "collection", text="Name")
 
 
     def execute(self, context):
-
+        self.renamed_collection.name = self.collection
+        # update the view layer
+        context.view_layer.update()
+        
         return {"FINISHED"}
