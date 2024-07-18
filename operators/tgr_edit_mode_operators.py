@@ -191,8 +191,12 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
         bone = context.object.data.edit_bones[-1]
         # Set the bone use_connect
         bone.use_connect = False
-        # Set the bone parent to the root
-        bone.parent = context.object.data.edit_bones[context.object.tgr_props.root_bone]
+        try:
+            # Set the bone parent to the root
+            bone.parent = context.object.data.edit_bones[context.object.tgr_props.root_bone]
+        except KeyError:
+            # Trigger a warning if the root bone is not set
+            self.report({"WARNING"}, "Root bone not set")
         # Align the bone rotation to the world
         bone.select = True
         bone.select_head = True
@@ -230,8 +234,12 @@ class TGR_OT_AddDeformBone(bpy.types.Operator):
         bone = context.object.data.edit_bones[-1]
         # Set the bone use_connect
         bone.use_connect = False
-        # Set the bone parent to the root
-        bone.parent = context.object.data.edit_bones[context.object.tgr_props.root_bone]
+        try:
+            # Set the bone parent to the root
+            bone.parent = context.object.data.edit_bones[context.object.tgr_props.root_bone]
+        except KeyError:
+            # Trigger a warning if the root bone is not set
+            self.report({"WARNING"}, "Root bone not set")
         # Align the bone rotation to the world
         bone.select = True
         bone.select_head = True
