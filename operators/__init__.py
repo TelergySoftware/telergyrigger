@@ -10,9 +10,10 @@ from .tgr_utilities_operators import (TGR_OT_AddPrefix,
                                       TGR_OT_RemoveSuffix,
                                       TGR_OT_SelectBonesByName,
                                       TGR_OT_SelectCollectionBones,
+                                      TGR_OT_SetCollectionActive,
                                       TGR_OT_AssignBonesToCollection,
                                       TGR_OT_LockBonesFromCollection,
-                                      TGR_OT_NewCollection)
+                                      TGR_OT_NewCollection,)
 # Add classes from tgr_edit_mode_operators
 from .tgr_edit_mode_operators import (TGR_OT_AddNonDeformBone,
                                       TGR_OT_AlignBoneToWorld,

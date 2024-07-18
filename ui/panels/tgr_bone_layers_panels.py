@@ -19,7 +19,10 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         split.separator()
         # Use the second part of the split for your properties
         main_row = split.row(align=True)
-            
+        
+        
+        active = collection.name == bpy.context.object.tgr_props.armature.data.collections.active.name
+        main_row.operator('tgr.set_collection_active', icon='CHECKBOX_HLT' if active else 'CHECKBOX_DEHLT', text="").collection = collection.name  
         main_row.prop(collection, "is_visible", toggle=True, text=collection.name)
         if not edit_mode:
             main_row.operator('tgr.assign_bones_to_collection', icon='REC', text="").name = collection.name

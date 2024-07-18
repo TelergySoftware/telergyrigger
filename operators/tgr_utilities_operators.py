@@ -687,3 +687,30 @@ class TGR_OT_RenameCollection(bpy.types.Operator):
         context.view_layer.update()
         
         return {"FINISHED"}
+
+
+class TGR_OT_SetCollectionActive(bpy.types.Operator):
+    """Set the selected collection as the active one"""
+    bl_idname = "tgr.set_collection_active"
+    bl_label = "Set Collection Active"
+    bl_options = {"REGISTER", "UNDO"}
+
+    collection: bpy.props.StringProperty(name="Collection Name", default="")
+
+    @classmethod
+    def poll(cls, context):
+        # Check if the selected object is an Armature
+        is_armature = context.object.type == 'ARMATURE'
+        # Check if the selected object is in Edit Mode or Pose Mode
+        is_edit_mode = context.mode == 'EDIT_ARMATURE'
+        is_pose_mode = context.mode == 'POSE'
+        # Check if the selected object is an Armature and in Edit Mode or Pose Mode
+        return is_armature and (is_edit_mode or is_pose_mode)
+
+    def execute(self, context):
+        # Set the selected collection as the active one
+        context.object.tgr_props.armature.data.collections.active = context.object.tgr_props.armature.data.collections_all[self.collection]
+        # update the view layer
+        context.view_layer.update()
+
+        return {"FINISHED"}

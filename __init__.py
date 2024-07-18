@@ -12,6 +12,7 @@ from .operators import (
     TGR_OT_RemoveSuffix,
     TGR_OT_SelectBonesByName,
     TGR_OT_SelectCollectionBones,
+    TGR_OT_SetCollectionActive,
     TGR_OT_AssignBonesToCollection,
     TGR_OT_NewCollection
 )
@@ -146,6 +147,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_RemoveORG,
     TGR_OT_SelectBonesByName,
     TGR_OT_SelectCollectionBones,
+    TGR_OT_SetCollectionActive,
     TGR_OT_AssignBonesToCollection,
     TGR_OT_NewCollection,
     TGR_OT_UnbindORG,
