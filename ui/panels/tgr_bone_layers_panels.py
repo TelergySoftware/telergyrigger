@@ -67,5 +67,5 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         # TRACK NEW LAYER OPERATOR
         row = layout.row(align=True)
         # Call the track new layer menu
-        row.operator("tgr.new_collection", text="New", icon='ADD')
+        row.operator("tgr.new_collection", text="New", icon='ADD').parent = ""
         

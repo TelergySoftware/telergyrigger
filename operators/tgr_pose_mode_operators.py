@@ -130,7 +130,7 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
         org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
-        collections = context.object.tgr_props.armature.data.collections
+        collections = context.object.tgr_props.armature.data.collections_all
         # Check if at least one bone is selected
         if not context.selected_pose_bones:
             self.report({"WARNING"}, "No bones selected")
@@ -138,76 +138,127 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
 
         # Change the mode to edit mode
         bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Bones dictionary
+        bone_parties_names = {"FINAL": [], "INT": [], "MCH": []}
+        bone_parties_names["FINAL"] = [bone.name for bone in context.selected_bones]
 
         # Get current mirror mode
         mirror_mode = bpy.context.object.data.use_mirror_x
-
-        # Set the mirror mode to off
+        
+        # Turn off mirror mode
         bpy.context.object.data.use_mirror_x = False
 
         # Duplicate the selected bones and resize them to 50%
         bpy.ops.armature.duplicate()
         bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
 
-        bone_pair_names = []
-        for bone in context.selected_bones:
-            # Get the parent bone
-            ctrl_bone = context.object.data.edit_bones[bone.name[:-4]]
-            parent = ctrl_bone.parent
-            # Replace the ORG or CTRL prefix for MCH-INT- prefix and remove the .001 suffix,
-            if bone.name.startswith(org_prefix):
-                bone.name = bone.name.replace(org_prefix, f'{mch_prefix}INT{preferences.separator}')
-                bone.name = bone.name.replace('.001', '')
-            elif bone.name.startswith(ctrl_prefix):
-                bone.name = bone.name.replace(ctrl_prefix, f'{mch_prefix}INT{preferences.separator}')
-                bone.name = bone.name.replace('.001', '')
-                
-            # Add the bone pair to the list
-            bone_pair_names.append({'mch': bone.name, 'parent': parent.name})
-            
-            # Set the parent of the MCH-INT- bone to be the root bone
-            bpy.ops.tgr.parent_to_root()
-            # Move the MCH-INT- bone to the tail of the parent bone
-            distance_vector = bone.head - parent.tail
-            bone.head -= distance_vector
-            bone.tail -= distance_vector
-            # Align the bone to the parent bone
-            parent_head_tail_vector = (parent.head - parent.tail).normalized()
-            bone.tail = bone.head - parent_head_tail_vector * bone.length
-            bone.roll = parent.roll
-            # Set the current bone as the partent of the ctrl bone
-            ctrl_bone.use_connect = False
-            ctrl_bone.parent = bone
-            # Send the bone to the MCH collection
-            collection_index, _ = get_collection_index(preferences.mch_prefix)
-            bpy.ops.armature.move_to_collection(collection_index=collection_index)
+        bone_parties_names["INT"] = [bone.name for bone in context.selected_bones]
         
-        # Set mirror mode back to the original state
-        bpy.context.object.data.use_mirror_x = mirror_mode
-        # Change the mode to pose mode
+        # Duplicate the selected bones and resize them to 50%
+        bpy.ops.armature.duplicate()
+        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+        
+        bone_parties_names["MCH"] = [bone.name for bone in context.selected_bones]
+        
+        # Get the root bone
+        root_bone = context.object.tgr_props.root_bone
+        edit_root_bone = context.object.data.edit_bones[root_bone]
+        
+        # Get the MCH collection
+        mch_collection = collections[preferences.mch_prefix]
+        # Index counter
+        i = 0
+        # Loop through bone parties
+        for final_bone_name, int_bone_name, mch_bone_name in zip(bone_parties_names["FINAL"], bone_parties_names["INT"], bone_parties_names["MCH"]):
+            # Get the bones
+            final_bone = context.object.data.edit_bones[final_bone_name]
+            int_bone = context.object.data.edit_bones[int_bone_name]
+            mch_bone = context.object.data.edit_bones[mch_bone_name]
+            
+            # Set the parent of the final bone to the int bone
+            final_bone.parent = int_bone
+            # Set the parent of the int bone to the root bone
+            int_bone.parent = edit_root_bone
+            
+            # Change the bone names
+            if final_bone.name.startswith(org_prefix):
+                int_bone.name = int_bone.name.replace(org_prefix, mch_prefix + "INT" + preferences.separator)
+                mch_bone.name = mch_bone.name.replace(org_prefix, mch_prefix)                
+            elif final_bone.name.startswith(ctrl_prefix):
+                int_bone.name = int_bone.name.replace(ctrl_prefix, mch_prefix + "INT" + preferences.separator)
+                mch_bone.name = mch_bone.name.replace(ctrl_prefix, mch_prefix)
+            else:
+                # Raise a warning if the bone is not a ORG or CTRL bone
+                self.report({"WARNING"}, f"Bone \"{int_bone.name}\" is not a ORG or CTRL bone!")
+            
+            # Remove the number suffix from the bone name
+            int_bone.name = int_bone.name[:-4]
+            mch_bone.name = mch_bone.name[:-4]
+            # Update the bone parties names
+            bone_parties_names["INT"][i] = int_bone.name
+            bone_parties_names["MCH"][i] = mch_bone.name
+            
+            # Send MCH and MCH_INT bones to the MCH collection
+            mch_collection.assign(int_bone)
+            mch_collection.assign(mch_bone)
+            # Remove the MCH_INT and MCH bones from the other collections
+            for collection in collections:
+                if collection.name == mch_collection.name:
+                    continue
+                collection.unassign(int_bone)
+                collection.unassign(mch_bone)
+            
+            # Increment the index counter
+            i += 1
+            
+        # Go back to pose mode
         bpy.ops.object.mode_set(mode='POSE')
         
-        # Add the constraints to the MCH-INT- bones
-        for bone_pair in bone_pair_names:
-            mch_bone = context.object.pose.bones[bone_pair['mch']]
-            parent = context.object.pose.bones[bone_pair['parent']]
+        # Set constraints to the MCH_INT bones
+        for mch_bone_name, int_bone_name in zip(bone_parties_names["MCH"], bone_parties_names["INT"]):
+            mch_bone = context.object.pose.bones[mch_bone_name]
+            int_bone = context.object.pose.bones[int_bone_name]
             
-            # Add the copy location constraint
-            constraint = mch_bone.constraints.new('COPY_LOCATION')
-            constraint.target = context.object
-            constraint.subtarget = parent.name
-            constraint.head_tail = 1
-            constraint.influence = 1 if not self.isolate_location else 0
-            # Add the copy rotation constraint
-            constraint = mch_bone.constraints.new('COPY_ROTATION')
-            constraint.target = context.object
-            constraint.subtarget = parent.name
-            constraint.influence = 1 if not self.isolate_rotation else 0
-            # Add the copy scale constraint
-            constraint = mch_bone.constraints.new('COPY_SCALE')
-            constraint.target = context.object
-            constraint.subtarget = parent.name
-            constraint.influence = 1 if not self.isolate_scale else 0
+            # Add constraints and set influence to 0 if the isolate option is True
+            # Location constraint
+            location_constraint = int_bone.constraints.new('COPY_LOCATION')
+            location_constraint.name = "TGR Isolate Location"
+            location_constraint.target = context.object
+            location_constraint.subtarget = mch_bone.name
+            location_constraint.influence = 0 if self.isolate_location else 1
+            # Rotation constraint
+            rotation_constraint = int_bone.constraints.new('COPY_ROTATION')
+            rotation_constraint.name = "TGR Isolate Rotation"
+            rotation_constraint.target = context.object
+            rotation_constraint.subtarget = mch_bone.name
+            rotation_constraint.influence = 0 if self.isolate_rotation else 1
+            # Scale constraint
+            scale_constraint = int_bone.constraints.new('COPY_SCALE')
+            scale_constraint.name = "TGR Isolate Scale"
+            scale_constraint.target = context.object
+            scale_constraint.subtarget = mch_bone.name
+            scale_constraint.influence = 0 if self.isolate_scale else 1
+        
+        # Go back to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        # If the mirror mode was on, turn it back on and symmetrize the bones
+        if mirror_mode:
+            bpy.context.object.data.use_mirror_x = True
+            for final_bone_name, int_bone_name, mch_bone_name in zip(bone_parties_names["FINAL"], bone_parties_names["INT"], bone_parties_names["MCH"]):
+                final_bone = context.object.data.edit_bones[final_bone_name]
+                int_bone = context.object.data.edit_bones[int_bone_name]
+                mch_bone = context.object.data.edit_bones[mch_bone_name]
+                # Select the bones
+                final_bone.select = int_bone.select = mch_bone.select = True
+                final_bone.select_head = final_bone.select_tail = True
+                int_bone.select_head = int_bone.select_tail = True
+                mch_bone.select_head = mch_bone.select_tail = True
+            # Symmetrize the bones
+            bpy.ops.armature.symmetrize()
+        
+        # Go back to pose mode
+        bpy.ops.object.mode_set(mode='POSE')
 
         return {'FINISHED'}
 
@@ -255,10 +306,10 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
     def execute(self, context):
         preferences = context.preferences.addons[get_addon_name()].preferences
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
-        tgr_props = context.object.tgr_props
+        def_prefix = preferences.def_prefix + preferences.separator
         # Must not rotate DEF bones
         for bone in context.selected_pose_bones:
-            if bone.name.startswith(tgr_props.def_prefix):
+            if bone.name.startswith(def_prefix):
                 self.report({'ERROR'}, 'Cannot use rotation chains on DEF- bones')
                 return {'CANCELLED'}
 

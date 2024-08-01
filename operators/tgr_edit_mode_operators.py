@@ -30,7 +30,7 @@ def create_org(context):
     org_collection = collections[preferences.org_prefix]
     # Set bones deform to False
     set_bones_deform(context.selected_bones, False)
-    bpy.ops.armature.collection_assign(name=org_collection.name)
+    bpy.ops.tgr.assign_bones_to_collection(name=org_collection.name)
     update_armature(context)
 
 

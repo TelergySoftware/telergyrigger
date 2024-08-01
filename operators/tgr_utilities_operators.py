@@ -474,6 +474,10 @@ class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
     bl_idname = "tgr.assign_bones_to_collection"
     bl_label = "Assign Bones to Collection"
     bl_options = {"REGISTER", "UNDO"}
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.shift = False
 
     name: bpy.props.StringProperty(name="Collection Name", default="")
 
