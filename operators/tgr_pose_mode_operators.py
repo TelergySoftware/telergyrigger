@@ -369,6 +369,90 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
         return {"FINISHED"}
 
 
+class TGR_CreateTweakChain(bpy.types.Operator):
+    """Create a tweak chain for the selected bones, can choose if the chain will be a stretch chain or a damp track chain"""
+    
+    bl_idname = "tgr.create_tweak_chain"
+    bl_label = "Create Tweak Chain"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    use_stretch: bpy.props.BoolProperty(name="Use Stretch", default=False, description="If true, the chain will be a stretch chain, otherwise it will be a damp track chain")
+    
+    @classmethod
+    def poll(cls, context):
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+    
+    def execute(self, context):
+        preferences = context.preferences.addons[get_addon_name()].preferences
+        
+        armature = context.object
+        root_bone_name = armature.tgr_props.root_bone
+        
+        org_prefix = preferences.org_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        def_prefix = preferences.def_prefix + preferences.separator
+        
+        # Must not be added to DEF bones
+        for bone in context.selected_pose_bones:
+            if bone.name.startswith(def_prefix):
+                self.report({'ERROR'}, 'Cannot use tweak chains on DEF- bones')
+                return {'CANCELLED'}
+        
+        bpy.ops.object.mode_set(mode='EDIT')
+        
+        # Disconnect the selected bones
+        bpy.ops.armature.parent_clear(type='DISCONNECT')
+        bpy.ops.armature.select_linked()
+        # Store the names of the selected bones
+        selected_bones_names = [bone.name for bone in context.selected_bones]     
+        # Duplicate the selected bones
+        bpy.ops.armature.duplicate()
+        # Replace the prefix of the selected bones to ctrl_prefix and add the TWEAK suffix
+        # Also scale the bones to 25% of their original size
+        for bone in context.selected_bones:
+            bone.name = bone.name.replace(org_prefix, f"{ctrl_prefix}TWEAK{preferences.separator}")
+            bone.name = bone.name.replace(mch_prefix, f"{ctrl_prefix}TWEAK{preferences.separator}")
+            bone.name = bone.name[:-4]
+            # Scale down the bone
+            bone.length *= 0.25
+        
+        # Get the names of the selected bones
+        tweak_bones_names = [bone.name for bone in context.selected_bones]
+        # Deselct all bones
+        bpy.ops.armature.select_all(action='DESELECT')
+        # Duplicate the last tweak bone and move it in the Y normal axis by 4 times its length
+        tip_bone = context.object.data.edit_bones[tweak_bones_names[-1]]
+        tip_bone.select = tip_bone.select_head = tip_bone.select_tail = True
+        tip_bone_length = tip_bone.length
+        bpy.ops.armature.duplicate()
+        bpy.ops.transform.translate(value=(0, tip_bone_length * 4, 0), orient_type='NORMAL')
+        tip_bone = context.selected_editable_bones[-1]
+        tip_bone.name = tip_bone.name[:-4] + "_TIP"
+        tip_bone.parent = armature.data.edit_bones[root_bone_name]
+        # Append the new bone to the selected bones names
+        tweak_bones_names.append(tip_bone.name)
+        # Set the parent of each selected bone to the corresponding tweak bone
+        for i, bone_name in enumerate(selected_bones_names):
+            bone = context.object.data.edit_bones[bone_name]
+            tweak_bone = context.object.data.edit_bones[tweak_bones_names[i]]
+            bone.parent = tweak_bone
+            tweak_bone.parent = armature.data.edit_bones[root_bone_name]
+        
+        # Go back to pose mode
+        bpy.ops.object.mode_set(mode='POSE')
+        # Add constraints to the selected bones targetting the next tweak bone
+        for i, bone_name in enumerate(selected_bones_names):
+            bone = context.object.pose.bones[bone_name]
+            constraint = bone.constraints.new(type='STRETCH_TO') if self.use_stretch else bone.constraints.new(type='DAMPED_TRACK')
+            constraint.target = armature
+            constraint.subtarget = tweak_bones_names[i + 1]
+         
+        return {'FINISHED'}    
+
+
 class TGR_OT_CreateStretchToChain(bpy.types.Operator):
     """
     Create a stretch to constraint chain for the selected bones.
