@@ -9,6 +9,8 @@ class TGR_PT_View3D_Panel_CustomProperties(TGR_PT_BASE):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT'
         is_pose_mode = context.mode == 'POSE'

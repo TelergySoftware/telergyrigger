@@ -20,6 +20,8 @@ class TGR_OT_BindORG(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_pose_mode = context.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -89,6 +91,8 @@ class TGR_OT_UnbindORG(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_pose_mode = context.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -121,6 +125,8 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_pose_mode = context.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -273,6 +279,8 @@ class TGR_OT_CreateIkFkSwitchChain(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_pose_mode = context.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -299,6 +307,8 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_pose_mode = context.active_object.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -380,6 +390,8 @@ class TGR_CreateTweakChain(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_pose_mode = context.active_object.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -464,6 +476,8 @@ class TGR_OT_CreateStretchToChain(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_pose_mode = context.active_object.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -487,6 +501,8 @@ class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_pose_mode = context.active_object.mode == 'POSE'
         return is_armature and is_pose_mode
@@ -554,6 +570,8 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_pose_mode = context.active_object.mode == 'POSE'
         return is_armature and is_pose_mode

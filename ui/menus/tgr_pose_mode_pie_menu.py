@@ -10,6 +10,8 @@ class TGR_MT_PoseMode_Constraints_PieMenu(bpy.types.Menu):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_pose_mode = context.mode == 'POSE'
         return is_armature and is_pose_mode

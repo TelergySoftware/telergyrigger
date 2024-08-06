@@ -10,6 +10,8 @@ class TGR_MT_EditMode_PieMenu(bpy.types.Menu):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode

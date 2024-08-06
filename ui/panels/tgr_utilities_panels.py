@@ -11,6 +11,8 @@ class TGR_PT_View3D_Panel_Utilities(TGR_PT_BASE):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         is_pose_mode = context.mode == 'POSE'
@@ -31,6 +33,8 @@ class TGR_PT_View3D_Panel_Utilities_Naming(TGR_PT_BASE):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         is_pose_mode = context.mode == 'POSE'
@@ -90,6 +94,8 @@ class TGR_PT_View3D_Panel_Utilities_Selection(TGR_PT_BASE):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         is_pose_mode = context.mode == 'POSE'

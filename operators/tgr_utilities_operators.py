@@ -48,6 +48,8 @@ class TGR_OT_AddPrefix(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -111,6 +113,8 @@ class TGR_OT_AddSuffix(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -185,6 +189,8 @@ class TGR_OT_RemovePrefix(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -239,6 +245,8 @@ class TGR_OT_RemoveSuffix(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -324,6 +332,8 @@ class TGR_OT_CleanNameUp(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -376,6 +386,8 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -427,6 +439,8 @@ class TGR_OT_SelectCollectionBones(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -483,6 +497,8 @@ class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -532,6 +548,8 @@ class TGR_OT_LockBonesFromCollection(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -582,6 +600,8 @@ class TGR_OT_NewCollection(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -624,6 +644,8 @@ class TGR_OT_RemoveCollection(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -664,6 +686,8 @@ class TGR_OT_RenameCollection(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode
@@ -703,6 +727,8 @@ class TGR_OT_SetCollectionActive(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         # Check if the selected object is an Armature
         is_armature = context.object.type == 'ARMATURE'
         # Check if the selected object is in Edit Mode or Pose Mode

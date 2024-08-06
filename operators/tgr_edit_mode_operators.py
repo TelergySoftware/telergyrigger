@@ -104,6 +104,8 @@ class TGR_OT_CreateORG(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode
@@ -135,6 +137,8 @@ class TGR_OT_RemoveORG(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode
@@ -176,6 +180,8 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode
@@ -221,6 +227,8 @@ class TGR_OT_AddDeformBone(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode
@@ -265,6 +273,8 @@ class TGR_OT_ParentToRoot(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode
@@ -298,6 +308,8 @@ class TGR_OT_ConnectBones(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.object.type == 'ARMATURE'
         is_edit_mode = context.mode == 'EDIT_ARMATURE'
         return is_armature and is_edit_mode
@@ -331,6 +343,8 @@ class TGR_OT_AlignBoneToWorld(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_edit_mode = context.active_object.mode == 'EDIT'
         return is_armature and is_edit_mode
@@ -372,6 +386,8 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_edit_mode = context.active_object.mode == 'EDIT'
         return is_armature and is_edit_mode
@@ -442,6 +458,8 @@ class TGR_OT_CopyTransforms(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_edit_mode = context.active_object.mode == 'EDIT'
         return is_armature and is_edit_mode
@@ -480,6 +498,8 @@ class TGR_OT_CreateSwitchChains(bpy.types.Operator):
     
     @classmethod
     def poll(cls, context):
+        if not context.object:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
         is_edit_mode = context.active_object.mode == 'EDIT'
         return is_armature and is_edit_mode
