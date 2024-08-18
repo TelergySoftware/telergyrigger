@@ -465,28 +465,6 @@ class TGR_CreateTweakChain(bpy.types.Operator):
         return {'FINISHED'}    
 
 
-class TGR_OT_CreateStretchToChain(bpy.types.Operator):
-    """
-    Create a stretch to constraint chain for the selected bones.
-    The active bone will be the parent of the chain
-    """
-    bl_idname = "tgr.create_stretch_to_chain"
-    bl_label = "Create Stretch To Chain"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        if not context.object:
-            return False
-        is_armature = context.active_object.type == 'ARMATURE'
-        is_pose_mode = context.active_object.mode == 'POSE'
-        return is_armature and is_pose_mode
-
-    def execute(self, context):
-        # Finish the operation 
-        return {'FINISHED'}
-
-
 class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
     """
     Create a copy transforms chain considering two given names
