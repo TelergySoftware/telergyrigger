@@ -269,33 +269,6 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class TGR_OT_CreateIkFkSwitchChain(bpy.types.Operator):
-    """
-    Create an IK/FK switch chain.
-    """
-    bl_idname = "tgr.create_ikfk_switch_chain"
-    bl_label = "Create IK/FK Switch Chain"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        if not context.object:
-            return False
-        is_armature = context.object.type == 'ARMATURE'
-        is_pose_mode = context.mode == 'POSE'
-        return is_armature and is_pose_mode
-
-    def execute(self, context):
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-
-
 class TGR_OT_CreateRotationChain(bpy.types.Operator):
     """
     Create a rotation chain with the selected bones
