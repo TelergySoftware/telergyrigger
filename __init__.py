@@ -33,6 +33,7 @@ from .operators import (
 from .operators import (
     TGR_OT_BindORG,
     TGR_OT_CopyTransformsToChain,
+    TGR_OT_CreateIKChain,
     TGR_OT_CreateIKPoleTarget,
     TGR_OT_CreateRotationChain,
     TGR_CreateTweakChain,
@@ -125,6 +126,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_ConnectBones,
     TGR_OT_CopyTransforms,
     TGR_OT_CopyTransformsToChain,
+    TGR_OT_CreateIKChain,
     TGR_OT_CreateIKPoleTarget,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateSwitchChains,

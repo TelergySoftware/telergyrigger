@@ -51,8 +51,10 @@ class TGR_MT_PoseMode_Constraints_PieMenu(bpy.types.Menu):
 
         pie = layout.menu_pie()
         col = pie.column()
-        col.operator("pose.constraint_add_with_targets", text="Damped Track",
+        col.label(text="Track Constraints")
+        row = col.row()
+        row.operator("pose.constraint_add_with_targets", text="Damped Track",
                      icon="CON_TRACKTO").type = 'DAMPED_TRACK'
-        col.operator("pose.constraint_add_with_targets", text="Stretch To", icon='CON_STRETCHTO').type = 'STRETCH_TO'
+        row.operator("pose.constraint_add_with_targets", text="Stretch To", icon='CON_STRETCHTO').type = 'STRETCH_TO'
 
-        pie.operator("pose.constraint_add_with_targets", text="Inverse Kinematics", icon='CON_KINEMATIC').type = 'IK'
+        pie.operator("tgr.create_ik_chain", text="Inverse Kinematics", icon='CON_KINEMATIC')

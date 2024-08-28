@@ -1,7 +1,7 @@
 import bpy
 import math
 from mathutils import Vector
-from ..utils import get_addon_name, get_collection_index
+from ..utils import get_addon_name
 
 
 def update_armature(context):
@@ -497,6 +497,59 @@ class TGR_OT_CopyTransformsToChain(bpy.types.Operator):
 
         row = layout.row()
         row.prop(self, "constraint_name")
+        
+        
+class TGR_OT_CreateIKChain(bpy.types.Operator):
+    """Create an IK chain by selecting the IK target bone and the IK bone"""
+    bl_idname = "tgr.create_ik_chain"
+    bl_label = "Create IK Chain"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+    
+    def modal(self, context, event):
+        # Change chain length with mouse wheel
+        if event.type == 'WHEELUPMOUSE':
+            self.constraint.chain_count += 1
+            context.area.header_text_set(f"Chain Length: {self.constraint.chain_count}")
+            return {'RUNNING_MODAL'}
+        elif event.type == 'WHEELDOWNMOUSE':
+            self.constraint.chain_count -= 1
+            context.area.header_text_set(f"Chain Length: {self.constraint.chain_count}")
+            return {'RUNNING_MODAL'}
+        # Finish the operator with left click
+        elif event.type == 'LEFTMOUSE':
+            context.area.header_text_set(None)
+            return {'FINISHED'}
+        # Cancel the operator with right click or ESC
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            self.active_pose_bone.constraints.remove(self.constraint)
+            context.area.header_text_set(None)
+            return {'CANCELLED'}
+        
+        return {'RUNNING_MODAL'}
+    
+    def invoke(self, context, event):
+        # Check if there are two selected bones
+        if len(context.selected_pose_bones) != 2:
+            self.report({'ERROR'}, 'Please select two bones')
+            return {'CANCELLED'}
+        # Get the active pose bone
+        self.active_pose_bone = context.active_pose_bone
+        # Add an IK constraint to the active pose bone targeting the selected bone
+        self.constraint = self.active_pose_bone.constraints.new('IK')
+        self.constraint.target = context.active_object
+        self.constraint.subtarget = context.selected_pose_bones[0].name if context.selected_pose_bones[0] != self.active_pose_bone else context.selected_pose_bones[1].name
+        context.window_manager.modal_handler_add(self)
+        context.area.header_text_set(f"Chain Length: {self.constraint.chain_count}")
+        return {'RUNNING_MODAL'}
+    
 
 
 class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
