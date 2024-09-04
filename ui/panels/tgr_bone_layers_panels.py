@@ -39,6 +39,11 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
             main_row.operator('tgr.rename_collection', icon='GREASEPENCIL', text="").collection = collection.name
             main_row.operator("tgr.remove_collection", text="", icon='TRASH').collection = collection.name
         main_row.operator('tgr.new_collection', icon='ADD', text="").parent = collection.name
+        
+        if collection.is_visible:
+                if len(children := collection.children) > 0:
+                    for child in children:
+                        self.draw_collection(layout, child, edit_mode, left_margin=left_margin + 8)
 
     @classmethod
     def poll(cls, context):
@@ -61,10 +66,7 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
 
         for collection in collections:
             self.draw_collection(layout, collection, edit_mode)
-            if collection.is_visible:
-                if len(children := collection.children) > 0:
-                    for child in children:
-                        self.draw_collection(layout, child, edit_mode, left_margin=8)
+            
                     
 
         # TRACK NEW LAYER OPERATOR
