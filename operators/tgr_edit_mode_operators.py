@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Vector
 
-from ..utils import change_bones_prefix, set_bones_deform, get_addon_name, get_collection_index
+from ..utils import change_bones_prefix, set_bones_deform, get_addon_name
 
 
 def update_armature(context):

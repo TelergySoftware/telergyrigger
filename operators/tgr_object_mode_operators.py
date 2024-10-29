@@ -11,9 +11,10 @@ def init_tgr_collections():
     collections[0].name = "DEF"
     collections[0]["locked"] = False
     
-    # Create the "ORG" and "MCH" collections
+    # Create the "ORG", "MCH" and "ROOT" collections
     collections.new(name="ORG")["locked"] = False
     collections.new(name="MCH")["locked"] = False
+    collections.new(name="ROOT")["locked"] = False
     
 
 class TGR_OT_AddTGRArmature(bpy.types.Operator):
@@ -42,6 +43,9 @@ class TGR_OT_AddTGRArmature(bpy.types.Operator):
         
         # Initialize the TGR collections
         init_tgr_collections()
+        
+        # Move the root bone to the ROOT collection
+        bpy.ops.armature.move_to_collection(collection="ROOT")
         
         # Set up the tgr armature
         tgr_props = context.object.tgr_props
