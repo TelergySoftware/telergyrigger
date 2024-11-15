@@ -45,7 +45,7 @@ class TGR_OT_AddTGRArmature(bpy.types.Operator):
         init_tgr_collections()
         
         # Move the root bone to the ROOT collection
-        bpy.ops.armature.move_to_collection(collection="ROOT")
+        bpy.ops.armature.move_to_collection(collection_index=3)
         
         # Set up the tgr armature
         tgr_props = context.object.tgr_props
