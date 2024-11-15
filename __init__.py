@@ -97,18 +97,6 @@ from .properties import (
 # ----- PREFERENCES -----
 from .tgr_preferences import TGR_Preferences
 
-bl_info = {
-    "name": "Telergy Rigger",
-    "author": "Telergy Studio",
-    "description": "Supercharge your rigging workflow! Accelerate the process, automate tasks, and unleash your"
-                   " creative potential like never before.",
-    "blender": (4, 1, 0),
-    "version": (0, 1, 0),
-    "location": "",
-    "warning": "Under Heavy Development",
-    "category": "Rigging"
-}
-
 # Classes to register
 CLASSES_TO_REGISTER = (
     # Preferences
