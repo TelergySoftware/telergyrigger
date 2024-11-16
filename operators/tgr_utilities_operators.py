@@ -1,7 +1,5 @@
 import bpy
 
-from ..utils import get_addon_name
-
 
 # ------------- ADD PREFIX OR SUFFIX -------------
 def add_prefix_suffix(context, bones, prefix="", suffix=""):
@@ -292,7 +290,7 @@ def clean_up_name(context, name: str) -> str:
     Change the .001, .002, .003, ... suffixes to be before the .L or .R suffixes if
     they exist and change the dots to dashs.
     """
-    preferences = context.preferences.addons[get_addon_name()].preferences
+    preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
     suffix_separator = preferences.suffix_separator
     separator = preferences.separator
     valid_symbols = ".!@#$%^&*()_-+={}[]"

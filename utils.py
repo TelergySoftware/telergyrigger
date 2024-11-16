@@ -15,10 +15,6 @@ def get_collection_index(name: str) -> tuple[int, bool]:
         return -1, False
 
 
-def get_addon_name():
-    return os.path.basename(os.path.dirname(__file__))
-
-
 def change_bones_prefix(bones, old_prefix: str = "", prefix: str = ""):
     """
     Change the prefix of all bones.
