@@ -577,4 +577,53 @@ class TGR_OT_CreateSwitchChains(bpy.types.Operator):
         # Finish
         return {"FINISHED"}
         
+    
+class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
+    """Creates an MCH bone that acts as an intermediate bone"""
+    
+    bl_idname = "tgr.create_intermediate_bone"
+    bl_label = "Create Intermediate Bone"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_edit_mode = context.active_object.mode == 'EDIT'
+        return is_armature and is_edit_mode
+    
+    def execute(self, context):
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         
+        # It doesn't make sense to create an intermediate bone for a DEF bone
+        if context.active_bone.name.startswith(def_prefix):
+            self.report({"ERROR"}, "Cannot create an intermediate bone for a DEF bone")
+            return {"CANCELLED"}
+        
+        # Duplicate the active bones
+        bpy.ops.armature.duplicate()
+        # Scale bones to 0.5
+        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+        # Change bone prefix to the mch_prefix or mch_prefix + "INT" if the selected bone is already an MCH bone and remove the .### from the bone name
+        for bone in context.selected_editable_bones:
+            # Set the current bone as the parent of the original bone
+            context.active_object.data.edit_bones[bone.name[:-4]].parent = bone
+            if bone.name.startswith(org_prefix):
+                bone.name = bone.name.replace(org_prefix, mch_prefix)
+            elif bone.name.startswith(ctrl_prefix):
+                bone.name = bone.name.replace(ctrl_prefix, mch_prefix)
+            elif bone.name.startswith(mch_prefix):
+                bone.name = bone.name.replace(mch_prefix, mch_prefix + "INT_")
+            bone.name = bone.name[:-4]
+            
+        # Update the armature
+        update_armature(context)
+        # Finish
+        return {"FINISHED"}
+                
+                

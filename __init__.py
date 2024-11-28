@@ -28,6 +28,7 @@ from .operators import (
     TGR_OT_RemoveORG,
     TGR_OT_ParentToRoot,
     TGR_OT_CopyTransforms,
+    TGR_OT_CreateIntermediateBone,
 )
 
 from .operators import (
@@ -116,6 +117,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_CopyTransformsToChain,
     TGR_OT_CreateIKChain,
     TGR_OT_CreateIKPoleTarget,
+    TGR_OT_CreateIntermediateBone,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateSwitchChains,
     TGR_CreateTweakChain,

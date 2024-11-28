@@ -59,6 +59,9 @@ class TGR_PT_View3D_Panel_EditMode_Create(TGR_PT_BASE):
         row.operator("tgr.bones_on_points", icon='BONE_DATA')
         
         row = layout.row()
+        row.operator("tgr.create_intermediate_bone", icon='BONE_DATA')
+        
+        row = layout.row()
         row.operator("tgr.create_switch_chains", icon='BONE_DATA')
 
         row = layout.row()
