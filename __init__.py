@@ -39,7 +39,8 @@ from .operators import (
     TGR_OT_CreateRotationChain,
     TGR_CreateTweakChain,
     TGR_OT_IsolateBone,
-    TGR_OT_UnbindORG
+    TGR_OT_UnbindORG,
+    TGR_OT_AddPivotController,
 )
 
 from .operators import (
@@ -105,6 +106,7 @@ CLASSES_TO_REGISTER = (
     # Operators
     TGR_OT_AddDeformBone,
     TGR_OT_AddNonDeformBone,
+    TGR_OT_AddPivotController,
     TGR_OT_AddPrefix,
     TGR_OT_AddSuffix,
     TGR_OT_AddTGRArmature,

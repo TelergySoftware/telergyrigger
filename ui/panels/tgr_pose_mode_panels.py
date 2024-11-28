@@ -87,3 +87,6 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
 
         row = layout.row()
         row.operator("tgr.create_ik_pole_target", icon='CON_TRACKTO')
+        
+        row = layout.row()
+        row.operator("tgr.add_pivot_controller", icon='CON_TRACKTO')

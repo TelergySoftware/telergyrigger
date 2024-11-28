@@ -34,7 +34,8 @@ from .tgr_pose_mode_operators import (TGR_OT_BindORG,
                                       TGR_OT_CreateRotationChain,
                                       TGR_CreateTweakChain,                                      
                                       TGR_OT_IsolateBone,
-                                      TGR_OT_UnbindORG)
+                                      TGR_OT_UnbindORG,
+                                      TGR_OT_AddPivotController)
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (TGR_OT_GenerateUI,
                                TGR_OT_RIG_UI_AddComponent,

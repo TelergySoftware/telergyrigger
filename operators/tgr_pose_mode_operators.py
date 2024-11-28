@@ -768,3 +768,67 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         
         row = layout.row()
         row.prop(self, "collections")
+
+
+class TGR_OT_AddPivotController(bpy.types.Operator):
+    """Add a pivot controller bone to the selected bones"""
+    
+    bl_idname = "tgr.add_pivot_controller"
+    bl_label = "Add Pivot Controller"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+
+    def execute(self, context):
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
+        def_prefix = preferences.def_prefix + preferences.separator
+        armature = context.active_object
+        
+        # It doesn't make sense to add a pivot controller to DEF bones
+        for bone in context.selected_pose_bones:
+            if bone.name.startswith(def_prefix):
+                self.report({'ERROR'}, 'Cannot add pivot controller to DEF- bones')
+                return {'CANCELLED'}
+        
+        # Enter edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        # Add an intermediate bone to the selected bones
+        bpy.ops.tgr.create_intermediate_bone()
+        # Add "PIVOT" to the intermediate bone name and store the names for later
+        intermediate_bones_names = []
+        for bone in context.selected_editable_bones:
+            bone.name = bone.name.replace(mch_prefix, mch_prefix + "PIVOT" + preferences.separator)
+            intermediate_bones_names.append(bone.name)
+        # Add another intermediate bone to the selected bones
+        bpy.ops.tgr.create_intermediate_bone()
+        # Change their names to CTRL instead of MCH_INT
+        for bone in context.selected_editable_bones:
+            bone.name = bone.name.replace(mch_prefix + "INT", ctrl_prefix[:-1])
+        
+        # Go back to pose mode
+        bpy.ops.object.mode_set(mode='POSE')
+        # Add a copy location constraint to the intermediate bones
+        for i, bone_name in enumerate(intermediate_bones_names):
+            bone = armature.pose.bones[bone_name]
+            constraint = bone.constraints.new('COPY_LOCATION')
+            constraint.target = armature
+            constraint.subtarget = context.selected_pose_bones[i].name
+            constraint.name = "TGR Pivot Controller"
+            constraint.invert_x = constraint.invert_y = constraint.invert_z = True
+            # Change the target space and owner space to LOCAL
+            constraint.target_space = 'LOCAL'
+            constraint.owner_space = 'LOCAL'
+        
+        # Update the view layer
+        update_armature(context)
+        return {'FINISHED'}
+        
