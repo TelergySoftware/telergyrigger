@@ -618,8 +618,11 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
             elif bone.name.startswith(ctrl_prefix):
                 bone.name = bone.name.replace(ctrl_prefix, mch_prefix)
             elif bone.name.startswith(mch_prefix):
-                bone.name = bone.name.replace(mch_prefix, mch_prefix + "INT_")
+                bone.name = bone.name.replace(mch_prefix, mch_prefix + "INT" + preferences.separator)
             bone.name = bone.name[:-4]
+            
+        # Send the bone to the MCH collection
+        bpy.ops.tgr.assign_bones_to_collection(name=preferences.mch_prefix)
             
         # Update the armature
         update_armature(context)
