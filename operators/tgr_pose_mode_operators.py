@@ -1,5 +1,6 @@
 import bpy
 import math
+from ..utils import move_bones_to_collection
 from mathutils import Vector
 
 
@@ -789,7 +790,6 @@ class TGR_OT_AddPivotController(bpy.types.Operator):
         preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
-        org_prefix = preferences.org_prefix + preferences.separator
         def_prefix = preferences.def_prefix + preferences.separator
         armature = context.active_object
         
@@ -810,15 +810,18 @@ class TGR_OT_AddPivotController(bpy.types.Operator):
             intermediate_bones_names.append(bone.name)
         # Add another intermediate bone to the selected bones
         bpy.ops.tgr.create_intermediate_bone()
-        # Change their names to CTRL instead of MCH_INT
+        # Change their names to CTRL instead of MCH_INT and move them to the active collection
         for bone in context.selected_editable_bones:
             bone.name = bone.name.replace(mch_prefix + "INT", ctrl_prefix[:-1])
+            move_bones_to_collection(armature.data.collections.active.name, bone)
         
         # Go back to pose mode
         bpy.ops.object.mode_set(mode='POSE')
         # Add a copy location constraint to the intermediate bones
         for i, bone_name in enumerate(intermediate_bones_names):
             bone = armature.pose.bones[bone_name]
+            # Move the intermediate bone to the MCH collection
+            move_bones_to_collection(preferences.mch_prefix, bone.bone)
             constraint = bone.constraints.new('COPY_LOCATION')
             constraint.target = armature
             constraint.subtarget = context.selected_pose_bones[i].name

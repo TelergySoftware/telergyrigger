@@ -15,6 +15,18 @@ def get_collection_index(name: str) -> tuple[int, bool]:
         return -1, False
 
 
+def move_bones_to_collection(collection_name: str, *bones):
+    """Move bones to the given collection"""
+    
+    collection = bpy.context.active_object.data.collections_all[collection_name]
+    for bone in bones:
+        # Remove the bone from the current collections
+        for bone_collection in bone.collections:
+            bone_collection.unassign(bone)
+        # Add the bone to the new collection
+        collection.assign(bone)
+
+
 def change_bones_prefix(bones, old_prefix: str = "", prefix: str = ""):
     """
     Change the prefix of all bones.

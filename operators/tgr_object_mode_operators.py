@@ -3,17 +3,22 @@ import bpy
 
 def init_tgr_collections():
     """ Initialize the TGR collections """
+    preferences = bpy.context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
     armature = bpy.context.active_object
     collections = armature.data.collections
+    # Collection names
+    def_prefix = preferences.def_prefix
+    org_prefix = preferences.org_prefix
+    mch_prefix = preferences.mch_prefix
     
     # Change the name of the default collection to "DEF"
     # and set the locked property to False
-    collections[0].name = "DEF"
+    collections[0].name = def_prefix
     collections[0]["locked"] = False
     
     # Create the "ORG", "MCH" and "ROOT" collections
-    collections.new(name="ORG")["locked"] = False
-    collections.new(name="MCH")["locked"] = False
+    collections.new(name=org_prefix)["locked"] = False
+    collections.new(name=mch_prefix)["locked"] = False
     collections.new(name="ROOT")["locked"] = False
     
 
