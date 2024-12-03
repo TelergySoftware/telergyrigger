@@ -28,6 +28,8 @@ class TGR_Collection_Properties(bpy.types.PropertyGroup):
         description="Toggle edit mode",
         default=False
     )
+    
+    locked_collections: set = set()
 
 
 class TGR_UI_Components(bpy.types.PropertyGroup):

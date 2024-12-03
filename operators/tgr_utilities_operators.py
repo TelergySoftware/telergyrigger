@@ -558,6 +558,7 @@ class TGR_OT_LockBonesFromCollection(bpy.types.Operator):
 
     def execute(self, context):
         collection = context.object.tgr_props.armature.data.collections_all[self.collection_name]
+        collection_props = context.object.tgr_collections
 
         # Get bones to lock
         # Hack for now, try something else later
@@ -569,10 +570,14 @@ class TGR_OT_LockBonesFromCollection(bpy.types.Operator):
         # Select all the bones of the specified collection
         bones = collection.bones
 
-        collection["locked"] = not collection["locked"]
+        # Check if the collection is locked and change its state
+        if collection.name in collection_props.locked_collections:
+            collection_props.locked_collections.remove(collection.name)
+        else:
+            collection_props.locked_collections.add(collection.name)
 
         for bone in bones:
-            bone.hide_select = collection["locked"]
+            bone.hide_select = collection.name in collection_props.locked_collections
 
         # Deselect all bones
         bpy.ops.pose.select_all(action='DESELECT')
