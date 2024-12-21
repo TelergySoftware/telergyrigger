@@ -77,6 +77,10 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
         # Create Tweak Chain
         row = layout.row()
         row.operator("tgr.create_tweak_chain", icon='ACTION_TWEAK')
+        
+        # Create FK From Tweak Chain
+        row = layout.row()
+        row.operator("tgr.fk_from_tweak_chain", icon='TRACKING_REFINE_FORWARDS')
 
         # Create Rotation Chain
         row = layout.row()

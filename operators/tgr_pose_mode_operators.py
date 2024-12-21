@@ -352,7 +352,7 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class TGR_CreateTweakChain(bpy.types.Operator):
+class TGR_OT_CreateTweakChain(bpy.types.Operator):
     """Create a tweak chain for the selected bones, can choose if the chain will be a stretch chain or a damp track chain"""
     
     bl_idname = "tgr.create_tweak_chain"
@@ -434,6 +434,7 @@ class TGR_CreateTweakChain(bpy.types.Operator):
             constraint = bone.constraints.new(type='STRETCH_TO') if self.use_stretch else bone.constraints.new(type='DAMPED_TRACK')
             constraint.target = armature
             constraint.subtarget = tweak_bones_names[i + 1]
+            constraint.name = "TGR Tweak Chain"
          
         return {'FINISHED'}    
 
@@ -834,4 +835,93 @@ class TGR_OT_AddPivotController(bpy.types.Operator):
         # Update the view layer
         update_armature(context)
         return {'FINISHED'}
+
+
+class TGR_OT_FKFromTweakChain(bpy.types.Operator):
+    """Create a FK chain from the selected tweak chain"""
+    
+    bl_idname = "tgr.fk_from_tweak_chain"
+    bl_label = "FK From Tweak Chain"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+    
+    def execute(self, context):
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
         
+        armature = context.active_object
+        
+        first_bone = ""
+        # DEF bones cannot be used to create FK chains
+        for bone in context.selected_pose_bones:
+            if bone.name.startswith(def_prefix):
+                self.report({'ERROR'}, 'Cannot create FK chains from deformer bones')
+                return {'CANCELLED'}
+            if first_bone == "":
+                first_bone = bone.name
+        
+        targets = []
+        # Check if the selected bones have the damped track or stretch to constraints
+        for bone in context.selected_pose_bones:
+            for constraint in bone.constraints:
+                if constraint.type not in {'DAMPED_TRACK', 'STRETCH_TO'}:
+                    self.report({'ERROR'}, f'The bone {bone.name} is not part of a tweak chain')
+                    return {'CANCELLED'}
+            try:
+                targets.append(bone.constraints['TGR Tweak Chain'].subtarget)
+            except KeyError:
+                self.report({'ERROR'}, f'The bone {bone.name} is not part of a tweak chain or does not have the TGR Tweak Chain constraint')
+                return {'CANCELLED'}
+        
+        # Enter edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        # Duplicate the selected bones
+        bpy.ops.armature.duplicate()
+        # Change the prefix of the duplicated bones to CTRL FK
+        for bone in context.selected_editable_bones:
+            # Change the length of the bone to 50% of the original length
+            bone.length *= 0.5
+            if bone.name.startswith(mch_prefix):
+                bone.name = bone.name.replace(mch_prefix, ctrl_prefix + "FK" + preferences.separator)
+            elif bone.name.startswith(org_prefix):
+                bone.name = bone.name.replace(org_prefix, ctrl_prefix + "FK" + preferences.separator)
+            else:
+                self.report({'ERROR'}, f'The bone {bone.name} is not part of a tweak chain')
+                return {'CANCELLED'}
+            # Remove the number suffix from the bone name
+            bone.name = bone.name[:-4]
+        
+        for i, bone in enumerate(context.selected_editable_bones):
+            if i == 0:
+                bone.parent = armature.data.edit_bones[armature.tgr_props.root_bone]
+                target_bone = armature.data.edit_bones[first_bone].parent
+                target_bone.parent = bone
+                continue
+            bone.parent = context.object.data.edit_bones[context.selected_editable_bones[i-1].name]
+            target_bone = armature.data.edit_bones[targets[i-1]]
+            target_bone.parent = bone
+            if i == len(context.selected_editable_bones) - 1:
+                target_bone = armature.data.edit_bones[targets[i]]
+                target_bone.parent = bone
+        
+        # Go back to pose mode
+        bpy.ops.object.mode_set(mode='POSE')
+        # Remove the constraints from the selected bones
+        for bone in context.selected_pose_bones:
+            for constraint in bone.constraints:
+                if constraint.type in {'DAMPED_TRACK', 'STRETCH_TO'}:
+                    bone.constraints.remove(constraint)
+        # Update the view layer
+        update_armature(context)
+        
+        return {'FINISHED'}

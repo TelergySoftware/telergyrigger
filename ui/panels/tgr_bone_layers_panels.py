@@ -67,8 +67,7 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
 
         for collection in collections:
             self.draw_collection(layout, collection, edit_mode)
-            
-                    
+
 
         # TRACK NEW LAYER OPERATOR
         row = layout.row(align=True)
