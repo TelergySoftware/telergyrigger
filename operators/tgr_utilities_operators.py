@@ -747,3 +747,36 @@ class TGR_OT_SetCollectionActive(bpy.types.Operator):
         context.view_layer.update()
 
         return {"FINISHED"}
+
+class TGR_OT_AutoCorrectUseDeform(bpy.types.Operator):
+    """Auto correct the Use Deform property of all bones in the armature"""
+    bl_idname = "tgr.auto_correct_use_deform"
+    bl_label = "Auto Correct Use Deform"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        # Check if the selected object is an Armature
+        is_armature = context.object.type == 'ARMATURE'
+        # Check if the armature is not in object mode
+        not_object_mode = context.mode != 'OBJECT'
+        # Check if the selected object is an Armature and not in object mode
+        return is_armature and not_object_mode
+    
+    def execute(self, context):
+        # Set the Use Deform property of all bones with DEF prefix to True
+        # and all other bones to False
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        def_prefix = preferences.def_prefix
+        changed_bones = []
+        for bone in context.object.data.bones:
+            current_use_deform = bone.use_deform
+            bone.use_deform = bone.name.startswith(def_prefix)
+            if current_use_deform != bone.use_deform:
+                changed_bones.append(bone.name)
+        
+        if changed_bones:
+            self.report({"INFO"}, f"Use Deform property of {len(changed_bones)} bones changed: {', '.join(changed_bones)}")
+        return {"FINISHED"}

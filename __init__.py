@@ -14,7 +14,8 @@ from .operators import (
     TGR_OT_SelectCollectionBones,
     TGR_OT_SetCollectionActive,
     TGR_OT_AssignBonesToCollection,
-    TGR_OT_NewCollection
+    TGR_OT_NewCollection,
+    TGR_OT_AutoCorrectUseDeform,
 )
 
 from .operators import (
@@ -111,6 +112,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_AddSuffix,
     TGR_OT_AddTGRArmature,
     TGR_OT_AlignBoneToWorld,
+    TGR_OT_AutoCorrectUseDeform,
     TGR_OT_BindORG,
     TGR_OT_BoneOnPoints,
     TGR_OT_CleanNameUp,

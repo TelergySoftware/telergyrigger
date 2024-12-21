@@ -61,6 +61,7 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         
         row = layout.row(align=True)
         row.prop(context.object.tgr_collections, "edit_mode", toggle=True, text="Edit Mode", icon='EDITMODE_HLT')
+        row.operator('tgr.auto_correct_use_deform', icon='FILE_REFRESH', text="Fix Deform")
         
         edit_mode = context.object.tgr_collections.edit_mode
 
