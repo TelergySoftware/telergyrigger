@@ -463,7 +463,7 @@ class TGR_OT_SelectCollectionBones(bpy.types.Operator):
         if not current_mode == 'POSE':
             bpy.ops.object.mode_set(mode='POSE')
         # Select all the bones of the specified collection
-        for bone in context.object.tgr_props.armature.data.collections[self.name].bones:
+        for bone in context.object.tgr_props.armature.data.collections_all[self.name].bones:
             bone.select = True
         
         # Restore the previous armature mode
