@@ -85,6 +85,10 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
         # Create Rotation Chain
         row = layout.row()
         row.operator("tgr.create_rotation_chain", icon='CON_ROTLIKE')
+        
+        # Create Single Controller Stretch
+        row = layout.row()
+        row.operator("tgr.create_single_controller_stretch", icon='CON_STRETCHTO')
 
         row = layout.row()
         row.operator("tgr.copy_transforms_to_chain", icon='CON_TRANSFORM')

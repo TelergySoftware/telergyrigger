@@ -43,6 +43,7 @@ from .operators import (
     TGR_OT_UnbindORG,
     TGR_OT_AddPivotController,
     TGR_OT_FKFromTweakChain,
+    TGR_OT_CreateSingleControllerStretch,
 )
 
 from .operators import (
@@ -123,6 +124,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_CreateIKChain,
     TGR_OT_CreateIKPoleTarget,
     TGR_OT_CreateIntermediateBone,
+    TGR_OT_CreateSingleControllerStretch,
     TGR_OT_CreateRotationChain,
     TGR_OT_CreateSwitchChains,
     TGR_OT_CreateTweakChain,

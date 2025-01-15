@@ -925,3 +925,154 @@ class TGR_OT_FKFromTweakChain(bpy.types.Operator):
         update_armature(context)
         
         return {'FINISHED'}
+
+
+class TGR_OT_CreateSingleControllerStretch(bpy.types.Operator):
+    """Create a single controller stretch bone for the selected bones"""
+    
+    bl_idname = "tgr.create_single_controller_stretch"
+    bl_label = "Create Single Controller Stretch"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    controller_name: bpy.props.StringProperty(name="Controller Name", default="LIMB", description="Name of the controller bone")
+    influence: bpy.props.FloatProperty(name="Influence", default=0.5, min=0.0, max=1.0, description="Influence of the copy transforms")
+    all_stretch: bpy.props.BoolProperty(name="All Stretch", default=False, description="If true, all bones will have a stretch to constraint")
+    extra_controls: bpy.props.BoolProperty(name="Extra Controls", default=False, description="If true, extra controls will be exposed")
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+    
+    def execute(self, context):
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
+        def_prefix = preferences.def_prefix + preferences.separator
+        
+        armature = context.active_object
+        
+        # Check if the selected bones are DEF bones
+        for bone in context.selected_pose_bones:
+            if bone.name.startswith(def_prefix):
+                self.report({'ERROR'}, 'Cannot create single controller stretch bones from DEF bones')
+                return {'CANCELLED'}
+        
+        # Enter edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        # Disconnect the selected bones
+        bpy.ops.armature.parent_clear(type='DISCONNECT')
+        # Select the linked bones
+        bpy.ops.armature.select_linked()
+        # Store the names of the selected bones
+        selected_bones_names = [bone.name for bone in context.selected_bones]
+        # Deselect the first bone of the chain
+        first_bone = context.object.data.edit_bones[selected_bones_names[0]]
+        first_bone.select = first_bone.select_head = first_bone.select_tail = False
+        # Duplicate the selected bones
+        bpy.ops.armature.duplicate()
+        # Change the length of the duplicated bones to 25% of the original length
+        # Also change the prefix of the duplicated bones to MCH
+        # At last store the names of the duplicated bones
+        mch_bones_names = []
+        for bone in context.selected_editable_bones:
+            bone.length *= 0.25
+            if bone.name.startswith(org_prefix):
+                bone.name = bone.name.replace(org_prefix, mch_prefix)
+            elif bone.name.startswith(ctrl_prefix):
+                bone.name = bone.name.replace(ctrl_prefix, mch_prefix)
+            else:
+                self.report({'ERROR'}, f'The bone {bone.name} is not a ORG or CTRL bone')
+                return {'CANCELLED'}
+            # Remove the number suffix from the bone name
+            bone.name = bone.name[:-4]
+            # Parent the selected bone to the duplicated bone
+            selected_bone = context.object.data.edit_bones[selected_bones_names[context.selected_editable_bones.index(bone) + 1]]
+            selected_bone.parent = bone
+            # Append the name of the mch bone to the mch_bones_names list
+            mch_bones_names.append(bone.name)
+
+        # Deselct all bones
+        bpy.ops.armature.select_all(action='DESELECT')
+        # Select the last MCH bone, duplicate it and move it in the Y normal axis by 4 times its length
+        tip_bone = context.object.data.edit_bones[mch_bones_names[-1]]
+        tip_bone.select = tip_bone.select_head = tip_bone.select_tail = True
+        tip_bone_length = tip_bone.length
+        bpy.ops.armature.duplicate()
+        bpy.ops.transform.translate(value=(0, tip_bone_length * 4, 0), orient_type='NORMAL')
+        tip_bone = context.selected_editable_bones[-1]
+        tip_bone.name = tip_bone.name[:-4] + "_TIP"
+        # Append the new bone to the mch_bones_names list
+        mch_bones_names.append(tip_bone.name)
+        # Set the 3D cursor to the tip bone head
+        context.scene.cursor.location = tip_bone.head
+        # Add a new non deform bone
+        bpy.ops.tgr.add_non_deform_bone()
+        # Set the length of the bone to be 4 times the length of the tip bone
+        non_deform_bone = context.selected_editable_bones[0]
+        non_deform_bone.length = tip_bone.length * 4
+        # Set the parent of the non deform bone to the root bone
+        non_deform_bone.parent = armature.data.edit_bones[armature.tgr_props.root_bone]
+        # Rename the non deform bone to the appropriate name
+        non_deform_bone.name = f"{ctrl_prefix}{self.controller_name}"
+        # Store non deform bone name for later
+        non_deform_bone_name = non_deform_bone.name
+        # Creation of the MCH INT bones
+        mch_int_bones_names = []
+        for i, mch_bone_name in enumerate(reversed(mch_bones_names)):
+            if mch_bone_name.endswith("_TIP"):
+                # Set the parent of the tip bone to the non deform bone
+                tip_bone = context.object.data.edit_bones[mch_bone_name]
+                tip_bone.parent = non_deform_bone
+                continue
+            # Duplicate the selected bone and shrink it to 75% of its original size
+            bpy.ops.armature.duplicate()
+            int_bone = context.selected_editable_bones[0]
+            int_bone.length *= 0.75
+            # Rename the bone to MCH INT
+            int_bone.name = f"{mch_prefix}INT{preferences.separator}{self.controller_name}{preferences.separator}{i:03d}"
+            # Set the parent of the mch bone to the int bone
+            mch_bone = context.object.data.edit_bones[mch_bone_name]
+            mch_bone.parent = int_bone
+            # Append the name of the int bone to the mch_int_bones_names list
+            mch_int_bones_names.append(int_bone.name)
+        # Go back to pose mode
+        bpy.ops.object.mode_set(mode='POSE')
+        # Add a copy transforms constraint to the MCH INT bones targetting the CTRL first and then the previous bone
+        for mch_int_bone_name in mch_int_bones_names:
+            mch_int_bone = armature.pose.bones[mch_int_bone_name]
+            constraint = mch_int_bone.constraints.new('COPY_TRANSFORMS')
+            constraint.target = armature
+            constraint.subtarget = non_deform_bone_name if mch_int_bone_name == mch_int_bones_names[0] else mch_int_bones_names[mch_int_bones_names.index(mch_int_bone_name) - 1]
+            constraint.name = "TGR Single Controller Stretch"
+            constraint.influence = self.influence
+        
+        # Add the stretch to and damped track constraints to the initially selected bones
+        for i, pair_name in enumerate(zip(selected_bones_names, mch_bones_names)):
+            bone = armature.pose.bones[pair_name[0]]
+            constraint = bone.constraints.new('STRETCH_TO') if self.all_stretch or i == len(selected_bones_names) - 1 else bone.constraints.new('DAMPED_TRACK')
+            constraint.target = armature
+            constraint.subtarget = pair_name[1]
+            constraint.name = "TGR Single Controller Stretch"
+        
+        if self.extra_controls:
+            # Rename the mch bones to have a CTRL prefix
+            for mch_bone_name in mch_bones_names:
+                mch_bone = armature.pose.bones[mch_bone_name]
+                mch_bone.name = mch_bone.name.replace(mch_prefix, f"{ctrl_prefix}TWEAK{preferences.separator}")
+        else:
+            # Send the MCH bones to the MCH collection
+            mch_collection = armature.data.collections[preferences.mch_prefix]
+            bpy.ops.pose.select_all(action="DESELECT")
+            for bone_name in mch_bones_names:
+                bone = armature.pose.bones[bone_name]
+                move_bones_to_collection(mch_collection.name, bone.bone)
+        
+        # Update the view layer
+        update_armature(context)                
+        
+        return {'FINISHED'}
