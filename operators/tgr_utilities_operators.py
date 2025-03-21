@@ -379,7 +379,8 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
 
     bone_name: bpy.props.StringProperty(name="Bone Name", description="Name of bones to be selected")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.shift = False
 
     @classmethod
@@ -432,7 +433,8 @@ class TGR_OT_SelectCollectionBones(bpy.types.Operator):
 
     name: bpy.props.StringProperty(name="Collection Name", default="")
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.shift = False
 
     @classmethod
@@ -487,8 +489,8 @@ class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
     bl_label = "Assign Bones to Collection"
     bl_options = {"REGISTER", "UNDO"}
     
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.shift = False
 
     name: bpy.props.StringProperty(name="Collection Name", default="")

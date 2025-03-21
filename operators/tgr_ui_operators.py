@@ -212,7 +212,8 @@ class TGR_OT_RIG_UI_AddComponent(bpy.types.Operator):
         default=""
     )
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         tgr_components = bpy.context.active_object.tgr_ui_components
         components_line = [component.line for component in tgr_components]
         if len(components_line) == 0:
@@ -279,7 +280,8 @@ class TGR_OT_RIG_UI_ModifyItem(bpy.types.Operator):
     bl_label = "Modify Item"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.component = None
 
     def selected_items(self, context):
