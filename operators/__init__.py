@@ -45,3 +45,5 @@ from .tgr_ui_operators import (TGR_OT_GenerateUI,
                                TGR_OT_RIG_UI_ModifyItem,
                                TGR_OT_RIG_UI_RemoveItem,
                                TGR_OT_RIG_UI_Clear,)
+# Add classes from tgr_weight_paint_operators
+from .tgr_weight_paint_operators import (TGR_OT_ToggleDeformerConstraint,)

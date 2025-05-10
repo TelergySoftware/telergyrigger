@@ -12,8 +12,9 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
     
     def draw_collection(self, layout, collection, edit_mode, left_margin=0):
         
-        tgr_props = bpy.context.object.tgr_props
-        collection_props = bpy.context.object.tgr_collections
+        armature = bpy.context.object.parent if bpy.context.object.parent else bpy.context.object
+        tgr_props = armature.tgr_props
+        collection_props = armature.tgr_collections
         
         row = layout.row(align=True)
         # Create a split layout to simulate a left margin
@@ -24,7 +25,7 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         main_row = split.row(align=True)
         
         
-        active = collection.name == tgr_props.armature.data.collections.active.name
+        active = collection.name == armature.data.collections.active.name
         main_row.operator('tgr.set_collection_active', icon='CHECKBOX_HLT' if active else 'CHECKBOX_DEHLT', text="").collection = collection.name
         main_row.prop(collection, "is_solo", toggle=True, text="", icon='SOLO_ON' if collection.is_solo else 'SOLO_OFF')
         main_row.prop(collection, "is_visible", toggle=True, text=collection.name)
@@ -49,21 +50,26 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
     def poll(cls, context):
         if not context.object:
             return False
-        is_armature = context.object.type == 'ARMATURE'
-        is_edit_mode = context.mode == 'EDIT_ARMATURE'
-        is_pose_mode = context.mode == 'POSE'
-        return is_armature and (is_edit_mode or is_pose_mode)
+        # Check if the active object is parented to an armature or is an armature itself
+        if context.object.parent and context.object.parent.type == 'ARMATURE':
+            return True
+        if context.object.type == 'ARMATURE':
+            return True
+        return False
 
     def draw(self, context):
         layout = self.layout
-        armature = context.object.tgr_props.armature
+        armature = context.object.parent if context.object.parent else context.object
         collections = armature.data.collections
         
         row = layout.row(align=True)
-        row.prop(context.object.tgr_collections, "edit_mode", toggle=True, text="Edit Mode", icon='EDITMODE_HLT')
+        row.prop(armature.tgr_collections, "edit_mode", toggle=True, text="Edit Mode", icon='EDITMODE_HLT')
         row.operator('tgr.auto_correct_use_deform', icon='FILE_REFRESH', text="Fix Deform")
         
-        edit_mode = context.object.tgr_collections.edit_mode
+        row = layout.row(align=True)
+        row.operator('tgr.toggle_deformer_constraint', icon='CONSTRAINT_BONE', text="Toggle Deformer")
+        
+        edit_mode = armature.tgr_collections.edit_mode
 
         for collection in collections:
             self.draw_collection(layout, collection, edit_mode)

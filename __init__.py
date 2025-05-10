@@ -54,6 +54,10 @@ from .operators import (
     TGR_OT_RIG_UI_Clear
 )
 
+from .operators import (
+    TGR_OT_ToggleDeformerConstraint,
+)
+
 from .operators import TGR_OT_AddTGRArmature
 
 # ----- UI -----
@@ -146,6 +150,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_SelectBonesByName,
     TGR_OT_SelectCollectionBones,
     TGR_OT_SetCollectionActive,
+    TGR_OT_ToggleDeformerConstraint,
     TGR_OT_AssignBonesToCollection,
     TGR_OT_NewCollection,
     TGR_OT_UnbindORG,
