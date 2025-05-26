@@ -629,4 +629,99 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
         # Finish
         return {"FINISHED"}
                 
-                
+
+class TGR_OT_BonesOnVertices(bpy.types.Operator):
+    """Add bones on selected vertices of the selected mesh object"""
+    
+    bl_idname = "tgr.bones_on_vertices"
+    bl_label = "Bones on Vertices"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    bone_scale: bpy.props.FloatProperty(name="Bone Scale", description="Bone Scale to be applied to each added bone",
+                                        default=1.0)
+    deform: bpy.props.BoolProperty(name="Deform", description="Choose whether the added bones are deform or not",
+                                      default=True)
+    object_name: bpy.props.StringProperty(name="Object Name", description="Name of the mesh object to use",
+                                          default="")
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_edit_mode = context.active_object.mode == 'EDIT'
+        return is_armature and is_edit_mode and context.selected_objects
+    
+    def execute(self, context):
+        armature = context.object.tgr_props.armature
+        
+        def_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.def_prefix
+        mch_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.mch_prefix
+        separator = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
+        # Check if the object name is valid and if it is a valid mesh object
+        try:
+            mesh_object = bpy.data.objects[self.object_name]
+        except KeyError:
+            self.report({"ERROR"}, f"Object '{self.object_name}' not found")
+            return {"CANCELLED"}
+        
+        if mesh_object.type != 'MESH':
+            self.report({"ERROR"}, f"Object '{self.object_name}' is not a mesh")
+            return {"CANCELLED"}
+        
+        # Get the positions of the selected vertices
+        selected_vertices_pos = [v.co for v in mesh_object.data.vertices if v.select]
+        if not selected_vertices_pos:
+            self.report({"ERROR"}, "No vertices selected in the mesh object")
+            return {"CANCELLED"}
+        
+        # Store the current active collection name
+        active_collection_name = armature.data.collections.active.name
+        # If deform is true, set the DEF collection as the active collection
+        prefix = ""
+        if self.deform:
+            armature.data.collections.active = armature.data.collections_all[def_prefix]
+            prefix = def_prefix + separator
+        else:
+            armature.data.collections.active = armature.data.collections_all[mch_prefix]
+            prefix = mch_prefix + separator
+        # Loop through the selected vertices positions
+        for pos in selected_vertices_pos:
+            # Create a new bone at the vertex position
+            bpy.ops.armature.bone_primitive_add(name=f"{prefix}BONE")
+            bpy.ops.armature.select_linked()
+            # Get the newly created bone
+            new_bone = context.selected_bones[0]
+            # Set the bone's head and tail to the vertex position
+            new_bone.head = pos
+            new_bone.tail = pos + Vector((0, 0, self.bone_scale))
+            new_bone.length = self.bone_scale
+            # Set the bone's deform property
+            new_bone.use_deform = self.deform
+            # Align the bone rotation to the world
+            context.object.data.edit_bones.active = new_bone
+            bpy.ops.tgr.align_bone_to_world()
+            # Set the parent of the new bone to the root bone
+            try:
+                new_bone.parent = armature.data.edit_bones[armature.tgr_props.root_bone]
+            except KeyError:
+                self.report({"WARNING"}, "Root bone not set, parent not assigned")
+            
+        # Restore the active collection
+        armature.data.collections.active = armature.data.collections[active_collection_name]
+        # Update the armature
+        update_armature(context)
+        # Finish
+        return {"FINISHED"}
+    
+    def invoke(self, context, event=None):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        # Search for the mesh object in the scene
+        row = layout.row()
+        row.prop_search(self, "object_name", context.scene, "objects", text="Mesh Object")
+        layout.prop(self, "bone_scale")
+        layout.prop(self, "deform", text="Deform Bone")
