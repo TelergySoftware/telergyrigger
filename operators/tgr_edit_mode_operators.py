@@ -35,9 +35,8 @@ def create_org(context):
 
 
 def create_org_with_selection(self, context):
-    """
-    Create ORG bones strategy for selected bones.
-    """
+    """Create ORG bones strategy for selected bones"""
+    
     preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
     # Get armature
     armature = context.object.tgr_props.armature
@@ -75,9 +74,8 @@ def create_org_with_selection(self, context):
 
 
 def create_org_with_all(self, context):
-    """
-    Create ORG bones strategy for all bones.
-    """
+    """Create ORG bones strategy for all bones"""
+    
     preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
     def_prefix = preferences.def_prefix + preferences.separator
     # Get armature
@@ -128,9 +126,8 @@ class TGR_OT_CreateORG(bpy.types.Operator):
 
 
 class TGR_OT_RemoveORG(bpy.types.Operator):
-    """
-    Remove the ORG bones from the selected armature.
-    """
+    """Remove the ORG bones from the selected armature"""
+    
     bl_idname = "tgr.remove_org"
     bl_label = "Remove ORG"
     bl_options = {'REGISTER', 'UNDO'}
@@ -169,9 +166,8 @@ class TGR_OT_RemoveORG(bpy.types.Operator):
 
 
 class TGR_OT_AddNonDeformBone(bpy.types.Operator):
-    """
-    Add a non-deforming bone to the selected armature.
-    """
+    """Add a non-deforming bone to the selected armature"""
+    
     bl_idname = "tgr.add_non_deform_bone"
     bl_label = "Add Non-Deform Bone"
     bl_options = {'REGISTER', 'UNDO'}
@@ -218,9 +214,8 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
 
 
 class TGR_OT_AddDeformBone(bpy.types.Operator):
-    """
-    Add a deform bone to the selected armature.
-    """
+    """Add a deform bone to the selected armature"""
+    
     bl_idname = "tgr.add_deform_bone"
     bl_label = "Add Deform Bone"
     bl_options = {'REGISTER', 'UNDO'}
@@ -263,9 +258,8 @@ class TGR_OT_AddDeformBone(bpy.types.Operator):
 
 
 class TGR_OT_ParentToRoot(bpy.types.Operator):
-    """
-    Parent the selected bones to the root bone.
-    """
+    """Parent the selected bones to the root bone"""
+    
     bl_idname = "tgr.parent_to_root"
     bl_label = "Parent to Root"
     bl_description = "Parent selected bones to the root bone"
@@ -297,10 +291,8 @@ class TGR_OT_ParentToRoot(bpy.types.Operator):
 
 
 class TGR_OT_ConnectBones(bpy.types.Operator):
-    """
-    Connect the selected bones to their parent
-    without moving their head.
-    """
+    """Connect the selected bones to their parent without moving their head"""
+    
     bl_idname = "tgr.connect_bones"
     bl_label = "Connect Bones"
     bl_description = "Connect selected bones to their parent"
@@ -334,9 +326,8 @@ class TGR_OT_ConnectBones(bpy.types.Operator):
 
 
 class TGR_OT_AlignBoneToWorld(bpy.types.Operator):
-    """
-    Align bone rotation to world.
-    """
+    """Align bone rotation to world"""
+    
     bl_idname = "tgr.align_bone_to_world"
     bl_label = "Align Rotation to World"
     bl_options = {'REGISTER', 'UNDO'}
@@ -373,9 +364,8 @@ class TGR_OT_AlignBoneToWorld(bpy.types.Operator):
 
 
 class TGR_OT_BoneOnPoints(bpy.types.Operator):
-    """
-    Add bones on selected bones points (Head and Tail).
-    """
+    """Add bones on selected bones points (Head and Tail)"""
+    
     bl_idname = "tgr.bones_on_points"
     bl_label = "Bones on Points"
     bl_options = {'REGISTER', 'UNDO'}
@@ -439,6 +429,7 @@ class TGR_OT_BoneOnPoints(bpy.types.Operator):
 
 class TGR_OT_CopyTransforms(bpy.types.Operator):
     """Copy the active bone transforms to the selected bones"""
+    
     bl_idname = "tgr.copy_transforms"
     bl_label = "Copy Transforms"
     bl_options = {'REGISTER', 'UNDO'}
@@ -486,9 +477,8 @@ class TGR_OT_CopyTransforms(bpy.types.Operator):
 
 
 class TGR_OT_CreateSwitchChains(bpy.types.Operator):
-    """
-    Create switch chains for the selected bones.
-    """
+    """Create switch chains for the selected bones"""
+    
     bl_idname = "tgr.create_switch_chains"
     bl_label = "Create Switch Chains"
     bl_options = {'REGISTER', 'UNDO'}
