@@ -567,7 +567,7 @@ class TGR_OT_CreateSwitchChains(bpy.types.Operator):
         # Finish
         return {"FINISHED"}
         
-    
+
 class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
     """Creates an MCH bone that acts as an intermediate bone"""
     
@@ -595,12 +595,19 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
             self.report({"ERROR"}, "Cannot create an intermediate bone for a DEF bone")
             return {"CANCELLED"}
         
-        # Duplicate the active bones
-        bpy.ops.armature.duplicate()
-        # Scale bones to 0.5
-        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
-        # Change bone prefix to the mch_prefix or mch_prefix + "INT" if the selected bone is already an MCH bone and remove the .### from the bone name
-        for bone in context.selected_editable_bones:
+        # Store Bone parents
+        bone_names = [bone.name for bone in context.selected_editable_bones]
+        # Deselect all bones
+        bpy.ops.armature.select_all(action='DESELECT')
+        
+        for bone_name in bone_names:
+            bone = context.object.data.edit_bones[bone_name]
+            bone.select_tail = bone.select_head = bone.select = True
+            # Duplicate the selected bone
+            bpy.ops.armature.duplicate()
+            # Scale bones to 0.5
+            bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+            # Change bone prefix to the mch_prefix or mch_prefix + "INT" if the selected bone is already an MCH bone and remove the .### from the bone name
             # Set the current bone as the parent of the original bone
             context.active_object.data.edit_bones[bone.name[:-4]].parent = bone
             if bone.name.startswith(org_prefix):
@@ -610,10 +617,9 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
             elif bone.name.startswith(mch_prefix):
                 bone.name = bone.name.replace(mch_prefix, mch_prefix + "INT" + preferences.separator)
             bone.name = bone.name[:-4]
-            
-        # Send the bone to the MCH collection
-        bpy.ops.tgr.assign_bones_to_collection(name=preferences.mch_prefix)
-            
+            # Deselect the bone
+            bone.select_tail = bone.select_head = bone.select = False
+               
         # Update the armature
         update_armature(context)
         # Finish
