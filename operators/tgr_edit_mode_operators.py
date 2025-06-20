@@ -587,16 +587,22 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
         preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         org_prefix = preferences.org_prefix + preferences.separator
-        mch_prefix = preferences.mch_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
         
         # It doesn't make sense to create an intermediate bone for a DEF bone
-        if context.active_bone.name.startswith(def_prefix):
-            self.report({"ERROR"}, "Cannot create an intermediate bone for a DEF bone")
+        if any(bone.name.startswith(def_prefix) for bone in context.selected_editable_bones):
+            self.report({"ERROR"}, "Cannot create intermediate bones for DEF bones")
             return {"CANCELLED"}
+        
+        x_mirror = context.object.tgr_props.armature.data.use_mirror_x
+        # If x mirror is enabled, disable it temporarily
+        if x_mirror:
+            context.object.tgr_props.armature.data.use_mirror_x = False
         
         # Store Bone parents
         bone_names = [bone.name for bone in context.selected_editable_bones]
+        mch_bone_names = []
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
         
@@ -605,20 +611,41 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
             bone.select_tail = bone.select_head = bone.select = True
             # Duplicate the selected bone
             bpy.ops.armature.duplicate()
+            mch_bone = context.selected_editable_bones[0]
             # Scale bones to 0.5
             bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
             # Change bone prefix to the mch_prefix or mch_prefix + "INT" if the selected bone is already an MCH bone and remove the .### from the bone name
             # Set the current bone as the parent of the original bone
-            context.active_object.data.edit_bones[bone.name[:-4]].parent = bone
+            bone.parent = mch_bone
+            # Rename the bone based on its original name
             if bone.name.startswith(org_prefix):
-                bone.name = bone.name.replace(org_prefix, mch_prefix)
+                mch_bone.name = bone.name.replace(org_prefix, mch_prefix)
             elif bone.name.startswith(ctrl_prefix):
-                bone.name = bone.name.replace(ctrl_prefix, mch_prefix)
+                mch_bone.name = bone.name.replace(ctrl_prefix, mch_prefix)
             elif bone.name.startswith(mch_prefix):
-                bone.name = bone.name.replace(mch_prefix, mch_prefix + "INT" + preferences.separator)
-            bone.name = bone.name[:-4]
+                mch_bone.name = bone.name.replace(mch_prefix, mch_prefix + "INT" + preferences.separator)
+            
+            # Add the new bone to the list of MCH bones
+            mch_bone_names.append(mch_bone.name)
+            
             # Deselect the bone
-            bone.select_tail = bone.select_head = bone.select = False
+            bpy.ops.armature.select_all(action='DESELECT')
+
+        # Select the bones and mch_bones
+        for bone_name, mch_bone_name in zip(bone_names, mch_bone_names):
+            bone = context.object.data.edit_bones[bone_name]
+            mch_bone = context.object.data.edit_bones[mch_bone_name]
+            # Select the original bone
+            bone.select_tail = bone.select_head = bone.select = True
+            # Select the MCH bone
+            mch_bone.select_tail = mch_bone.select_head = mch_bone.select = True
+        
+        # Symmetrize the bones if x_mirror is enabled
+        if x_mirror:
+            bpy.ops.armature.symmetrize()
+            
+        # Return the x_mirror state to its original value
+        context.object.tgr_props.armature.data.use_mirror_x = x_mirror
                
         # Update the armature
         update_armature(context)
