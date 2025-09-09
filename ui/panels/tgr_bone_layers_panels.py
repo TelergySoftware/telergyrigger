@@ -10,6 +10,10 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
     bl_label = "Bone Collections"
     bl_idname = "TGR_PT_View3D_Panel_BoneCollections"
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+    
     def draw_collection(self, layout, collection, edit_mode, left_margin=0):
         
         armature = bpy.context.object.parent if bpy.context.object.parent else bpy.context.object
