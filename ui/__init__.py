@@ -19,7 +19,7 @@ from .panels import (
     # Bone Layers
     TGR_PT_View3D_Panel_BoneCollections,
     # Rig UI
-    TGR_PT_View3D_Panel_RigUI,
+    TGR_PT_RIG_UI,
     # Custom Properties
     TGR_PT_View3D_Panel_CustomProperties,
 )

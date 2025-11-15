@@ -27,10 +27,7 @@ from .tgr_pose_mode_operators import (TGR_OT_AddPivotController,
                                       TGR_OT_UnbindORG,)
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (TGR_OT_GenerateUI,
-                               TGR_OT_RIG_UI_AddComponent,
-                               TGR_OT_RIG_UI_Clear,
-                               TGR_OT_RIG_UI_ModifyItem,
-                               TGR_OT_RIG_UI_RemoveItem,)
+                               )
 # Add classes from tgr_utilities_operators
 from .tgr_utilities_operators import (TGR_OT_AddPrefix,
                                       TGR_OT_AddSuffix,

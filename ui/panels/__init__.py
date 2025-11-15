@@ -9,7 +9,7 @@ from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_P
 # Bone Layers panels
 from .tgr_bone_layers_panels import TGR_PT_View3D_Panel_BoneCollections
 # Rig UI panels
-from .tgr_rig_ui_panels import TGR_PT_View3D_Panel_RigUI
+from .tgr_rig_ui_panels import TGR_PT_RIG_UI
 # Custom Properties panels
 from .tgr_custom_properties_panels import TGR_PT_View3D_Panel_CustomProperties
 

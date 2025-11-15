@@ -32,36 +32,14 @@ class TGR_Collection_Properties(bpy.types.PropertyGroup):
     locked_collections: set = set()
 
 
-class TGR_UI_Components(bpy.types.PropertyGroup):
-    """Components used to create the generated UI"""
-
-    component_type: bpy.props.StringProperty(
-        name="Component Type",
-        description="Can be LAYER or LABEL",
-        default="LAYER",
+class TGR_RIG_UI_Properties(bpy.types.PropertyGroup):
+    """ Properties for the Rig UI panel """
+    
+    edit_mode: bpy.props.BoolProperty(
+        name="Edit Mode",
+        description="Toggle edit mode for Rig UI",
+        default=False
     )
-
-    value: bpy.props.StringProperty(
-        name="Value",
-        description="Describes the layer or label text",
-        default=""
-    )
-
-    line: bpy.props.IntProperty(
-        name="Line",
-        description="Line in which the component will be placed",
-        default=0,
-        min=0
-    )
-
-    layer_index: bpy.props.IntProperty(
-        name="Layer Index",
-        description="Layer index, only used if component type is LAYER",
-        default=0,
-        min=0,
-        max=31
-    )
-
-    selected: bpy.props.BoolProperty(
-        name="Selected",
-    )
+    
+    ui_structure: dict = {}
+    

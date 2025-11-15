@@ -49,10 +49,6 @@ from .operators import (
 
 from .operators import (
     TGR_OT_GenerateUI,
-    TGR_OT_RIG_UI_AddComponent,
-    TGR_OT_RIG_UI_ModifyItem,
-    TGR_OT_RIG_UI_RemoveItem,
-    TGR_OT_RIG_UI_Clear
 )
 
 from .operators import (
@@ -86,7 +82,7 @@ from .ui import (
 # Bone Layers panel
 from .ui import TGR_PT_View3D_Panel_BoneCollections
 # Rig UI
-# from .ui import TGR_PT_View3D_Panel_RigUI
+from .ui import TGR_PT_RIG_UI
 # Custom Properties
 from .ui import TGR_PT_View3D_Panel_CustomProperties
 # Menus
@@ -100,7 +96,7 @@ from .ui import (
 # ----- PROPERTIES -----
 from .properties import (
     TGR_Properties,
-    TGR_UI_Components,
+    TGR_RIG_UI_Properties,
     TGR_Collection_Properties,
 )
 
@@ -141,10 +137,6 @@ CLASSES_TO_REGISTER = (
     TGR_OT_IsolateBone,
     TGR_OT_LockBonesFromCollection,
     TGR_OT_ParentToRoot,
-    TGR_OT_RIG_UI_AddComponent,
-    TGR_OT_RIG_UI_Clear,
-    TGR_OT_RIG_UI_ModifyItem,
-    TGR_OT_RIG_UI_RemoveItem,
     TGR_OT_RemoveCollection,
     TGR_OT_RemovePrefix,
     TGR_OT_RemoveSuffix,
@@ -166,7 +158,7 @@ CLASSES_TO_REGISTER = (
     TGR_PT_View3D_Panel_PoseMode,
     TGR_PT_View3D_Panel_PoseMode_Constraints,
     TGR_PT_View3D_Panel_PoseMode_ORG,
-    # TGR_PT_View3D_Panel_RigUI,
+    TGR_PT_RIG_UI,
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,
     TGR_PT_View3D_Panel_Utilities_Selection,
@@ -177,7 +169,7 @@ CLASSES_TO_REGISTER = (
     TGR_MT_PoseMode_Constraints_PieMenu,
     # Properties
     TGR_Properties,
-    TGR_UI_Components,
+    TGR_RIG_UI_Properties,
     TGR_Collection_Properties,
 )
 
@@ -200,6 +192,7 @@ def register():
     # Add properties to the armature object
     bpy.types.Object.tgr_props = bpy.props.PointerProperty(type=TGR_Properties)
     bpy.types.Object.tgr_collections = bpy.props.PointerProperty(type=TGR_Collection_Properties)
+    bpy.types.Object.tgr_rig_ui_props = bpy.props.PointerProperty(type=TGR_RIG_UI_Properties)
 
     # Append the default layers
 

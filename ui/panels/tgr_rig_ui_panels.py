@@ -1,60 +1,31 @@
 from .tgr_base_panel import TGR_PT_BASE
 
 
-def layer_name_by_index(context, index: int) -> str:
-    layers = context.active_object.tgr_layer_collection
-
-    for layer in layers:
-        if layer.index == index:
-            return layer.ui_name
-
-    return "NOT NAMED LAYER"
-
-
-class TGR_PT_View3D_Panel_RigUI(TGR_PT_BASE):
-    """
-    Rig UI panel, used to create the final Rig UI script.
-    """
-
-    bl_label = "Rig UI"
-    bl_idname = "TGR_PT_View3D_Panel_RigUI"
+class TGR_PT_RIG_UI(TGR_PT_BASE):
+    bl_idname = "TGR_PT_RIG_UI"
+    bl_label = "Rig UI Panel"
+    bl_description = "Panel for Rig UI settings and options"
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @classmethod
     def poll(cls, context):
-        is_armature = context.object.type == 'ARMATURE'
-        is_edit_mode = context.mode == 'EDIT_ARMATURE'
-        is_pose_mode = context.mode == 'POSE'
-        return is_armature and (is_edit_mode or is_pose_mode)
-
+        if not context.object:
+            return False
+        # Check if the active object is parented to an armature or is an armature itself
+        if context.object.parent and context.object.parent.type == 'ARMATURE':
+            return True
+        if context.object.type == 'ARMATURE':
+            return True
+        return False
+    
     def draw(self, context):
-        ui_components = context.active_object.tgr_ui_components
+        rig_ui_props = None
+        if context.object.type == "ARMATURE":
+            rig_ui_props = context.object.tgr_rig_ui_props
+        elif context.object.parent and context.object.parent.type == "ARMATURE":
+            rig_ui_props = context.object.parent.tgr_rig_ui_props
         layout = self.layout
-
-        # PREVIEW OF THE RIG UI
-        current_line = -1
-        for component in ui_components:
-            if component.line > current_line:
-                row = layout.row(align=True)
-                current_line = component.line
-            if component.component_type == "LAYER":
-                row.prop(component, "selected", toggle=True, text=component.value)
-            elif component.component_type == "LABEL":
-                row.prop(component, "selected", expand=True, text=component.value)
-
-        row = layout.row()
-        row.separator()
-
-        row = layout.row(align=True)
-        row.alignment = 'EXPAND'
-        row.scale_x = 3
-        row.operator("tgr.ui_add_component", icon='ADD', text='')
-
-        if any(filter(lambda x: x.selected, ui_components)):
-            row = layout.row(align=True)
-            row.operator("tgr.ui_remove_item", icon='TRASH')
-            row.operator("tgr.ui_modify_item", icon='MODIFIER')
-
-        row = layout.row()
-        row.operator("tgr.ui_clear", icon='FILE_REFRESH')
-        row = layout.row()
-        row.operator("tgr.generate_ui", icon='MOD_BUILD')
+        
+        layout.prop(rig_ui_props, "edit_mode", text="Edit Mode", toggle=True)

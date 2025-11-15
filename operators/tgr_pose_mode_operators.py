@@ -277,6 +277,9 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
     bl_idname = "tgr.create_rotation_chain"
     bl_label = "Create Rotation Chain"
     bl_options = {"REGISTER", "UNDO"}
+    
+    scale : bpy.props.FloatProperty(name="Scale", description="Scale of the FK bones",
+                                    default=0.5)
 
     @classmethod
     def poll(cls, context):
@@ -310,25 +313,24 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
 
         bpy.ops.armature.duplicate()
         for bone in context.selected_bones:
-            bone.name = bone.name.replace(ctrl_prefix, f"{ctrl_prefix}TWEAK{preferences.separator}")
+            bone.name = bone.name.replace(ctrl_prefix, f"{ctrl_prefix}FK{preferences.separator}")
             bone.name = bone.name.replace(".001", "")
-        ctrl_tweak_bone_names = [bone.name for bone in context.selected_bones]
+        ctrl_fk_bone_names = [bone.name for bone in context.selected_bones]
 
-        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+        bpy.ops.transform.resize(value=(self.scale, self.scale, self.scale))
         first_bones = True
-        for ctrl, tweak in zip(ctrl_bone_names, ctrl_tweak_bone_names):
+        for ctrl, tweak in zip(ctrl_bone_names, ctrl_fk_bone_names):
             ctrl_edit_bone = context.object.data.edit_bones[ctrl]
-            ctrl_tweak_edit_bone = context.object.data.edit_bones[tweak]
-
-            ctrl_edit_bone.parent = ctrl_tweak_edit_bone
+            ctrl_fk_edit_bone = context.object.data.edit_bones[tweak]
+    
+            ctrl_edit_bone.parent = ctrl_fk_edit_bone
             if first_bones:
                 first_bones = False
-                tweak_parent = ctrl_edit_bone
+                fk_parent = ctrl_edit_bone
                 continue
 
-            ctrl_tweak_edit_bone.parent = tweak_parent
-            tweak_parent = ctrl_edit_bone
-
+            ctrl_fk_edit_bone.parent = fk_parent
+            fk_parent = ctrl_edit_bone
         bpy.ops.object.mode_set(mode='POSE')
         first_bone = True
         for ctrl in ctrl_bone_names:

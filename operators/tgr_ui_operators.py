@@ -1,39 +1,5 @@
 import bpy
 
-COMPONENT_TYPES = [
-    ("LAYER", "LAYER", "Bone layer component"),
-    ("LABEL", "LABEL", "Label component")
-]
-
-
-def sort_components(context):
-    components = context.active_object.tgr_ui_components
-    n = len(components)
-    for i in range(n):
-        swapped = False
-        for j in range(n - i - 1):
-            if components[j].line > components[j + 1].line:
-                components[j].component_type, components[j + 1].component_type = components[j + 1].component_type, \
-                    components[j].component_type
-                components[j].value, components[j + 1].value = components[j + 1].value, components[j].value
-                components[j].selected, components[j + 1].selected = components[j + 1].selected, components[j].selected
-                components[j].line, components[j + 1].line = components[j + 1].line, components[j].line
-                components[j].layer_index, components[j + 1].layer_index = components[j + 1].layer_index, components[
-                    j].layer_index
-                swapped = True
-        if not swapped:
-            break
-
-
-def layer_name_by_index(context, index: int) -> str:
-    layers = context.active_object.tgr_layer_collection
-
-    for layer in layers:
-        if layer.index == index:
-            return layer.ui_name
-
-    return "NOT NAMED LAYER"
-
 
 class TGR_OT_GenerateUI(bpy.types.Operator):
     """
@@ -49,6 +15,12 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
         description="Name that will show on the N panel tab",
         default="Rig UI"
     )
+    
+    file_name: bpy.props.StringProperty(
+        name="File Name",
+        description="Name of the generated UI python script",
+        default="TGR_RigUI.py"
+    )
 
     @classmethod
     def poll(cls, context):
@@ -59,11 +31,12 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
 
     def execute(self, context):
         components = context.active_object.tgr_ui_components
+        self.file_name = self.file_name if self.file_name.endswith(".py") else self.file_name + ".py"
         try:
-            text = bpy.data.texts["TGR_RigUI.py"]
+            text = bpy.data.texts[self.file_name]
             text.clear()
         except KeyError:
-            text = bpy.data.texts.new("TGR_RigUI.py")
+            text = bpy.data.texts.new(self.file_name)
 
         # Header comments
         text.write("# ----- RIG UI Created by TelergyRigger -----\n")
@@ -181,248 +154,145 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class TGR_OT_RIG_UI_AddComponent(bpy.types.Operator):
-    """Add a new component to the RIG UI"""
-
-    bl_idname = "tgr.ui_add_component"
-    bl_label = "Add Component"
+class TGR_OT_UI_AddPanel(bpy.types.Operator):
+    """ Add a new panel to the Rig UI components list """
+    
+    bl_idname = "tgr.ui_add_panel"
+    bl_label = "Add UI Panel"
     bl_options = {'REGISTER', 'UNDO'}
-
-    component_type: bpy.props.EnumProperty(
-        name="Type",
-        items=COMPONENT_TYPES,
+    
+    name: bpy.props.StringProperty(
+        name="Panel Name",
+        default="New Panel"
     )
 
-    value: bpy.props.StringProperty(
-        name="Value",
-        description="Describes the layer or label text",
+    def execute(self, context):
+        rig_ui_props = context.object.tgr_rig_ui_props
+        rig_ui_props.ui_structure[self.name] = []
+        return {'FINISHED'}
+
+
+class TGR_OT_UI_AddRow(bpy.types.Operator):
+    """ Add a new row to the Rig UI components list """
+    
+    bl_idname = "tgr.ui_add_row"
+    bl_label = "Add UI Row"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    path: bpy.props.StringProperty(
+        name="Panel Path",
+        default="",
+        description="Path to the panel in the collections_panel_structure dict separated by dots"
+    )
+
+    def execute(self, context):
+        rig_ui_props = context.object.tgr_rig_ui_props
+        panel = rig_ui_props.ui_structure
+        # Try to add a dictionary with the name ROW:1 under the specified path
+        # Don't add if the path is invalid
+        try:
+            for part in self.path.split('.'):
+                panel = panel[part]
+            row_index = len([item for item in panel if isinstance(item, dict) and 'ROW' in item])
+            panel.append({f'ROW:{row_index}': []})
+        except KeyError:
+            self.report({'ERROR'}, "Invalid panel path")
+            return {'CANCELLED'}
+            
+        return {'FINISHED'}
+    
+
+def add_ui_component(context, component_type, value, path: str) -> bool:
+    """ Helper function to add a UI component to the Rig UI structure """
+    rig_ui_props = context.object.tgr_rig_ui_props
+    panel = rig_ui_props.ui_structure
+    # Try to add the component under the specified path
+    # Don't add if the path is invalid
+    try:
+        for part in path.split('.'):
+            panel = panel[part]
+        panel.append({
+            'type': component_type,
+            'value': value
+        })
+    except KeyError:
+        print("Invalid panel path")
+        return False
+        
+    return True
+
+
+class TGR_OT_UI_AddCollection(bpy.types.Operator):
+    """ Add a new collection to the Rig UI components list """
+    
+    bl_idname = "tgr.ui_add_collection"
+    bl_label = "Add UI Collection"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    path: bpy.props.StringProperty(
+        name="Panel Path",
+        default="",
+        description="Path to the panel in the ui_structure dict separated by dots"
+    )
+    collection_name: bpy.props.StringProperty(
+        name="Collection Name",
+        default=""
+    )
+    
+    def execute(self, context):
+        success = add_ui_component(context, "COLLECTION", self.collection_name, self.path)
+        
+        return {'FINISHED'} if success else {'CANCELLED'}
+
+
+class TGR_OT_UI_AddLabel(bpy.types.Operator):
+    """ Add a new label to the Rig UI components list """
+    
+    bl_idname = "tgr.ui_add_label"
+    bl_label = "Add UI Label"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    path: bpy.props.StringProperty(
+        name="Panel Path",
+        default="",
+        description="Path to the panel in the ui_structure dict separated by dots"
+    )
+    label_text: bpy.props.StringProperty(
+        name="Label Text",
         default=""
     )
 
-    line: bpy.props.IntProperty(
-        name="Line",
-        description="Line in which the component will be placed",
-        default=0,
-        min=0
-    )
-
-    layer_name: bpy.props.StringProperty(
-        name="Layer Name",
-        description="Layer to get the information from",
-        default=""
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        tgr_components = bpy.context.active_object.tgr_ui_components
-        components_line = [component.line for component in tgr_components]
-        if len(components_line) == 0:
-            self.line = 0
-        else:
-            self.line = max(components_line) + 1
-
-    @classmethod
-    def poll(cls, context):
-        is_armature = context.active_object.type == 'ARMATURE'
-        is_pose_mode = context.active_object.mode == 'POSE'
-        is_edit_mode = context.active_object.mode == 'EDIT'
-        return is_armature and (is_pose_mode or is_edit_mode)
-
     def execute(self, context):
-        components = context.active_object.tgr_ui_components
-        collections = context.active_object.tgr_props.armature.data.collections
-        components.add()
-        components[-1].component_type = self.component_type
-        components[-1].value = self.value
-        components[-1].line = self.line
-        for collection in collections:
-            if collection.name == self.layer_name:
-                components[-1].layer_index = layer.index
-                break
-        sort_components(context)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-    def draw(self, context):
-
-        layout = self.layout
-        row = layout.row()
-        row.prop(self, "component_type")
-
-        row = layout.row()
-        row.prop(self, "value")
-
-        if self.component_type == "LAYER":
-            row = layout.row()
-            row.label(text="Choose a layer:")
-
-            row = layout.row()
-            row.prop_search(self, "layer_name", context.object.tgr_props.armature.data, "collections")
-
-        row = layout.row()
-        row.prop(self, "line")
+        success = add_ui_component(context, "LABEL", self.label_text, self.path)
+        
+        return {'FINISHED'} if success else {'CANCELLED'}
 
 
-def get_selected_components(context) -> list:
-    components = context.active_object.tgr_ui_components
-    return list(filter(lambda x: x.selected, components))
-
-
-class TGR_OT_RIG_UI_ModifyItem(bpy.types.Operator):
-    """
-    Generate the UI python script
-    """
-
-    bl_idname = "tgr.ui_modify_item"
-    bl_label = "Modify Item"
+class TGR_OT_UI_RemoveComponent(bpy.types.Operator):
+    """ Remove the component from the Rig UI components list by index """
+    
+    bl_idname = "tgr.ui_remove_component"
+    bl_label = "Remove UI Component"
     bl_options = {'REGISTER', 'UNDO'}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.component = None
-
-    def selected_items(self, context):
-        return [(item.value, item.value, "") for i, item in enumerate(get_selected_components(context))]
-
-    items: bpy.props.EnumProperty(
-        items=selected_items,
-        name="Selected Items"
-    )
-    component_type: bpy.props.EnumProperty(
-        items=COMPONENT_TYPES,
-        name="Type"
-    )
-    layer_name: bpy.props.StringProperty(
-        name="Layer Name",
-        description="Layer to get the information from",
-        default=""
+    
+    path: bpy.props.StringProperty(
+        name="Panel Path",
+        default="",
+        description="Path to the panel in the ui_structure dict separated by dots"
     )
 
-    @classmethod
-    def poll(cls, context):
-        is_armature = context.active_object.type == 'ARMATURE'
-        is_pose_mode = context.active_object.mode == 'POSE'
-        is_edit_mode = context.active_object.mode == 'EDIT'
-        return is_armature and (is_pose_mode or is_edit_mode)
-
     def execute(self, context):
-        layers = context.active_object.tgr_layer_collection
-        if self.component_type == "LAYER" and self.layer_name == "":
-            self.report({"ERROR"}, "Layer name cannot be empty")
-            return {"CANCELLED"}
+        rig_ui_props = context.object.tgr_rig_ui_props
+        component = rig_ui_props.ui_structure
+        # Try to remove the component under the specified path
+        try:
+            parts = self.path.split('.')
+            for part in parts[:-1]:
+                component = component[part]
+            del component
+        except KeyError:
+            self.report({'ERROR'}, "Invalid panel path")
+            return {'CANCELLED'}
+        
+        return {'FINISHED'}
 
-        self.component.component_type = self.component_type
-
-        if self.component_type == "LAYER":
-            for layer in layers:
-                if layer.name == self.layer_name:
-                    self.component.layer_index = layer.index
-                    break
-
-        sort_components(context)
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-    def draw(self, context):
-        components = context.active_object.tgr_ui_components
-
-        layout = self.layout
-        row = layout.row()
-        if get_selected_components(context).__len__() > 1:
-            row.label(text="Choose the component to modify:")
-
-            row = layout.row()
-            row.prop(self, "items")
-
-            for component in components:
-                if component.value == str(self.items):
-                    self.component = component
-                    break
-
-        else:
-            self.component = get_selected_components(context)[0]
-
-        row = layout.row()
-        row.label(text="Edit component:")
-
-        row = layout.row()
-        row.prop(self, "component_type")
-
-        row = layout.row()
-        row.prop(self.component, "value")
-
-        if self.component_type == "LAYER":
-            row = layout.row()
-            row.label(text="Choose a layer:")
-
-            row = layout.row()
-            row.prop_search(self, "layer_name", context.active_object, "tgr_layer_collection")
-
-        row = layout.row()
-        row.prop(self.component, "line")
-
-
-class TGR_OT_RIG_UI_Clear(bpy.types.Operator):
-    """
-    Generate the UI python script
-    """
-
-    bl_idname = "tgr.ui_clear"
-    bl_label = "Clear"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        is_armature = context.active_object.type == 'ARMATURE'
-        is_pose_mode = context.active_object.mode == 'POSE'
-        is_edit_mode = context.active_object.mode == 'EDIT'
-        return is_armature and (is_pose_mode or is_edit_mode)
-
-    def execute(self, context):
-        components = context.active_object.tgr_ui_components
-        components.clear()
-        self.report({"INFO"}, "RIG UI Cleared!")
-        return {"FINISHED"}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-        row = layout.row()
-
-        row.label(text="Confirm to clear the RIG UI")
-
-
-class TGR_OT_RIG_UI_RemoveItem(bpy.types.Operator):
-    """
-    Generate the UI python script
-    """
-
-    bl_idname = "tgr.ui_remove_item"
-    bl_label = "Remove Item"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        is_armature = context.active_object.type == 'ARMATURE'
-        is_pose_mode = context.active_object.mode == 'POSE'
-        is_edit_mode = context.active_object.mode == 'EDIT'
-        at_least_one = any(get_selected_components(context))
-        return is_armature and at_least_one and (is_pose_mode or is_edit_mode)
-
-    def execute(self, context):
-        components = context.active_object.tgr_ui_components
-        while any(get_selected_components(context)):
-            for i, component in enumerate(components):
-                if component.selected:
-                    components.remove(i)
-                    break
-        return {"FINISHED"}
