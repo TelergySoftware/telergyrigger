@@ -371,7 +371,7 @@ class TGR_OT_CleanNameUp(bpy.types.Operator):
 # ------------- SELECTION -------------
 class TGR_OT_SelectBonesByName(bpy.types.Operator):
     """
-    Select all the bones of that match the searched name.
+    Select all the bones that match the searched name.
     """
     bl_idname = "tgr.select_bones_by_name"
     bl_label = "Select Bones By Name"
@@ -412,7 +412,7 @@ class TGR_OT_SelectBonesByName(bpy.types.Operator):
         elif context.mode == 'POSE':
             for pose_bone in context.active_object.pose.bones:
                 if self.bone_name in pose_bone.name:
-                    pose_bone.bone.select = True
+                    pose_bone.select = True
 
         return {"FINISHED"}
 

@@ -794,6 +794,7 @@ class TGR_OT_AddPivotController(bpy.types.Operator):
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         def_prefix = preferences.def_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
         armature = context.active_object
         
         # It doesn't make sense to add a pivot controller to DEF bones
@@ -809,8 +810,11 @@ class TGR_OT_AddPivotController(bpy.types.Operator):
         # Add "PIVOT" to the intermediate bone name and store the names for later
         intermediate_bones_names = []
         for bone in context.selected_editable_bones:
+            if bone.name.startswith(ctrl_prefix) or bone.name.startswith(org_prefix):
+                continue
             bone.name = bone.name.replace(mch_prefix, mch_prefix + "PIVOT" + preferences.separator)
             intermediate_bones_names.append(bone.name)
+
         # Add another intermediate bone to the selected bones
         bpy.ops.tgr.create_intermediate_bone()
         # Change their names to CTRL instead of MCH_INT and move them to the active collection
@@ -845,6 +849,9 @@ class TGR_OT_FKFromTweakChain(bpy.types.Operator):
     bl_idname = "tgr.fk_from_tweak_chain"
     bl_label = "FK From Tweak Chain"
     bl_options = {'REGISTER', 'UNDO'}
+    
+    scale: bpy.props.FloatProperty(name="Scale", description="Scale of the FK bones",
+                                   default=0.5)
     
     @classmethod
     def poll(cls, context):
@@ -892,7 +899,7 @@ class TGR_OT_FKFromTweakChain(bpy.types.Operator):
         # Change the prefix of the duplicated bones to CTRL FK
         for bone in context.selected_editable_bones:
             # Change the length of the bone to 50% of the original length
-            bone.length *= 0.5
+            bone.length *= self.scale
             if bone.name.startswith(mch_prefix):
                 bone.name = bone.name.replace(mch_prefix, ctrl_prefix + "FK" + preferences.separator)
             elif bone.name.startswith(org_prefix):

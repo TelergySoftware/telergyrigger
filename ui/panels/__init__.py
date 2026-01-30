@@ -8,8 +8,6 @@ from .tgr_pose_mode_panels import TGR_PT_View3D_Panel_PoseMode, TGR_PT_View3D_Pa
 from .tgr_utilities_panels import TGR_PT_View3D_Panel_Utilities, TGR_PT_View3D_Panel_Utilities_Naming, TGR_PT_View3D_Panel_Utilities_Selection
 # Bone Layers panels
 from .tgr_bone_layers_panels import TGR_PT_View3D_Panel_BoneCollections
-# Rig UI panels
-from .tgr_rig_ui_panels import TGR_PT_RIG_UI
 # Custom Properties panels
 from .tgr_custom_properties_panels import TGR_PT_View3D_Panel_CustomProperties
 

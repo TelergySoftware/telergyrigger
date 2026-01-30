@@ -106,3 +106,6 @@ class TGR_PT_View3D_Panel_Utilities_Selection(TGR_PT_BASE):
         # Search Select
         row = layout.row()
         row.operator("tgr.select_bones_by_name", text="Search and Select", icon="BORDERMOVE")
+        
+        row = layout.row()
+        row.operator("tgr.ui_picker", text="UI Picker", icon="EYEDROPPER")

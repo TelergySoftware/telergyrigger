@@ -1,298 +1,234 @@
 import bpy
 
 
+class TGR_OT_UIPicker(bpy.types.Operator):
+    """Hover over any UI area to detect the area and region. Click to select it"""
+
+    bl_idname = "tgr.ui_picker"
+    bl_label = "UI Picker"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def modal(self, context, event):
+        # Cancel on right click or escape
+        if event.type in {'RIGHTMOUSE', 'ESC'}:
+            context.window.cursor_set('DEFAULT')
+            context.workspace.status_text_set(None)
+            return {'CANCELLED'}
+        
+        # Logic to detect UI area under mouse cursor
+        found_area = None
+        found_region = None
+        
+        for area in context.window.screen.areas:
+            for region in area.regions:
+                if (region.x <= event.mouse_x <= region.x + region.width and
+                    region.y <= event.mouse_y <= region.y + region.height):
+                    found_area = area
+                    found_region = region
+                    break
+            if found_area:
+                break
+        
+        # Update status text while hovering
+        if event.type == 'MOUSEMOVE':
+            if found_area and found_region:
+                context.workspace.status_text_set(f"Area: {found_area.type}, Region: {found_region.type}")
+            else:
+                context.workspace.status_text_set("Hover over a UI area...")
+        
+        # Confirm selection on left click
+        if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
+            if found_area and found_region:
+                self.view_node.space_type = found_area.type
+                self.view_node.region_type = found_region.type
+                # Redraw the node editor to reflect changes
+                for area in context.window.screen.areas:
+                    if area.type == 'NODE_EDITOR':
+                        area.tag_redraw()
+                self.report({'INFO'}, f"Selected Area: {found_area.type}, Region: {found_region.type}")
+            else:
+                self.report({'WARNING'}, "No UI area detected under cursor")
+            context.window.cursor_set('DEFAULT')
+            context.workspace.status_text_set(None)
+            return {'FINISHED'}
+        
+        return {'RUNNING_MODAL'}
+    
+    def invoke(self, context, event):
+        self.view_node = context.active_node
+        context.window.cursor_set('EYEDROPPER')
+        context.window_manager.modal_handler_add(self)
+        context.workspace.status_text_set("Hover over a UI area and click to select. Right click or Esc to cancel.")
+        return {'RUNNING_MODAL'}       
+
+
+class NodeTreeCompiler:
+    """Compiler for TGR node trees to generate UI code"""
+    
+    def __init__(self, node_tree, armature):
+        self.node_tree = node_tree
+        self.armature = armature
+        self.output_lines = []
+        self.indent_level = 0
+        self.visited_nodes = set()
+    
+    def compile(self):
+        """Main compilation method"""
+        self.output_lines = [
+            "# ===== GENERATED UI SCRIPT BY TELERGY RIGGER =====",
+            "import bpy",
+            "",
+            "",
+            "# ===== RIG CONSTANTS =====",
+            f"ARMATURE_NAME = '{self.armature.name}'",
+            "",
+            "# ===== UI CLASSES =====",
+            "",
+        ]
+        
+        # Find output nodes (nodes with no outputs connected)
+        output_nodes = self._find_output_nodes()
+        
+        # Find 3D View nodes to generate panels
+        view_nodes = [node for node in self.node_tree.nodes if node.bl_idname == "TGR_ViewNode"]
+        properties_nodes = [node for node in self.node_tree.nodes if node.bl_idname == "TGR_PropertiesNode"]
+        
+        if view_nodes:
+            for view_node in view_nodes:
+                self._compile_view_node(view_node)
+        else:
+            # If no view nodes found, raise an error
+            raise RuntimeError("No TGR_ViewNode found in the node tree.")
+        
+        if properties_nodes:
+            for prop_node in properties_nodes:
+                self._compile_properties_node(prop_node)
+        
+        # Add registration code
+        self._add_registration_code()
+        
+        return "\n".join(self.output_lines)
+    
+    def _add_line(self, line):
+        """Add a line to the output with proper indentation"""
+        indent = "    " * self.indent_level
+        self.output_lines.append(f"{indent}{line}")
+    
+    def _find_output_nodes(self):
+        """Find nodes that have no output connections"""
+        output_nodes = []
+        for node in self.node_tree.nodes:
+            has_output_connection = False
+            for output in node.outputs:
+                if output.links:
+                    has_output_connection = True
+                    break
+            if not has_output_connection:
+                output_nodes.append(node)
+        return output_nodes
+    
+    def _compile_view_node(self, node):
+        """Compile a View Node into a Blender panel class"""
+        for ui_socket in node.inputs:
+            if ui_socket.type == 'TGR_UISocket' and ui_socket.is_linked:
+                for link in ui_socket.links:
+                    panel_node = link.from_node
+                    if panel_node.bl_idname == "TGR_PanelNode":
+                        self._compile_panel_node(panel_node, node)
+    
+    def _compile_panel_node(self, panel_node, view_node):
+        """Compile a Panel Node into a Blender panel class"""
+        class_name = f"TGR_PT_{panel_node.name.replace(' ', '_')}"
+        self.output_lines.append(f"class {class_name}(bpy.types.Panel):")
+        self.indent_level += 1
+        self._add_line(f'bl_idname = "{class_name}"')
+        self._add_line(f'bl_label = "{panel_node.name}"')
+        self._add_line(f'bl_space_type = "{view_node.space_type}"')
+        self._add_line(f'bl_region_type = "{view_node.region_type}"')
+        self._add_line(f'bl_category = "{view_node.inputs["Category"].default_value}"')
+        self._add_line("")
+    
+    def _add_registration_code(self):
+        """Add registration code for all generated classes"""
+        self.output_lines.append("")
+        self.output_lines.append("classes = [")
+        for line in self.output_lines:
+            if line.startswith("class TGR_PT_") or line.startswith("class TGR_OT_"):
+                class_name = line.split()[1].split("(")[0]
+                self.output_lines.append(f"    {class_name},")
+        self.output_lines.append("]")
+        self.output_lines.append("")
+        self.output_lines.append("def register():")
+        self.indent_level += 1
+        self._add_line("for cls in classes:")
+        self.indent_level += 1
+        self._add_line("bpy.utils.register_class(cls)")
+        self.indent_level -= 2
+        self.output_lines.append("")
+        self.output_lines.append("def unregister():")
+        self.indent_level += 1
+        self._add_line("for cls in reversed(classes):")
+        self.indent_level += 1
+        self._add_line("bpy.utils.unregister_class(cls)")
+        self.indent_level -= 2
+        self.output_lines.append("")
+        self.output_lines.append("if __name__ == '__main__':")
+        self.indent_level += 1
+        self._add_line("register()")
+        self.indent_level -= 1
+        
+
 class TGR_OT_GenerateUI(bpy.types.Operator):
-    """
-    Generate the UI python script
-    """
+    """Generate the UI python script"""
 
     bl_idname = "tgr.generate_ui"
     bl_label = "Generate UI"
     bl_options = {'REGISTER', 'UNDO'}
 
-    panel_name: bpy.props.StringProperty(
-        name="Panel Name",
-        description="Name that will show on the N panel tab",
-        default="Rig UI"
-    )
-    
-    file_name: bpy.props.StringProperty(
-        name="File Name",
-        description="Name of the generated UI python script",
-        default="TGR_RigUI.py"
-    )
-
     @classmethod
     def poll(cls, context):
+        if context.active_object is None or context.space_data is None:
+            return False
         is_armature = context.active_object.type == 'ARMATURE'
-        is_pose_mode = context.active_object.mode == 'POSE'
-        is_edit_mode = context.active_object.mode == 'EDIT'
-        return is_armature and (is_pose_mode or is_edit_mode)
+        is_node_tree_active = context.space_data.tree_type == 'TGR_RigNodeTree'
+        return is_armature and is_node_tree_active
 
     def execute(self, context):
-        components = context.active_object.tgr_ui_components
-        self.file_name = self.file_name if self.file_name.endswith(".py") else self.file_name + ".py"
+        node_tree = context.space_data.node_tree
+        armature = context.active_object
+        
+        if not node_tree:
+            self.report({'ERROR'}, "No active node tree found")
+            return {"CANCELLED"}
+        
+        print("Compiling UI script:", node_tree.name, "for armature:", armature.name)
+        
+        # Create or overwrite the text block for the UI script
+        script_name = f"{node_tree.name.replace(' ', '_').lower()}.py"
+        if script_name in bpy.data.texts:
+            text_block = bpy.data.texts[script_name]
+            text_block.clear()
+        else:
+            text_block = bpy.data.texts.new(script_name)
+        
+        # Compile the node tree
         try:
-            text = bpy.data.texts[self.file_name]
-            text.clear()
-        except KeyError:
-            text = bpy.data.texts.new(self.file_name)
-
-        # Header comments
-        text.write("# ----- RIG UI Created by TelergyRigger -----\n")
-        # Imports
-        text.write("import bpy\n")
-        text.write("\n\n")
-        # Properties class
-        text.write(
-            "class TGR_RIG_Properties(bpy.types.PropertyGroup):\n"
-            "\tpass\n"
-        )
-        text.write("\n\n")
-        # Rig layers panel
-        text.write(
-            "class TGR_RIG_PT_Layers_Panel(bpy.types.Panel):\n"
-            "\tbl_label = 'Bone Layers'\n"
-            "\tbl_idname = 'TGR_RIG_PT_Layers_Panel'\n"
-            "\tbl_space_type = 'VIEW_3D'\n"
-            "\tbl_region_type = 'UI'\n"
-            f"\tbl_category = '{self.panel_name}'\n"
-            "\n"
-            "\tdef draw(self, context):\n"
-            "\t\tarmature = context.active_object.data\n"
-            "\t\tlayout = self.layout\n"
-            "\t\t# Toggle bone layer visibility\n"
-            "\n"
-        )
-        current_line = -1
-        for component in components:
-            if component.line > current_line:
-                text.write(
-                    "\t\trow = layout.row(align=True)\n"
-                )
-                current_line = component.line
-            if component.component_type == "LAYER":
-                text.write(
-                    f"\t\trow.prop(armature, 'layers', index={component.layer_index},"
-                    f" toggle=True, text='{component.value}')\n"
-                )
-            elif component.component_type == "LABEL":
-                text.write(
-                    f"\t\trow.label(text='{component.value}')\n"
-                )
-        text.write("\n\n")
-        # Rig properties panel
-        text.write(
-            "class TGR_RIG_PT_Properties_Panel(bpy.types.Panel):\n"
-            "\tbl_label = 'Rig Properties'\n"
-            "\tbl_idname = 'TGR_RIG_PT_Properties_Panel'\n"
-            "\tbl_space_type = 'VIEW_3D'\n"
-            "\tbl_region_type = 'UI'\n"
-            f"\tbl_category = '{self.panel_name}'\n"
-            "\n"
-            "\tdef draw(self, context):\n"
-            "\t\tlayout = self.layout\n"
-            "\t\tarmature = context.active_object\n"
-            "\t\tif context.mode == 'EDIT':\n"
-            "\t\t\tbones = armature.edit_bones\n"
-            "\t\t\tbone_names = [bone.name for bone in bones]\n"
-            "\t\telif context.mode == 'POSE':\n"
-            "\t\t\tbones = armature.pose.bones\n"
-            "\t\t\tbone_names = [bone.name for bone in bones]\n"
-            "\t\telse:\n"
-            "\t\t\treturn\n"
-            "\n"
-            "\t\tfor bone_name in bone_names:\n"
-            "\t\t\tbone = bones[bone_name]\n"
-            "\t\t\tif len(bone.keys()) == 0:\n"
-            "\t\t\t\tcontinue\n"
-            "\t\t\tbox = layout.box()\n"
-            "\t\t\tbox.label(text=bone_name)\n"
-            "\t\t\tfor key in bone.keys():\n"
-            "\t\t\t\tbox.prop(bone, f'[\"{key}\"]')\n"
-        )
-        text.write("\n\n")
-        # Register classes and properties
-        text.write(
-            "def register():\n"
-            "\tbpy.utils.register_class(TGR_RIG_PT_Layers_Panel)\n"
-            "\tbpy.utils.register_class(TGR_RIG_Properties)\n"
-            "\tbpy.utils.register_class(TGR_RIG_PT_Properties_Panel)\n"
-            "\n"
-            "\tbpy.types.Scene.rig_ui_properties = bpy.props.PointerProperty(type=TGR_RIG_Properties)\n"
-            "\n"
-            "\tbpy.types.Scene.rig_props = bpy.props.PointerProperty(type=TGR_RIG_Properties)\n"
-        )
-        text.write("\n\n")
-        # Unregister classes and properties
-        text.write(
-            "def unregister():\n"
-            "\tdel bpy.types.Scene.rig_props\n"
-            "\n"
-            "\tbpy.utils.unregister_class(TGR_RIG_PT_Layers_Panel)\n"
-            "\tbpy.utils.unregister_class(TGR_RIG_Properties)\n"
-            "\tbpy.utils.unregister_class(TGR_RIG_PT_Properties_Panel)\n"
-        )
-        text.write("\n\n")
-        # Relink drivers
-        text.write(
-            "def relink_drivers():\n"
-            "\t'''Update dependencies of drivers'''\n"
-            "\tfor obj in bpy.data.objects:\n"
-            "\t\tif obj.animation_data:\n"
-            "\t\t\tfor driver in obj.animation_data.drivers:\n"
-            "\t\t\t\tdriver.driver.expression = driver.driver.expression\n"
-        )
-        text.write("\n\n")
-        # Main
-        text.write(
-            "if __name__ == '__main__':\n"
-            "\tregister()\n"
-            "\trelink_drivers()\n"
-        )
-
+            compiler = NodeTreeCompiler(node_tree, armature)
+            generated_code = compiler.compile()
+        except RuntimeError:
+            self.report({'ERROR'}, "No Area Node found in the node tree.")
+            return {"CANCELLED"}
+        
+        # Write the generated code to the text block
+        text_block.write(generated_code)
+        
+        # Execute the generated script
+        try:
+            exec(text_block.as_string())
+            self.report({'INFO'}, f"UI script '{script_name}' compiled and executed successfully.")
+        except Exception as e:
+            self.report({'ERROR'}, f"Error executing compiled UI script: {e}")
+        
         return {"FINISHED"}
 
-
-class TGR_OT_UI_AddPanel(bpy.types.Operator):
-    """ Add a new panel to the Rig UI components list """
-    
-    bl_idname = "tgr.ui_add_panel"
-    bl_label = "Add UI Panel"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    name: bpy.props.StringProperty(
-        name="Panel Name",
-        default="New Panel"
-    )
-
-    def execute(self, context):
-        rig_ui_props = context.object.tgr_rig_ui_props
-        rig_ui_props.ui_structure[self.name] = []
-        return {'FINISHED'}
-
-
-class TGR_OT_UI_AddRow(bpy.types.Operator):
-    """ Add a new row to the Rig UI components list """
-    
-    bl_idname = "tgr.ui_add_row"
-    bl_label = "Add UI Row"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    path: bpy.props.StringProperty(
-        name="Panel Path",
-        default="",
-        description="Path to the panel in the collections_panel_structure dict separated by dots"
-    )
-
-    def execute(self, context):
-        rig_ui_props = context.object.tgr_rig_ui_props
-        panel = rig_ui_props.ui_structure
-        # Try to add a dictionary with the name ROW:1 under the specified path
-        # Don't add if the path is invalid
-        try:
-            for part in self.path.split('.'):
-                panel = panel[part]
-            row_index = len([item for item in panel if isinstance(item, dict) and 'ROW' in item])
-            panel.append({f'ROW:{row_index}': []})
-        except KeyError:
-            self.report({'ERROR'}, "Invalid panel path")
-            return {'CANCELLED'}
-            
-        return {'FINISHED'}
-    
-
-def add_ui_component(context, component_type, value, path: str) -> bool:
-    """ Helper function to add a UI component to the Rig UI structure """
-    rig_ui_props = context.object.tgr_rig_ui_props
-    panel = rig_ui_props.ui_structure
-    # Try to add the component under the specified path
-    # Don't add if the path is invalid
-    try:
-        for part in path.split('.'):
-            panel = panel[part]
-        panel.append({
-            'type': component_type,
-            'value': value
-        })
-    except KeyError:
-        print("Invalid panel path")
-        return False
-        
-    return True
-
-
-class TGR_OT_UI_AddCollection(bpy.types.Operator):
-    """ Add a new collection to the Rig UI components list """
-    
-    bl_idname = "tgr.ui_add_collection"
-    bl_label = "Add UI Collection"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    path: bpy.props.StringProperty(
-        name="Panel Path",
-        default="",
-        description="Path to the panel in the ui_structure dict separated by dots"
-    )
-    collection_name: bpy.props.StringProperty(
-        name="Collection Name",
-        default=""
-    )
-    
-    def execute(self, context):
-        success = add_ui_component(context, "COLLECTION", self.collection_name, self.path)
-        
-        return {'FINISHED'} if success else {'CANCELLED'}
-
-
-class TGR_OT_UI_AddLabel(bpy.types.Operator):
-    """ Add a new label to the Rig UI components list """
-    
-    bl_idname = "tgr.ui_add_label"
-    bl_label = "Add UI Label"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    path: bpy.props.StringProperty(
-        name="Panel Path",
-        default="",
-        description="Path to the panel in the ui_structure dict separated by dots"
-    )
-    label_text: bpy.props.StringProperty(
-        name="Label Text",
-        default=""
-    )
-
-    def execute(self, context):
-        success = add_ui_component(context, "LABEL", self.label_text, self.path)
-        
-        return {'FINISHED'} if success else {'CANCELLED'}
-
-
-class TGR_OT_UI_RemoveComponent(bpy.types.Operator):
-    """ Remove the component from the Rig UI components list by index """
-    
-    bl_idname = "tgr.ui_remove_component"
-    bl_label = "Remove UI Component"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    path: bpy.props.StringProperty(
-        name="Panel Path",
-        default="",
-        description="Path to the panel in the ui_structure dict separated by dots"
-    )
-
-    def execute(self, context):
-        rig_ui_props = context.object.tgr_rig_ui_props
-        component = rig_ui_props.ui_structure
-        # Try to remove the component under the specified path
-        try:
-            parts = self.path.split('.')
-            for part in parts[:-1]:
-                component = component[part]
-            del component
-        except KeyError:
-            self.report({'ERROR'}, "Invalid panel path")
-            return {'CANCELLED'}
-        
-        return {'FINISHED'}
 
