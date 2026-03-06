@@ -1,4 +1,5 @@
 import bpy
+from dataclasses import dataclass, field
 
 
 class TGR_OT_UIPicker(bpy.types.Operator):
@@ -62,15 +63,62 @@ class TGR_OT_UIPicker(bpy.types.Operator):
         return {'RUNNING_MODAL'}       
 
 
+
+@dataclass
+class Panel:
+    """Data class to represent a UI panel"""
+    name: str
+    space_type: str
+    region_type: str
+    category: str = ""
+    parent_id: str = ""
+    draw_code: list = field(default_factory=list)
+    code_lines: list = field(default_factory=list)
+    indent_level: int = 0
+    
+    def _add_line(self, line):
+        """Add a line of code with proper indentation"""
+        indent = "    " * self.indent_level
+        self.code_lines.append(f"{indent}{line}")
+    
+    @property
+    def class_name(self):
+        """Generate a valid class name based on the panel name"""
+        return f"TGR_PT_{self.name.replace(' ', '_')}"
+
+@dataclass
+class PropertyGroup:
+    """Data class to represent a property group"""
+    name: str
+    properties: list = field(default_factory=list)
+    code_lines: list = field(default_factory=list)
+    indent_level: int = 0
+    
+    def _add_line(self, line):
+        """Add a line of code with proper indentation"""
+        indent = "    " * self.indent_level
+        self.code_lines.append(f"{indent}{line}")
+    
+    @property
+    def class_name(self):
+        """Generate a valid class name based on the property group name"""
+        return f"TGR_PG_{self.name.replace(' ', '_')}"
+
+
 class NodeTreeCompiler:
     """Compiler for TGR node trees to generate UI code"""
     
     def __init__(self, node_tree, armature):
         self.node_tree = node_tree
         self.armature = armature
+        self.panels = {}
+        self.property_groups = {}
         self.output_lines = []
         self.indent_level = 0
         self.visited_nodes = set()
+        self.compilers = {
+            "TGR_ViewNode": self._compile_view_node,
+            "TGR_PanelNode": self._compile_panel_node,}
     
     def compile(self):
         """Main compilation method"""
@@ -90,8 +138,8 @@ class NodeTreeCompiler:
         output_nodes = self._find_output_nodes()
         
         # Find 3D View nodes to generate panels
-        view_nodes = [node for node in self.node_tree.nodes if node.bl_idname == "TGR_ViewNode"]
-        properties_nodes = [node for node in self.node_tree.nodes if node.bl_idname == "TGR_PropertiesNode"]
+        view_nodes = [node for node in output_nodes if node.bl_idname == "TGR_ViewNode"]
+        properties_nodes = [node for node in output_nodes if node.bl_idname == "TGR_PropertiesNode"]
         
         if view_nodes:
             for view_node in view_nodes:
@@ -130,24 +178,53 @@ class NodeTreeCompiler:
     def _compile_view_node(self, node):
         """Compile a View Node into a Blender panel class"""
         for ui_socket in node.inputs:
-            if ui_socket.type == 'TGR_UISocket' and ui_socket.is_linked:
+            if ui_socket.type == 'CUSTOM' and ui_socket.is_linked:
                 for link in ui_socket.links:
                     panel_node = link.from_node
-                    if panel_node.bl_idname == "TGR_PanelNode":
-                        self._compile_panel_node(panel_node, node)
+                    self.compilers[panel_node.bl_idname](panel_node, node)
     
-    def _compile_panel_node(self, panel_node, view_node):
+    def _compile_panel_node(self, panel_node, node):
         """Compile a Panel Node into a Blender panel class"""
-        class_name = f"TGR_PT_{panel_node.name.replace(' ', '_')}"
+        panel_name = ""
+        if panel_node.inputs['Name'].is_linked:
+            from_node = panel_node.inputs['Name'].links[0].from_node
+            if from_node.bl_idname == "TGR_StringNode":
+                panel_name = from_node.value
+        else:
+            panel_name = panel_node.inputs['Name'].default_value
+            
+
+        class_name = f"TGR_PT_{panel_name.replace(' ', '_')}"
         self.output_lines.append(f"class {class_name}(bpy.types.Panel):")
         self.indent_level += 1
         self._add_line(f'bl_idname = "{class_name}"')
-        self._add_line(f'bl_label = "{panel_node.name}"')
-        self._add_line(f'bl_space_type = "{view_node.space_type}"')
-        self._add_line(f'bl_region_type = "{view_node.region_type}"')
-        self._add_line(f'bl_category = "{view_node.inputs["Category"].default_value}"')
+        self._add_line(f'bl_label = "{panel_name}"')
+        self._add_line(f'bl_space_type = "{node.space_type}"')
+        self._add_line(f'bl_region_type = "{node.region_type}"')
+        self._add_line(f'bl_category = "{node.inputs["Category"].default_value}"')
+        if node.bl_idname == "TGR_PanelNode":
+            parent_id = ""
+            if node.inputs['Name'].is_linked:
+                from_node = node.inputs['Name'].links[0].from_node
+            if from_node.bl_idname == "TGR_StringNode":
+                parent_id = from_node.value
+            else:
+                parent_id = node.inputs['Name'].default_value
+            self._add_line(f"bl_parent_id = '{parent_id}'")
+        
         self._add_line("")
-    
+        self._add_line("def draw(self, context):")
+        self.indent_level += 1
+        self._add_line("layout = self.layout")
+        for ui_socket in panel_node.inputs:
+            if ui_socket.type == 'CUSTOM' and ui_socket.is_linked:
+                for link in ui_socket.links:
+                    from_node = link.from_node
+                    self.compilers[from_node.bl_idname](from_node, node)
+        self.indent_level -= 2
+        self._add_line("")
+        self._add_line("")
+
     def _add_registration_code(self):
         """Add registration code for all generated classes"""
         self.output_lines.append("")
