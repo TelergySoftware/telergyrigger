@@ -1,3 +1,15 @@
+bl_info = {
+    "name": "Telergy Rigger",
+    "author": "Telergy Studio",
+    "version": (1, 0, 0),
+    "blender": (4, 0, 0),
+    "location": "3D Viewport > Sidebar > TGR Panel",
+    "description": "This is a rigging toolbox to speed up the rigging process",
+    "warning": "",
+    "doc_url": "",
+    "category": "Rigging",
+}
+
 import bpy
 
 # ----- OPERATORS -----
