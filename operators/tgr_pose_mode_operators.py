@@ -27,7 +27,7 @@ class TGR_OT_BindORG(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
@@ -98,7 +98,7 @@ class TGR_OT_UnbindORG(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         # Unbind the ORG bones from the DEF bones
         for bone in context.object.pose.bones:
@@ -132,7 +132,7 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
@@ -287,7 +287,7 @@ class TGR_OT_CreateRotationChain(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         def_prefix = preferences.def_prefix + preferences.separator
         # Must not rotate DEF bones
@@ -370,7 +370,7 @@ class TGR_OT_CreateTweakChain(bpy.types.Operator):
         return is_armature and is_pose_mode
     
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         
         armature = context.object
         root_bone_name = armature.tgr_props.root_bone
@@ -582,7 +582,7 @@ class TGR_OT_CreateIKPoleTarget(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         mch_prefix = preferences.mch_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         armature = context.active_object
@@ -788,7 +788,7 @@ class TGR_OT_AddPivotController(bpy.types.Operator):
         return is_armature and is_pose_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         def_prefix = preferences.def_prefix + preferences.separator
@@ -853,7 +853,7 @@ class TGR_OT_FKFromTweakChain(bpy.types.Operator):
         return is_armature and is_pose_mode
     
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator

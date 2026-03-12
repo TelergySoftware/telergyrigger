@@ -12,7 +12,7 @@ def update_armature(context):
 def create_org(context):
     tgr_props = context.object.tgr_props
     collections = context.object.tgr_props.armature.data.collections
-    preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+    preferences = context.preferences.addons["telergyrigger"].preferences
     # Get armature
     armature = context.object.tgr_props.armature
     # Deselect the ROOT bone, just to be sure
@@ -38,7 +38,7 @@ def create_org_with_selection(self, context):
     """
     Create ORG bones strategy for selected bones.
     """
-    preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+    preferences = context.preferences.addons["telergyrigger"].preferences
     # Get armature
     armature = context.object.tgr_props.armature
     # Create the ORG bones
@@ -78,7 +78,7 @@ def create_org_with_all(self, context):
     """
     Create ORG bones strategy for all bones.
     """
-    preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+    preferences = context.preferences.addons["telergyrigger"].preferences
     def_prefix = preferences.def_prefix + preferences.separator
     # Get armature
     armature = context.object.tgr_props.armature
@@ -144,7 +144,7 @@ class TGR_OT_RemoveORG(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         org_prefix = preferences.org_prefix + preferences.separator
         # Deselect all bones
         bpy.ops.armature.select_all(action='DESELECT')
@@ -187,7 +187,7 @@ class TGR_OT_AddNonDeformBone(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         mch_prefix = preferences.mch_prefix + preferences.separator
         if self.bone_name == "":
             self.bone_name = f"{mch_prefix}BONE"
@@ -234,7 +234,7 @@ class TGR_OT_AddDeformBone(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         # Add a new bone
         bpy.ops.armature.bone_primitive_add(name=f"{def_prefix}BONE")
@@ -505,7 +505,7 @@ class TGR_OT_CreateSwitchChains(bpy.types.Operator):
         return is_armature and is_edit_mode
 
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
         org_prefix = preferences.org_prefix + preferences.separator
@@ -594,7 +594,7 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
         return is_armature and is_edit_mode
     
     def execute(self, context):
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix + preferences.separator
         org_prefix = preferences.org_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator

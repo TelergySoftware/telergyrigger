@@ -26,7 +26,6 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         
         active = collection.name == tgr_props.armature.data.collections.active.name
         main_row.operator('tgr.set_collection_active', icon='CHECKBOX_HLT' if active else 'CHECKBOX_DEHLT', text="").collection = collection.name
-        main_row.prop(collection, "is_solo", toggle=True, text="", icon='SOLO_ON' if collection.is_solo else 'SOLO_OFF')
         main_row.prop(collection, "is_visible", toggle=True, text=collection.name)
         lock_icon = 'UNLOCKED' if collection.name not in collection_props.locked_collections else 'LOCKED'
         if not edit_mode:
@@ -39,11 +38,6 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         main_row.operator('tgr.lock_bones_from_collection', icon=lock_icon, text="",
                         depress=lock_icon == 'LOCKED').collection_name = collection.name
         main_row.operator('tgr.new_collection', icon='ADD', text="").parent = collection.name
-        
-        if collection.is_visible:
-                if len(children := collection.children) > 0:
-                    for child in children:
-                        self.draw_collection(layout, child, edit_mode, left_margin=left_margin + 8)
 
     @classmethod
     def poll(cls, context):

@@ -3,7 +3,7 @@ import bpy
 
 def init_tgr_collections():
     """ Initialize the TGR collections """
-    preferences = bpy.context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+    preferences = bpy.context.preferences.addons["telergyrigger"].preferences
     armature = bpy.context.active_object
     collections = armature.data.collections
     # Collection names

@@ -290,7 +290,7 @@ def clean_up_name(context, name: str) -> str:
     Change the .001, .002, .003, ... suffixes to be before the .L or .R suffixes if
     they exist and change the dots to dashs.
     """
-    preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+    preferences = context.preferences.addons["telergyrigger"].preferences
     suffix_separator = preferences.suffix_separator
     separator = preferences.separator
     valid_symbols = ".!@#$%^&*()_-+={}[]"
@@ -768,7 +768,7 @@ class TGR_OT_AutoCorrectUseDeform(bpy.types.Operator):
     def execute(self, context):
         # Set the Use Deform property of all bones with DEF prefix to True
         # and all other bones to False
-        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        preferences = context.preferences.addons["telergyrigger"].preferences
         def_prefix = preferences.def_prefix
         changed_bones = []
         for bone in context.object.data.bones:
