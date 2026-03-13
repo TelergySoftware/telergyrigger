@@ -112,6 +112,81 @@ class TGR_OT_UnbindORG(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class TGR_OT_SampleTransforms(bpy.types.Operator):
+    """Creates a sampler bone for each selected bone, which copies the transforms of the original bone and can be used to sample the transforms without affecting the rig"""
+    
+    bl_idname = "tgr.sample_transforms"
+    bl_label = "Sample Transforms"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.object.type == 'ARMATURE'
+        is_pose_mode = context.mode == 'POSE'
+        return is_armature and is_pose_mode
+
+    def execute(self, context):
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        def_prefix = preferences.def_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        
+        # Check if at least one bone is selected
+        if not context.selected_pose_bones:
+            self.report({"WARNING"}, "No bones selected")
+            return {"CANCELLED"}
+        
+        selected_bones_names = [bone.name for bone in context.selected_pose_bones]
+        
+        # Change the mode to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        use_mirror = context.object.data.use_mirror_x
+        context.object.data.use_mirror_x = False
+        # Duplicate the selected bones and resize them to 50%
+        bpy.ops.armature.duplicate()
+        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+        # Change the bone names and add "SAMPLER" suffix
+        sampler_bones_names = []
+        for bone in context.selected_bones:
+            if bone.name.startswith(org_prefix):
+                bone.name = bone.name.replace(org_prefix, f"{mch_prefix}SAMPLER{preferences.separator}")
+            elif bone.name.startswith(ctrl_prefix):
+                bone.name = bone.name.replace(ctrl_prefix, f"{mch_prefix}SAMPLER{preferences.separator}")
+            elif bone.name.startswith(mch_prefix):
+                bone.name = bone.name.replace(mch_prefix, f"{mch_prefix}SAMPLER{preferences.separator}")
+            elif bone.name.startswith(def_prefix):
+                bone.name = bone.name.replace(def_prefix, f"{mch_prefix}SAMPLER{preferences.separator}")
+            else:
+                bone.name = f"{mch_prefix}SAMPLER{preferences.separator}" + bone.name
+            # Remove the number suffix from the bone name
+            bone.name = bone.name[:-4]
+            sampler_bones_names.append(bone.name)
+            # Clear parent
+            bone.parent = None
+        
+        # Clean names to avoid issues with .L and .R suffixes
+        bpy.ops.tgr.clean_name_up()
+        # Symmetrize the bones if the mirror mode was on
+        if use_mirror:
+            bpy.ops.armature.symmetrize()
+            
+        context.object.data.use_mirror_x = use_mirror
+        # Go back to pose mode
+        bpy.ops.object.mode_set(mode='POSE')
+        # Add copy transforms constraints to the selected bones targeting the corresponding sampler bone
+        for bone_name, sampler_bone_name in zip(selected_bones_names, sampler_bones_names):
+            sampler_bone = context.object.pose.bones[sampler_bone_name]
+            constraint = sampler_bone.constraints.new(type='COPY_TRANSFORMS')
+            constraint.name = "TGR Sample Transforms"
+            constraint.target = context.object
+            constraint.subtarget = bone_name
+        
+        return {'FINISHED'}
+
+
 class TGR_OT_IsolateBone(bpy.types.Operator):
     """Isolate the selected bones from their parent transforms"""
     

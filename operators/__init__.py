@@ -24,7 +24,8 @@ from .tgr_pose_mode_operators import (TGR_OT_AddPivotController,
                                       TGR_OT_CreateTweakChain,
                                       TGR_OT_FKFromTweakChain,
                                       TGR_OT_IsolateBone,
-                                      TGR_OT_UnbindORG,)
+                                      TGR_OT_UnbindORG,
+                                      TGR_OT_SampleTransforms,)
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (TGR_OT_GenerateUI,
                                TGR_OT_UIPicker,
