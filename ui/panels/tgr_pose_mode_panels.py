@@ -74,6 +74,10 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
         row = layout.row()
         row.operator("tgr.isolate_bone", icon='UNLINKED', text="Isolate Bone")
         
+        # Sample Transforms
+        row = layout.row()
+        row.operator("tgr.sample_transforms", icon='EYEDROPPER', text="Sample Transforms")
+        
         # Create Tweak Chain
         row = layout.row()
         row.operator("tgr.create_tweak_chain", icon='ACTION_TWEAK')

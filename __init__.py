@@ -55,6 +55,7 @@ from .operators import (
     TGR_OT_UnbindORG,
     TGR_OT_AddPivotController,
     TGR_OT_FKFromTweakChain,
+    TGR_OT_SampleTransforms,
 )
 
 from .operators import (
@@ -62,7 +63,7 @@ from .operators import (
     TGR_OT_RIG_UI_AddComponent,
     TGR_OT_RIG_UI_ModifyItem,
     TGR_OT_RIG_UI_RemoveItem,
-    TGR_OT_RIG_UI_Clear
+    TGR_OT_RIG_UI_Clear,
 )
 
 from .operators import TGR_OT_AddTGRArmature
@@ -159,6 +160,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_AssignBonesToCollection,
     TGR_OT_NewCollection,
     TGR_OT_UnbindORG,
+    TGR_OT_SampleTransforms,
     # Panels
     TGR_PT_View3D_Panel_BoneCollections,
     TGR_PT_View3D_Panel_CustomProperties,
