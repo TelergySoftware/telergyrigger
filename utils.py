@@ -9,7 +9,7 @@ def get_collection_index(name: str) -> tuple[int, bool]:
     Return the index of a collection by name.
     """
     try:
-        collection = bpy.context.active_object.data.collections_all[name]
+        collection = bpy.context.active_object.data.collections[name]
         return collection.index, True
     except KeyError:
         return -1, False
@@ -18,7 +18,7 @@ def get_collection_index(name: str) -> tuple[int, bool]:
 def move_bones_to_collection(collection_name: str, *bones):
     """Move bones to the given collection"""
     
-    collection = bpy.context.active_object.data.collections_all[collection_name]
+    collection = bpy.context.active_object.data.collections[collection_name]
     for bone in bones:
         # Remove the bone from the current collections
         for bone_collection in bone.collections:

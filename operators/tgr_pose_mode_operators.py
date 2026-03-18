@@ -136,7 +136,7 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
         org_prefix = preferences.org_prefix + preferences.separator
         ctrl_prefix = preferences.ctrl_prefix + preferences.separator
         mch_prefix = preferences.mch_prefix + preferences.separator
-        collections = context.object.tgr_props.armature.data.collections_all
+        collections = context.object.tgr_props.armature.data.collections
         # Check if at least one bone is selected
         if not context.selected_pose_bones:
             self.report({"WARNING"}, "No bones selected")

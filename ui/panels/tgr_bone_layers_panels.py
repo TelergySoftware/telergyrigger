@@ -10,10 +10,10 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
     bl_label = "Bone Collections"
     bl_idname = "TGR_PT_View3D_Panel_BoneCollections"
     
-    def draw_collection(self, layout, collection, edit_mode, left_margin=0):
+    def draw_collection(self, layout, armature, collection, edit_mode, left_margin=0):
         
-        tgr_props = bpy.context.object.tgr_props
-        collection_props = bpy.context.object.tgr_collections
+        tgr_props = armature.tgr_props
+        collection_props = armature.tgr_collections
         
         row = layout.row(align=True)
         # Create a split layout to simulate a left margin
@@ -43,14 +43,16 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
     def poll(cls, context):
         if not context.object:
             return False
-        is_armature = context.object.type == 'ARMATURE'
-        is_edit_mode = context.mode == 'EDIT_ARMATURE'
-        is_pose_mode = context.mode == 'POSE'
-        return is_armature and (is_edit_mode or is_pose_mode)
+        has_armature = context.object.parent and context.object.parent.type == 'ARMATURE' or (context.object.type == 'ARMATURE')
+        return has_armature
 
     def draw(self, context):
         layout = self.layout
-        armature = context.object.tgr_props.armature
+        armature = None
+        if context.object.type == 'ARMATURE':
+            armature = context.object
+        elif context.object.parent and context.object.parent.type == 'ARMATURE':
+            armature = context.object.parent
         collections = armature.data.collections
         
         row = layout.row(align=True)
@@ -60,7 +62,7 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         edit_mode = context.object.tgr_collections.edit_mode
 
         for collection in collections:
-            self.draw_collection(layout, collection, edit_mode)
+            self.draw_collection(layout, armature, collection, edit_mode)
 
 
         # TRACK NEW LAYER OPERATOR

@@ -506,7 +506,7 @@ class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        collections = context.object.tgr_props.armature.data.collections_all
+        collections = context.object.tgr_props.armature.data.collections
 
         if context.mode == 'EDIT_ARMATURE':
             # Set the layer of the selected bones
@@ -557,7 +557,7 @@ class TGR_OT_LockBonesFromCollection(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def execute(self, context):
-        collection = context.object.tgr_props.armature.data.collections_all[self.collection_name]
+        collection = context.object.tgr_props.armature.data.collections[self.collection_name]
         collection_props = context.object.tgr_collections
 
         # Get bones to lock
@@ -628,7 +628,7 @@ class TGR_OT_NewCollection(bpy.types.Operator):
         # Create a new collection
         collection = context.object.tgr_props.armature.data.collections.new(self.name)
         if not self.parent == "":
-            collection.parent = context.object.tgr_props.armature.data.collections_all[self.parent]
+            collection.parent = context.object.tgr_props.armature.data.collections[self.parent]
         collection["locked"] = self.lock_selection
         # update the view layer
         context.view_layer.update()
@@ -670,7 +670,7 @@ class TGR_OT_RemoveCollection(bpy.types.Operator):
     def execute(self, context):
         # Remove the collection
         collections = context.object.tgr_props.armature.data.collections
-        removed_collection = context.object.tgr_props.armature.data.collections_all[self.collection]
+        removed_collection = context.object.tgr_props.armature.data.collections[self.collection]
         collections.remove(removed_collection)
         # update the view layer
         context.view_layer.update()
@@ -700,7 +700,7 @@ class TGR_OT_RenameCollection(bpy.types.Operator):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def invoke(self, context, event):
-        self.renamed_collection = context.object.tgr_props.armature.data.collections_all[self.collection]
+        self.renamed_collection = context.object.tgr_props.armature.data.collections[self.collection]
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
@@ -742,7 +742,7 @@ class TGR_OT_SetCollectionActive(bpy.types.Operator):
 
     def execute(self, context):
         # Set the selected collection as the active one
-        context.object.tgr_props.armature.data.collections.active = context.object.tgr_props.armature.data.collections_all[self.collection]
+        context.object.tgr_props.armature.data.collections.active = context.object.tgr_props.armature.data.collections[self.collection]
         # update the view layer
         context.view_layer.update()
 
