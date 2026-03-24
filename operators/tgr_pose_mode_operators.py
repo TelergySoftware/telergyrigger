@@ -1160,3 +1160,69 @@ class TGR_OT_CreateSingleControllerStretch(bpy.types.Operator):
         update_armature(context)                
         
         return {'FINISHED'}
+
+
+
+class TGR_OT_TransformWithActive(bpy.types.Operator):
+    """Add a transform constraint with the current selected bones' transforms and using the active bone as the target"""
+    
+    bl_idname = "tgr.transform_with_active"
+    bl_label = "Transform With Active"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def __init__(self):
+        self.selected_bones = []
+        self.active_bone = None
+        self.active_transforms = {}
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode and context.active_pose_bone in context.selected_pose_bones
+
+    def invoke(self, context, event):
+        self.selected_bones = [bone.name for bone in context.selected_pose_bones if bone.name != context.active_pose_bone.name]
+        self.active_bone = context.active_pose_bone.name
+        return {'RUNNING_MODAL'}
+    
+    def modal(self, context, event):
+        if event.type in {'RIGHTMOUSE', 'ESC'}:
+            return {'CANCELLED'}
+        elif event.type in {'LEFTMOUSE', 'RETURN', 'NUMPAD_ENTER'}:
+            self.execute(context)
+        elif event.type == 'G':
+            bpy.ops.armature.select_all(action='DESELECT')
+            active_bone = context.object.pose.bones[self.active_bone]
+            active_bone.bone.select = True
+            bpy.ops.transform.translate('INVOKE_DEFAULT')
+            self.active_transforms['LOCATION'] = active_bone.location.copy()
+        elif event.type == 'R':
+            bpy.ops.armature.select_all(action='DESELECT')
+            active_bone = context.object.pose.bones[self.active_bone]
+            active_bone.bone.select = True
+            bpy.ops.transform.rotate('INVOKE_DEFAULT')
+            self.active_transforms['ROTATION'] = active_bone.rotation_euler.copy()
+        elif event.type == 'S':
+            bpy.ops.armature.select_all(action='DESELECT')
+            active_bone = context.object.pose.bones[self.active_bone]
+            active_bone.bone.select = True
+            bpy.ops.transform.resize('INVOKE_DEFAULT')
+            self.active_transforms['SCALE'] = active_bone.scale.copy()
+        return {'RUNNING_MODAL'}
+    
+    def execute(self, context):
+        for bone_name in self.selected_bones:
+            bone = context.object.pose.bones[bone_name]
+            for transform in self.active_transforms.keys():
+                constraint = bone.constraints.new('TRANSFORM')
+                constraint.target = context.object
+                constraint.subtarget = self.active_bone
+                constraint.name = f"TGR Transform With {self.active_bone} {transform}"
+                constraint.target_space = 'LOCAL'
+                constraint.owner_space = 'LOCAL'
+                constraint.use_motion_extrapolate = True
+                constraint.map_from = transform
+                constraint.map_to = transform
