@@ -1273,8 +1273,6 @@ class TGR_OT_BindSwitch(bpy.types.Operator):
     def execute(self, context):
         mch_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.mch_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
         ctrl_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.ctrl_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
-        org_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.org_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
-        def_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.def_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
         
         # Check if the selected bones are valid for the switch
         if any(not bone.name.startswith(mch_prefix + "SWITCH") for bone in context.selected_pose_bones):
