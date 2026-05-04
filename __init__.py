@@ -37,6 +37,7 @@ from .operators import (
 
 from .operators import (
     TGR_OT_BindORG,
+    TGR_OT_BindSwitch,
     TGR_OT_CopyTransformsToChain,
     TGR_OT_CreateIKChain,
     TGR_OT_CreateIKPoleTarget,
@@ -150,6 +151,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_AlignBoneToWorld,
     TGR_OT_AutoCorrectUseDeform,
     TGR_OT_BindORG,
+    TGR_OT_BindSwitch,
     TGR_OT_BoneOnPoints,
     TGR_OT_BonesOnVertices,
     TGR_OT_CleanNameUp,

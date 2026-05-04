@@ -1226,3 +1226,92 @@ class TGR_OT_TransformWithActive(bpy.types.Operator):
                 constraint.use_motion_extrapolate = True
                 constraint.map_from = transform
                 constraint.map_to = transform
+
+
+class TGR_OT_BindSwitch(bpy.types.Operator):
+    """Bind the IK FK Switch chain using the given data path for the driver"""
+    
+    bl_idname = "tgr.bind_switch"
+    bl_label = "Bind IK FK Switch"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    data_path: bpy.props.StringProperty(name="Data Path", description="Data path for the driver to control the switch")
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        message = ""
+        if not is_armature or not is_pose_mode:
+            message = "Active object must be an armature in pose mode\n"
+        if not (bones_selected := len(context.selected_pose_bones) > 0):
+            message += "At least one 'SWITCH' bone must be selected"
+        if message:
+            cls.poll_message_set(message)
+        return is_armature and is_pose_mode and bones_selected
+    
+    def _add_driver(self, armature, constraint):
+        try:
+            fcurve = armature.animation_data.drivers.new(data_path=constraint.path_from_id("influence"), index=0)
+        except ValueError:
+            fcurve = armature.animation_data.drivers.find(data_path=constraint.path_from_id("influence"), index=0)
+        
+        driver = fcurve.driver
+        var = driver.variables.new()
+        var.name = "switch"
+        var.type = 'SINGLE_PROP'
+        var.targets[0].id_type = 'ARMATURE'
+        var.targets[0].id = armature.data
+        var.targets[0].data_path = self.data_path
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "data_path")
+
+    def execute(self, context):
+        mch_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.mch_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
+        ctrl_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.ctrl_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
+        org_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.org_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
+        def_prefix = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.def_prefix + context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences.separator
+        
+        # Check if the selected bones are valid for the switch
+        if any(not bone.name.startswith(mch_prefix + "SWITCH") for bone in context.selected_pose_bones):
+            self.report({'ERROR'}, 'All selected bones must be part of the SWITCH chain')
+            return {'CANCELLED'}
+        
+        armature = context.active_object
+        tgr_props = armature.tgr_props
+        
+        switch_bones = {"switch_bones": [], "ik_bones": [], "fk_bones": []}
+        for bone in context.selected_pose_bones:
+            switch_bones["switch_bones"].append(bone.name)
+            ik_bone_name = bone.name.replace(mch_prefix + "SWITCH", mch_prefix + "IK")
+            fk_bone_name = bone.name.replace(mch_prefix + "SWITCH", ctrl_prefix + "FK")
+            if ik_bone_name not in armature.pose.bones or fk_bone_name not in armature.pose.bones:
+                self.report({'ERROR'}, f'Bone {bone.name} does not have corresponding IK and FK bones')
+                return {'CANCELLED'}
+            switch_bones["ik_bones"].append(ik_bone_name)
+            switch_bones["fk_bones"].append(fk_bone_name)
+        
+        for switch_bone, ik_bone, fk_bone in zip(switch_bones["switch_bones"], switch_bones["ik_bones"], switch_bones["fk_bones"]):
+            switch_bone = armature.pose.bones[switch_bone]
+            
+            copy_transforms_ik = switch_bone.constraints.new('COPY_TRANSFORMS')
+            copy_transforms_ik.target = armature
+            copy_transforms_ik.subtarget = ik_bone
+            copy_transforms_ik.name = f"TGR Switch Copy Transforms IK"
+            
+            copy_transforms_fk = switch_bone.constraints.new('COPY_TRANSFORMS')
+            copy_transforms_fk.target = armature
+            copy_transforms_fk.subtarget = fk_bone
+            copy_transforms_fk.name = f"TGR Switch Copy Transforms FK"
+            
+            self._add_driver(armature, copy_transforms_fk)
+        
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)

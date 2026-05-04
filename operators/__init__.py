@@ -16,6 +16,7 @@ from .tgr_object_mode_operators import (TGR_OT_AddTGRArmature,)
 # Add classes from tgr_pose_mode_operators
 from .tgr_pose_mode_operators import (TGR_OT_AddPivotController,
                                       TGR_OT_BindORG,
+                                      TGR_OT_BindSwitch,
                                       TGR_OT_CopyTransformsToChain,
                                       TGR_OT_CreateIKChain,
                                       TGR_OT_CreateIKPoleTarget,
