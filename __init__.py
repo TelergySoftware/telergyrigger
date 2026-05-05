@@ -6,6 +6,7 @@ from nodeitems_utils import NodeCategory, NodeItem
 from .operators import (
     TGR_OT_AddPrefix,
     TGR_OT_AddSuffix,
+    TGR_OT_AutoColorBones,
     TGR_OT_CleanNameUp,
     TGR_OT_RenameCollection,
     TGR_OT_LockBonesFromCollection,
@@ -149,6 +150,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_AddSuffix,
     TGR_OT_AddTGRArmature,
     TGR_OT_AlignBoneToWorld,
+    TGR_OT_AutoColorBones,
     TGR_OT_AutoCorrectUseDeform,
     TGR_OT_BindORG,
     TGR_OT_BindSwitch,

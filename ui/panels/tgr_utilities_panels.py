@@ -19,7 +19,9 @@ class TGR_PT_View3D_Panel_Utilities(TGR_PT_BASE):
         return is_armature and (is_edit_mode or is_pose_mode)
 
     def draw(self, context):
-        pass
+        layout = self.layout
+        row = layout.row()
+        row.operator("tgr.auto_color_bones", text="Auto Color Bones", icon='COLOR')
 
 
 # Naming Subpanel

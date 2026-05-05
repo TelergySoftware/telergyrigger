@@ -197,6 +197,7 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
     isolate_location: bpy.props.BoolProperty(name="Isolate Location", default=False)
     isolate_rotation: bpy.props.BoolProperty(name="Isolate Rotation", default=True)
     isolate_scale: bpy.props.BoolProperty(name="Isolate Scale", default=True)
+    data_path: bpy.props.StringProperty(name="Data Path", default="", description="Data path to the driver that will control the isolation")
 
     @classmethod
     def poll(cls, context):
@@ -204,7 +205,28 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
             return False
         is_armature = context.object.type == 'ARMATURE'
         is_pose_mode = context.mode == 'POSE'
+        if not (bones_selected := context.selected_pose_bones):
+            cls.poll_message_set("At least one bone must be selected")
+            return False
         return is_armature and is_pose_mode
+    
+    def _add_driver(self, armature, constraint):
+        try:
+            fcurve = armature.animation_data.drivers.new(data_path=constraint.path_from_id("influence"), index=0)
+        except ValueError:
+            fcurve = armature.animation_data.drivers.find(data_path=constraint.path_from_id("influence"), index=0)
+        
+        driver = fcurve.driver
+        driver.type = 'AVERAGE'
+        var = driver.variables.new()
+        var.name = "follow"
+        var.type = 'SINGLE_PROP'
+        var.targets[0].id_type = 'ARMATURE'
+        var.targets[0].id = armature.data
+        var.targets[0].data_path = self.data_path
+    
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
         preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
@@ -314,6 +336,9 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
             rotation_constraint.target = context.object
             rotation_constraint.subtarget = mch_bone.name
             rotation_constraint.influence = 0 if self.isolate_rotation else 1
+            # Add drivers if data_path is provided
+            if self.data_path:
+                self._add_driver(context.object, rotation_constraint)
             # Scale constraint
             scale_constraint = int_bone.constraints.new('COPY_SCALE')
             scale_constraint.name = "TGR Isolate Scale"

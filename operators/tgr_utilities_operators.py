@@ -782,3 +782,38 @@ class TGR_OT_AutoCorrectUseDeform(bpy.types.Operator):
         if changed_bones:
             self.report({"INFO"}, f"Use Deform property of {len(changed_bones)} bones changed: {', '.join(changed_bones)}")
         return {"FINISHED"}
+
+
+
+class TGR_OT_AutoColorBones(bpy.types.Operator):
+    """Automatically color the bones based on their name"""
+    
+    bl_idname = "tgr.auto_color_bones"
+    bl_label = "Auto Color Bones"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+    
+    def execute(self, context):
+        
+        armature = context.active_object
+        
+        for bone in armature.data.bones:
+            if "TWEAK" in bone.name.upper():
+                bone.color.palette = "THEME03"
+            elif bone.name.endswith(".L"):
+                bone.color.palette = "THEME01"
+            elif bone.name.endswith(".R"):
+                bone.color.palette = "THEME04"
+            elif bone.name == "ROOT":
+                bone.color.palette = "THEME10"
+            else:
+                bone.color.palette = "THEME09"
+            
+        return {"FINISHED"}
