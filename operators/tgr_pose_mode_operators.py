@@ -212,6 +212,8 @@ class TGR_OT_IsolateBone(bpy.types.Operator):
     
     def _add_driver(self, armature, constraint):
         try:
+            if armature.animation_data is None:
+                armature.animation_data_create()
             fcurve = armature.animation_data.drivers.new(data_path=constraint.path_from_id("influence"), index=0)
         except ValueError:
             fcurve = armature.animation_data.drivers.find(data_path=constraint.path_from_id("influence"), index=0)
@@ -1279,6 +1281,8 @@ class TGR_OT_BindSwitch(bpy.types.Operator):
     
     def _add_driver(self, armature, constraint):
         try:
+            if not armature.animation_data:
+                armature.animation_data_create()
             fcurve = armature.animation_data.drivers.new(data_path=constraint.path_from_id("influence"), index=0)
         except ValueError:
             fcurve = armature.animation_data.drivers.find(data_path=constraint.path_from_id("influence"), index=0)
