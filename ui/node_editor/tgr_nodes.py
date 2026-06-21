@@ -1,918 +1,580 @@
 import bpy
 from bpy.types import Node
 
+from .tgr_node_tree import TGR_NT_Data, TGR_NT_UI
 
-# ================ UI Area Nodes ==================
 
-class TGR_ViewNode(Node):
-    bl_idname = "TGR_ViewNode"
-    bl_label = "View Area"
-    bl_icon = "VIEW3D"
+# ===========================================================
+# DATA TREE NODES
+# ===========================================================
+class TGR_DT_ND_Float(Node):
+    bl_idname = "TGR_DT_ND_Float"
+    bl_label = "Float"
+    bl_icon = 'EVENT_F'
     
-    space_type: bpy.props.EnumProperty(
-        name="View Type",
-        description="Type of the UI view area",
-        items=[
-            ("VIEW_3D", "3D View", "3D Viewport"),
-            ("IMAGE_EDITOR", "Image Editor", "Image Editor"),
-            ("NODE_EDITOR", "Node Editor", "Node Editor"),
-            ("SEQUENCE_EDITOR", "Video Sequence Editor", "Video Sequence Editor"),
-            ("CLIP_EDITOR", "Movie Clip Editor", "Movie Clip Editor"),
-            ("DOPESHEET_EDITOR", "Dope Sheet", "Dope Sheet Editor"),
-            ("GRAPH_EDITOR", "Graph Editor", "Graph Editor"),
-            ("NLA_EDITOR", "NLA Editor", "Non-Linear Animation Editor"),
-            ("TEXT_EDITOR", "Text Editor", "Text Editor"),
-            ("CONSOLE", "Python Console", "Python Console"),
-            ("INFO", "Info", "Info Editor"),
-            ("OUTLINER", "Outliner", "Outliner"),
-            ("PROPERTIES", "Properties", "Properties Editor"),
-            ("FILE_BROWSER", "File Browser", "File Browser"),
-            ("PREFERENCES", "Preferences", "User Preferences"),
-            ("TIMELINE", "Timeline", "Timeline"),
-            ("LOGIC_EDITOR", "Logic Editor", "Logic Editor"),
-            ("ASSET_BROWSER", "Asset Browser", "Asset Browser"),
-        ]
-    )
-    
-    region_type: bpy.props.EnumProperty(
-        name="Region Type",
-        description="Type of the UI region",
-        items=[
-            ("WINDOW", "Window", "Window Region"),
-            ("HEADER", "Header", "Header Region"),
-            ("CHANNELS", "Channels", "Channels Region"),
-            ("TOOLS", "Tools", "Tools Region"),
-            ("UI", "UI", "UI Region"),
-            ("TOOL_PROPS", "Tool Properties", "Tool Properties Region"),
-            ("PREVIEW", "Preview", "Preview Region"),
-            ("HUD", "HUD", "Heads-Up Display Region"),
-        ]
-    )
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.FloatProperty(name="Value", default=0.0, description="Default value for the float output")
+    min_value: bpy.props.FloatProperty(name="Min Value", default=0.0, description="Minimum value for the float output")
+    max_value: bpy.props.FloatProperty(name="Max Value", default=1.0, description="Maximum value for the float output")
     
     def init(self, context):
-        self.inputs.new("NodeSocketString", "Category")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
-    
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_UISocket", "")
-        socket.name = f"UI Element {len(self.inputs) - 1}"  # Don't count the Tab Name socket
-        return socket
-    
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element") and socket.name != "Tab Name":
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
-    
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            if socket.name != "Category":
-                if socket.is_linked:
-                    socket.name = f"UI Element {input_count}"
-                    input_count += 1
-                else:
-                    socket.name = f"UI Element {input_count}"
-    
-    def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                has_empty_socket = True
-                break
-        
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
-        
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
+        self.outputs.new('NodeSocketFloat', "Float")
+        self.inputs.new('TGR_SKT_Executable', "Update")
     
     def draw_buttons(self, context, layout):
-        col = layout.column()
-        col.operator("tgr.ui_picker", text="UI Picker", icon="EYEDROPPER")
-        col.prop(self, "space_type", text="View Type")
-        col.prop(self, "region_type", text="Region Type")
-    
-    def draw_label(self):
-        return self.space_type
-
-# ================ UI Nodes ==================
-
-class TGR_PanelNode(Node):
-    bl_idname = "TGR_PanelNode"
-    bl_label = "Panel"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        # Inputs: String -> Name,
-        self.inputs.new("NodeSocketString", "Name")
-        self.outputs.new("TGR_UISocket", "UI")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
-    
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_UISocket", "")
-        socket.name = f"UI Element {len(self.inputs) - 1}"  # Don't count the Name socket
-        return socket
-    
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element") and socket.name != "Name":
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
-    
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            if socket.name != "Name":
-                if socket.is_linked:
-                    socket.name = f"UI Element {input_count}"
-                    input_count += 1
-                else:
-                    socket.name = f"UI Element {input_count}"
-    
-    def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                has_empty_socket = True
-                break
-        
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
-        
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Panel"
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "default_value", text="Value")
+        layout.prop(self, "min_value", text="Min")
+        layout.prop(self, "max_value", text="Max")
 
 
-class TGR_RowNode(Node):
-    bl_idname = "TGR_RowNode"
-    bl_label = "Row"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.outputs.new("TGR_UISocket", "UI")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
-    
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_UISocket", "")
-        socket.name = f"UI Element {len(self.inputs)}"
-        return socket
-    
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
-    
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            socket.name = f"UI Element {input_count}"
-            input_count += 1
-    
-    def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                has_empty_socket = True
-                break
-        
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
-        
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Row"
-
-
-class TGR_ColumnNode(Node):
-    bl_idname = "TGR_ColumnNode"
-    bl_label = "Column"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.outputs.new("TGR_UISocket", "UI")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
-    
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_UISocket", "")
-        socket.name = f"UI Element {len(self.inputs)}"
-        return socket
-    
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
-    
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            socket.name = f"UI Element {input_count}"
-            input_count += 1
-    
-    def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                has_empty_socket = True
-                break
-        
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
-        
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Column"
-
-
-class TGR_BoxNode(Node):
-    bl_idname = "TGR_BoxNode"
-    bl_label = "Box"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.outputs.new("TGR_UISocket", "UI")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
-    
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_UISocket", "")
-        socket.name = f"UI Element {len(self.inputs)}"
-        return socket
-    
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
-    
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            socket.name = f"UI Element {input_count}"
-            input_count += 1
-    
-    def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("UI Element"):
-                has_empty_socket = True
-                break
-        
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
-        
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Box"
-
-
-# ================ Input Nodes ==================
-
-class TGR_ValueNode(Node):
-    """Simple float value input node"""
-    bl_idname = "TGR_ValueNode"
-    bl_label = "Value"
-    bl_icon = "NONE"
-    
-    value: bpy.props.FloatProperty(name="Value", default=0.0)
-    
-    def init(self, context):
-        self.outputs.new("NodeSocketFloat", "Value")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="")
-    
-    def draw_label(self):
-        return "Value"
-
-
-class TGR_IntegerNode(Node):
-    """Integer input node"""
-    bl_idname = "TGR_IntegerNode"
+class TGR_DT_ND_Integer(Node):
+    bl_idname = "TGR_DT_ND_Integer"
     bl_label = "Integer"
-    bl_icon = "NONE"
+    bl_icon = 'EVENT_I'
     
-    value: bpy.props.IntProperty(name="Integer", default=0)
-    
-    def init(self, context):
-        self.outputs.new("NodeSocketInt", "Integer")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="")
-    
-    def draw_label(self):
-        return "Integer"
-
-
-class TGR_BooleanNode(Node):
-    """Boolean input node"""
-    bl_idname = "TGR_BooleanNode"
-    bl_label = "Boolean"
-    bl_icon = "NONE"
-    
-    value: bpy.props.BoolProperty(name="Boolean", default=False)
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.IntProperty(name="Value", default=0, description="Default value for the integer output")
+    min_value: bpy.props.IntProperty(name="Min Value", default=0, description="Minimum value for the integer output")
+    max_value: bpy.props.IntProperty(name="Max Value", default=100, description="Maximum value for the integer output")
     
     def init(self, context):
-        self.outputs.new("NodeSocketBool", "Boolean")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
+        self.outputs.new('NodeSocketInt', "Integer")
+        self.inputs.new('TGR_SKT_Executable', "Update")
     def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="")
-    
-    def draw_label(self):
-        return "Boolean"
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "default_value", text="Value")
+        layout.prop(self, "min_value", text="Min")
+        layout.prop(self, "max_value", text="Max")
 
 
-class TGR_StringNode(Node):
-    """String input node"""
-    bl_idname = "TGR_StringNode"
+class TGR_DT_ND_String(Node):
+    bl_idname = "TGR_DT_ND_String"
     bl_label = "String"
-    bl_icon = "NONE"
+    bl_icon = 'EVENT_S'
     
-    value: bpy.props.StringProperty(name="String", default="")
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.StringProperty(name="Value", default="", description="Default value for the string output")
     
     def init(self, context):
-        self.outputs.new("NodeSocketString", "String")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
+        self.outputs.new('NodeSocketString', "String")
+        self.inputs.new('TGR_SKT_Executable', "Update")
     
     def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="")
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "default_value", text="", placeholder="String Value")
+
+
+class TGR_DT_ND_Boolean(Node):
+    bl_idname = "TGR_DT_ND_Boolean"
+    bl_label = "Boolean"
+    bl_icon = 'EVENT_B'
     
-    def draw_label(self):
-        return "String"
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.BoolProperty(name="Value", default=False, description="Default value for the boolean output")
+    
+    def init(self, context):
+        self.outputs.new('NodeSocketBool', "Boolean")
+        self.inputs.new('TGR_SKT_Executable', "Update")
+        
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "default_value", text="Value")
 
 
-class TGR_VectorNode(Node):
-    """Vector input node"""
-    bl_idname = "TGR_VectorNode"
+class TGR_DT_ND_Vector(Node):
+    bl_idname = "TGR_DT_ND_Vector"
     bl_label = "Vector"
-    bl_icon = "NONE"
+    bl_icon = 'EVENT_V'
     
-    value: bpy.props.FloatVectorProperty(
-        name="Vector",
-        description="Vector value",
-        default=(0.0, 0.0, 0.0),
-        size=3
-    )
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.FloatVectorProperty(name="Value", default=(0.0, 0.0, 0.0), description="Default value for the vector output")
+    min_value: bpy.props.FloatVectorProperty(name="Min Value", default=(0.0, 0.0, 0.0), description="Minimum value for the vector output")
+    max_value: bpy.props.FloatVectorProperty(name="Max Value", default=(1.0, 1.0, 1.0), description="Maximum value for the vector output")
     
     def init(self, context):
-        self.outputs.new("NodeSocketVector", "Vector")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
+        self.outputs.new('NodeSocketVector', "Vector")
+        self.inputs.new('TGR_SKT_Executable', "Update")
+        
     def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="")
-    
-    def draw_label(self):
-        return "Vector"
+        layout.prop(self, "name", text="", placeholder="Name")
+        col = layout.column(align=True)
+        col.prop(self, "default_value")
+        col.prop(self, "min_value")
+        col.prop(self, "max_value")
 
 
-class TGR_ColorNode(Node):
-    """Color input node"""
-    bl_idname = "TGR_ColorNode"
+class TGR_DT_ND_Color(Node):
+    bl_idname = "TGR_DT_ND_Color"
     bl_label = "Color"
-    bl_icon = "NONE"
+    bl_icon = 'IMAGE_RGB_ALPHA'
     
-    value: bpy.props.FloatVectorProperty(
-        name="Color",
-        description="Color value",
-        default=(1.0, 1.0, 1.0, 1.0),
-        size=4,
-        subtype='COLOR'
-    )
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.FloatVectorProperty(name="Value", subtype='COLOR', default=(1.0, 1.0, 1.0), description="Default value for the color output")
     
     def init(self, context):
-        self.outputs.new("NodeSocketColor", "Color")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
+        self.outputs.new('NodeSocketColor', "Color")
+        self.inputs.new('TGR_SKT_Executable', "Update")
+        
     def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="")
-    
-    def draw_label(self):
-        return "Color"
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "default_value", text="")
+        
 
-
-class TGR_ObjectNode(Node):
-    """Object reference input node"""
-    bl_idname = "TGR_ObjectNode"
-    bl_label = "Object"
-    bl_icon = "NONE"
+class TGR_DT_ND_Enum(Node):
+    bl_idname = "TGR_DT_ND_Enum"
+    bl_label = "Enum"
+    bl_icon = 'LINENUMBERS_OFF'
     
-    value: bpy.props.PointerProperty(
-        name="Object",
-        description="Object reference",
-        type=bpy.types.Object
-    )
+    name: bpy.props.StringProperty(name="Name", default="")
     
     def init(self, context):
-        self.outputs.new("NodeSocketObject", "Object")
+        self.inputs.new('TGR_SKT_Executable', "Update")
+        self.inputs.new('TGR_SKT_EnumItem', "Item 001")
+        self.outputs.new('TGR_SKT_Enum', "Enum")
     
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
+    def update(self):
+        if not self.inputs:
+            return
+        
+        if self.inputs[-1].is_linked:
+            new_index = len(self.inputs) + 1
+            self.inputs.new('TGR_SKT_EnumItem', f"Item {new_index:03d}")
+        
+        while len(self.inputs) > 2 and not self.inputs[-2].is_linked:
+            self.inputs.remove(self.inputs[-1])
     
     def draw_buttons(self, context, layout):
-        layout.prop(self, "value", text="", placeholder="Select Object...")
-    
-    def draw_label(self):
-        return "Object"
+        layout.prop(self, "name", text="", placeholder="Name")
 
 
-class TGR_EnumItemNode(Node):
-    """Enum item node for enum properties"""
-    bl_idname = "TGR_EnumItemNode"
+class TGR_DT_ND_EnumItem(Node):
+    bl_idname = "TGR_DT_ND_EnumItem"
     bl_label = "Enum Item"
-    bl_icon = "NONE"
+    bl_icon = 'LINENUMBERS_ON'
     
-    name: bpy.props.StringProperty(
-        name="Name",
-        description="Display name for the enum item",
-        default=""
-    )
-    
-    description: bpy.props.StringProperty(
-        name="Description",
-        description="Tooltip description for the enum item",
-        default=""
-    )
+    name: bpy.props.StringProperty(name="Name", default="")
+    description: bpy.props.StringProperty(name="Description", default="", description="Description for the enum item")
     
     def init(self, context):
-        self.outputs.new("TGR_EnumItemSocket", "Enum Item")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
+        self.outputs.new('TGR_SKT_EnumItem', "Enum")
     
     def draw_buttons(self, context, layout):
-        col = layout.column()
-        col.prop(self, "name", text="", placeholder="Item name...")
-        col.prop(self, "description", text="", placeholder="Description...")
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "description", text="", placeholder="Description")
+
+
+class TGR_DT_ND_Object(Node):
+    bl_idname = "TGR_DT_ND_Object"
+    bl_label = "Object"
+    bl_icon = 'OBJECT_DATAMODE'
     
-    def draw_label(self):
-        return "Enum Item"
-
-
-# ================ Property Nodes ==================
-class TGR_PropertiesNode(Node):
-    """Properties container node"""
-    bl_idname = "TGR_PropertiesNode"
-    bl_label = "Properties"
-    bl_icon = "NONE"
+    name: bpy.props.StringProperty(name="Name", default="")
+    default_value: bpy.props.PointerProperty(name="Value", type=bpy.types.Object, description="Default value for the object output")
     
     def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
+        self.outputs.new('NodeSocketObject', "Object")
+        self.inputs.new('TGR_SKT_Executable', "Update")
     
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_PropertySocket", "")
-        socket.name = f"Property {len(self.inputs) - 1}"  # Don't count the Name socket
-        return socket
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "default_value", text="", placeholder="Object Value")
+
+# ===========================================================
+# PROPERTY GROUP NODES
+# ===========================================================
+class TGR_DT_ND_PropertyGroup(Node):
+    bl_idname = "TGR_DT_ND_PropertyGroup"
+    bl_label = "Property Group"
+    bl_icon = 'GROUP'
     
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("Property") and socket.name != "Name":
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
+    name: bpy.props.StringProperty(name="Name", default="")
+    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the property group")
+    bone: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the property group (optional)")
     
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            if socket.name != "Name":
-                if socket.is_linked:
-                    socket.name = f"Property {input_count}"
-                    input_count += 1
-                else:
-                    socket.name = f"Property {input_count}"
+    def init(self, context):
+        self.inputs.new('TGR_SKT_Property', "Property 001")
     
     def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("Property"):
-                has_empty_socket = True
-                break
+        if not self.inputs:
+            return
         
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
+        if self.inputs[-1].is_linked:
+            new_index = len(self.inputs) + 1
+            self.inputs.new('TGR_SKT_Property', f"Property {new_index:03d}")
         
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
+        while len(self.inputs) > 1 and not self.inputs[-2].is_linked:
+            self.inputs.remove(self.inputs[-1])
     
     def draw_buttons(self, context, layout):
-        pass
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "target", text="", placeholder="Target Object")
+        if self.target and self.target.type == 'ARMATURE':
+            layout.prop_search(self, "bone", self.target.data, "bones", text="Bone", icon='BONE_DATA')
+
+# ===========================================================
+# OPERATOR NODES
+# ===========================================================
+class TGR_OP_ND_Executable(Node):
+    bl_idname = "TGR_OP_ND_Executable"
+    bl_label = "Executable"
+    bl_icon = 'NODE'
     
-    def draw_label(self):
-        return "Properties"
-
-
-class TGR_FloatPropertyNode(Node):
-    """Float property node"""
-    bl_idname = "TGR_FloatPropertyNode"
-    bl_label = "Float Property"
-    bl_icon = "NONE"
+    name: bpy.props.StringProperty(name="Name", default="")
+    node_type: bpy.props.EnumProperty(name="Type", items=[('OPERATOR', "Operator", "Blender Operator"), ('CALLBACK', "Callback", "Custom Callback Function")], default='OPERATOR')
+    
+    def _check_operator_exists(self):
+        try:
+            text_block = bpy.data.texts["tgr_executables.py"]
+        except KeyError:
+            return False
+        return f"{self.node_type}: {self.name}" in text_block.as_string()
     
     def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.inputs.new("NodeSocketFloat", "Value")
-        self.inputs.new("NodeSocketFloat", "Min")
-        self.inputs.new("NodeSocketFloat", "Max")
-        self.outputs.new("TGR_PropertySocket", "Property")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
+        self.outputs.new('TGR_SKT_Executable', "Executable")
     
     def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Float Property"
+        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "node_type", text="", placeholder="Type")
+        if not self._check_operator_exists():
+            operator = layout.operator("tgr.create_executable", text="Create Executable", icon='ADD')
+            operator.name = self.name
+            operator.exec_type = self.node_type
 
-
-class TGR_IntegerPropertyNode(Node):
-    """Integer property node"""
-    bl_idname = "TGR_IntegerPropertyNode"
-    bl_label = "Integer Property"
-    bl_icon = "NONE"
+# ==========================================================
+# Layout Nodes
+# ==========================================================
+class BaseDynamicLayoutNode(Node):
     
-    def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.inputs.new("NodeSocketInt", "Default Value")
-        self.inputs.new("NodeSocketInt", "Min")
-        self.inputs.new("NodeSocketInt", "Max")
-        self.outputs.new("TGR_PropertySocket", "Property")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Integer Property"
-
-
-class TGR_BooleanPropertyNode(Node):
-    """Boolean property node"""
-    bl_idname = "TGR_BooleanPropertyNode"
-    bl_label = "Boolean Property"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.inputs.new("NodeSocketBool", "Default Value")
-        self.outputs.new("TGR_PropertySocket", "Property")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Boolean Property"
-
-
-class TGR_StringPropertyNode(Node):
-    """String property node"""
-    bl_idname = "TGR_StringPropertyNode"
-    bl_label = "String Property"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.inputs.new("NodeSocketString", "Default Value")
-        self.outputs.new("TGR_PropertySocket", "Property")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "String Property"
-
-
-class TGR_VectorPropertyNode(Node):
-    """Vector property node"""
-    bl_idname = "TGR_VectorPropertyNode"
-    bl_label = "Vector Property"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.inputs.new("NodeSocketVector", "Default Value")
-        self.inputs.new("NodeSocketVector", "Min")
-        self.inputs.new("NodeSocketVector", "Max")
-        self.outputs.new("TGR_PropertySocket", "Property")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Vector Property"
-
-
-class TGR_ColorPropertyNode(Node):
-    """Color property node"""
-    bl_idname = "TGR_ColorPropertyNode"
-    bl_label = "Color Property"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.inputs.new("NodeSocketColor", "Default Value")
-        self.outputs.new("TGR_PropertySocket", "Property")
-    
-    def copy(self, node):
-        print("Copied node ", node)
-    
-    def free(self):
-        print("Node removed", self)
-    
-    def draw_buttons(self, context, layout):
-        pass
-    
-    def draw_label(self):
-        return "Color Property"
-
-
-class TGR_EnumPropertyNode(Node):
-    """Enum property node with dynamic enum items"""
-    bl_idname = "TGR_EnumPropertyNode"
-    bl_label = "Enum Property"
-    bl_icon = "NONE"
-    
-    def init(self, context):
-        self.inputs.new("NodeSocketString", "Name")
-        self.inputs.new("NodeSocketString", "Description")
-        self.outputs.new("TGR_PropertySocket", "Property")
-        # Add initial empty socket for dynamic input
-        self._add_empty_socket()
-    
-    def _add_empty_socket(self):
-        """Add an empty socket for new connections"""
-        socket = self.inputs.new("TGR_EnumItemSocket", "")
-        socket.name = f"Enum Item {len(self.inputs) - 2}"  # Don't count Name and Description sockets
-        return socket
-    
-    def _remove_empty_sockets(self):
-        """Remove unconnected empty sockets (except the last one)"""
-        empty_sockets = []
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("Enum Item") and socket.name not in ["Name", "Description"]:
-                empty_sockets.append(socket)
-        
-        # Always keep at least one empty socket for new connections
-        if len(empty_sockets) > 1:
-            for socket in empty_sockets[:-1]:
-                self.inputs.remove(socket)
-    
-    def _update_socket_names(self):
-        """Update socket names to maintain proper numbering"""
-        input_count = 1
-        for socket in self.inputs:
-            if socket.name not in ["Name", "Description"]:
-                if socket.is_linked:
-                    socket.name = f"Enum Item {input_count}"
-                    input_count += 1
-                else:
-                    socket.name = f"Enum Item {input_count}"
+    default_input_type = 'TGR_SKT_Layout'
     
     def update(self):
-        """Called when the node or its connections change"""
-        # Check if we need to add a new empty socket
-        has_empty_socket = False
-        for socket in self.inputs:
-            if not socket.is_linked and socket.name.startswith("Enum Item"):
-                has_empty_socket = True
-                break
+        if not self.inputs:
+            return
         
-        if not has_empty_socket:
-            # All sockets are connected, add a new empty one
-            self._add_empty_socket()
+        if self.inputs[-1].is_linked:
+            new_index = len(self.inputs) + 1
+            self.inputs.new(self.default_input_type, f"Item {new_index:03d}")
         
-        # Clean up unused empty sockets
-        self._remove_empty_sockets()
-        
-        # Update socket names
-        self._update_socket_names()
+        while len(self.inputs) > 1 and not self.inputs[-2].is_linked:
+            self.inputs.remove(self.inputs[-1])
+
+
+class TGR_LY_ND_Row(BaseDynamicLayoutNode):
+    bl_idname = "TGR_LY_ND_Row"
+    bl_label = "Row"
+    bl_icon = 'ALIGN_JUSTIFY'
     
-    def copy(self, node):
-        print("Copied node ", node)
+    align: bpy.props.BoolProperty(name="Align", default=False, description="Align items in the row")
+    height: bpy.props.IntProperty(name="Height", default=0, min=0, description="Height of the row (0 for automatic)")
     
-    def free(self):
-        print("Node removed", self)
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.inputs.new('TGR_SKT_Layout', "Item 001")
     
     def draw_buttons(self, context, layout):
-        pass
+        layout.prop(self, "align", text="Align", toggle=True)
+        layout.prop(self, "height", text="Height")
+
+
+class TGR_LY_ND_Column(BaseDynamicLayoutNode):
+    bl_idname = "TGR_LY_ND_Column"
+    bl_label = "Column"
+    bl_icon = 'ALIGN_JUSTIFY'
     
-    def draw_label(self):
-        return "Enum Property"
+    align: bpy.props.BoolProperty(name="Align", default=False, description="Align items in the column")
+    height: bpy.props.IntProperty(name="Height", default=0, min=0, description="Height of the column (0 for automatic)")
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.inputs.new('TGR_SKT_Layout', "Item 001")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "align", text="Align", toggle=True)
+        layout.prop(self, "height", text="Height")
+
+class TGR_LY_ND_Box(BaseDynamicLayoutNode):
+    bl_idname = "TGR_LY_ND_Box"
+    bl_label = "Box"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.inputs.new('TGR_SKT_Layout', "Item 001")
         
+        
+class TGR_LY_ND_SplitItem(Node):
+    bl_idname = "TGR_LY_ND_SplitItem"
+    bl_label = "Split Item"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    label: bpy.props.StringProperty(name="Label", default="", description="Label for the split item (optional)")
+    factor: bpy.props.FloatProperty(name="Factor", default=0.5, min=0.0, max=1.0, description="Split factor between 0 and 1")
+    
+    def init(self, context):
+        self.inputs.new('TGR_SKT_Layout', "Input")
+        self.outputs.new('TGR_SKT_SplitItem', "Layout")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "label", text="", placeholder="Label")
+        layout.prop(self, "factor", text="Factor")
+
+
+class TGR_LY_ND_Split(Node):
+    bl_idname = "TGR_LY_ND_Split"
+    bl_label = "Split"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def _check_invalid_links(self):
+        for input in self.inputs:
+            for link in input.links:
+                if link.from_socket.bl_idname != 'TGR_SKT_SplitItem':
+                    return True
+        return False
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.inputs.new('TGR_SKT_SplitItem', "Item 001")
+    
+    def insert_link(self, link):
+        if link.to_node != self:
+            return
+        # Show an error message if the user tries to connect something that is not a Split Item socket to the Split node
+        if link.from_socket.bl_idname != 'TGR_SKT_SplitItem' and link.from_socket:
+            self["_link_error"] = "Only Split Item sockets can be connected to the Split node"
+        else:
+            if "_link_error" in self:
+                del self["_link_error"]
+    
+    def update(self):
+        if self._check_invalid_links():
+            self["_link_error"] = "Only Split Item sockets can be connected to the Split node"
+        else:
+            if "_link_error" in self:
+                del self["_link_error"]
+        
+        if not self.inputs:
+            return
+        
+        if self.inputs[-1].is_linked:
+            new_index = len(self.inputs) + 1
+            self.inputs.new('TGR_SKT_SplitItem', f"Item {new_index:03d}")
+        
+        while len(self.inputs) > 1 and not self.inputs[-2].is_linked:
+            self.inputs.remove(self.inputs[-1])
+        
+    
+    def draw_buttons(self, context, layout):
+        if "_link_error" in self and self["_link_error"]:
+            layout.label(text=self["_link_error"], icon='ERROR')
+
+
+class TGR_LY_ND_Grid(BaseDynamicLayoutNode):
+    bl_idname = "TGR_LY_ND_Grid"
+    bl_label = "Grid"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.inputs.new('TGR_SKT_Layout', "Item 001")
+
+
+class TGR_LY_ND_Panel(BaseDynamicLayoutNode):
+    bl_idname = "TGR_LY_ND_Panel"
+    bl_label = "Panel"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def _get_panel_enum_items(self, context):
+        """Dynamically generate enum items based on the panels available in the current UI tree"""
+        items = [("NONE", "None", "No parent panel")]
+        ui_node_tree = None
+        for node_group in bpy.data.node_groups:
+            if isinstance(node_group, TGR_NT_UI):
+                ui_node_tree = node_group
+                break
+        if ui_node_tree:
+            for node in ui_node_tree.nodes:
+                if isinstance(node, TGR_LY_ND_Panel) and node != self:
+                    items.append((node.name, node.name, ""))
+        return items
+    
+    name: bpy.props.StringProperty(name="Panel Name", default="", description="Name of the panel")
+    parent: bpy.props.EnumProperty(name="Parent Panel", items=_get_panel_enum_items, description="Parent panel for nesting (optional)")
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.inputs.new('TGR_SKT_Layout', "Item 001")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "name", text="", placeholder="Panel Name")
+        layout.prop(self, "parent", text="Parent Panel")
+
+
+class TGR_LY_ND_Separator(Node):
+    bl_idname = "TGR_LY_ND_Separator"
+    bl_label = "Separator"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+
+
+class TGR_LY_ND_Prop(Node):
+    bl_idname = "TGR_LY_ND_Prop"
+    bl_label = "Property"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def _draw_float(self, context, layout):
+        layout.prop(self, "property_name", text="Property")
+        layout.prop(self, "use_slider", text="Use Slider")
+        layout.prop(self, "subtype", text="Subtype")
+    
+    def _draw_boolean(self, context, layout):
+        layout.prop(self, "property_name", text="Property")
+        layout.prop(self, "toggle", text="Toggle")
+        layout.prop(self, "invert_boolean", text="Invert Boolean")
+    
+    def _draw_vector(self, context, layout):
+        layout.prop(self, "property_name", text="Property")
+        layout.prop(self, "subtype", text="Subtype")
+        layout.prop(self, "orientation", text="Orientation")
+    
+    def _draw_default(self, context, layout):
+        layout.prop(self, "property_name", text="Property")
+        
+    
+    def _get_property_enum_items(self, context):
+        """Dynamically generate enum items based on the property nodes available in the data tree"""
+        items = []
+        data_node_tree = None
+        for node_group in bpy.data.node_groups:
+            if isinstance(node_group, TGR_NT_Data):
+                data_node_tree = node_group
+                break
+        if data_node_tree:
+            for node in data_node_tree.nodes:
+                if isinstance(node, (TGR_DT_ND_Float, TGR_DT_ND_Integer, TGR_DT_ND_String, TGR_DT_ND_Boolean, TGR_DT_ND_Vector, TGR_DT_ND_Color, TGR_DT_ND_Enum, TGR_DT_ND_Object)):
+                    # Don't add to the enum if they are not linked to the Property Group node
+                    if not any(isinstance(link.to_node, TGR_DT_ND_PropertyGroup) for link in node.outputs[0].links):
+                        continue
+                    items.append((node.name, node.name, ""))
+        return items
+    
+    def _get_property_type(self):
+        data_node_tree = None
+        for node_group in bpy.data.node_groups:
+            if isinstance(node_group, TGR_NT_Data):
+                data_node_tree = node_group
+                break
+        if data_node_tree:
+            for node in data_node_tree.nodes:
+                if node.name == self.property_name:
+                    return type(node)
+        return None
+    
+    property_name: bpy.props.EnumProperty(name="Property", items=_get_property_enum_items)
+    
+    # Float, Int
+    use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties")
+    subtype: bpy.props.EnumProperty(name="Unit",
+                                 items=[
+                                     ('NONE', "None", "No subtype"),
+                                     ('LENGTH', "Length", "Display as length"),
+                                     ('ANGLE', "Angle", "Display as angle"),
+                                     ('TIME', "Time", "Display as time"),
+                                     ('PERCENTAGE', "Percentage", "Display as percentage"),
+                                     ('PIXELS', "Pixels", "Display as pixels"),],
+                                 default='NONE', description="Subtype to display for numeric properties")
+    
+    # Boolean
+    toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button")
+    invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property")
+    
+    # Vector
+    orientation: bpy.props.EnumProperty(name="Orientation",
+                                        items=[
+                                            ('HORIZONTAL', "Horizontal", "Arrange vector components horizontally"),
+                                            ('VERTICAL', "Vertical", "Arrange vector components vertically")],
+                                        default='HORIZONTAL')
+
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+    
+    def draw_buttons(self, context, layout):
+        property_type = self._get_property_type()
+        if property_type == TGR_DT_ND_Float:
+            self._draw_float(context, layout)
+        elif property_type == TGR_DT_ND_Integer:
+            self._draw_float(context, layout)
+        elif property_type == TGR_DT_ND_Boolean:
+            self._draw_boolean(context, layout)
+        elif property_type == TGR_DT_ND_Vector:
+            self._draw_vector(context, layout)
+        else:
+            self._draw_default(context, layout)
+
+class TGR_LY_ND_Operator(Node):
+    bl_idname = "TGR_LY_ND_Operator"
+    bl_label = "Operator"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def _get_operator_enum_items(self, context):
+        """Dynamically generate enum items based on the operators defined in the Data Tree's Executable nodes"""
+        items = []
+        data_node_tree = None
+        for node_group in bpy.data.node_groups:
+            if isinstance(node_group, TGR_NT_Data):
+                data_node_tree = node_group
+                break
+        if data_node_tree:
+            for node in data_node_tree.nodes:
+                if isinstance(node, TGR_OP_ND_Executable) and node.node_type == 'OPERATOR':
+                    items.append((node.name, node.name, ""))
+        return items
+    
+    operator_name: bpy.props.EnumProperty(name="Operator", items=_get_operator_enum_items)
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operator_name", text="Operator")
+
+
+class TGR_LY_ND_Label(Node):
+    bl_idname = "TGR_LY_ND_Label"
+    bl_label = "Label"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    text: bpy.props.StringProperty(name="Text", default="")
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "text", text="", placeholder="Text")
+
+
+class TGR_LY_ND_BoneCollection(Node):
+    bl_idname = "TGR_LY_ND_BoneCollection"
+    bl_label = "Bone Collection"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def _get_bone_collection_items(self, context):
+        """Dynamically generate enum items based on the bone collections available in the armature"""
+        items = []
+        obj = context.object
+        if obj and obj.type == 'ARMATURE':
+            for collection in obj.data.collections_all:
+                items.append((collection.name, collection.name, ""))
+        return items
+    
+    collection_name: bpy.props.EnumProperty(name="Bone Collection", items=_get_bone_collection_items)
+    property: bpy.props.EnumProperty(name="Property", items=[("VISIBILITY", "Visibility", "Control the visibility of the bone collection"), ("SOLO", "Solo", "Control the solo state of the bone collection")], default="VISIBILITY")
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "property", text="Property")
+        layout.prop(self, "collection_name", text="Collection")

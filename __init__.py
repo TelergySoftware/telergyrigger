@@ -1,6 +1,6 @@
 import bpy
 import nodeitems_utils
-from nodeitems_utils import NodeCategory, NodeItem
+from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 
 # ----- OPERATORS -----
 from .operators import (
@@ -55,6 +55,7 @@ from .operators import (
 from .operators import (
     TGR_OT_UIPicker,
     TGR_OT_GenerateUI,
+    TGR_OT_CreateExecutable,
 )
 
 from .operators import (
@@ -99,33 +100,40 @@ from .ui import (
 # Rig Node Editor
 from .ui import (
     # Core node system components
-    TGR_RigNodeTree,
-    TGR_UISocket,
-    TGR_PropertySocket,
-    TGR_EnumItemSocket,
-    
+    TGR_NT_UI,
+    TGR_NT_Data,
+    # Socket classes
+    TGR_SKT_Enum,
+    TGR_SKT_EnumItem,
+    TGR_SKT_Property,
+    TGR_SKT_Executable,
+    TGR_SKT_Layout,
+    TGR_SKT_SplitItem,
+    # Layout nodes
+    TGR_LY_ND_Row,
+    TGR_LY_ND_Column,
+    TGR_LY_ND_Box,
+    TGR_LY_ND_SplitItem,
+    TGR_LY_ND_Split,
+    TGR_LY_ND_Grid,
+    TGR_LY_ND_Panel,
+    TGR_LY_ND_Separator,
+    TGR_LY_ND_BoneCollection,
+    TGR_LY_ND_Prop,
+    TGR_LY_ND_Operator,
+    TGR_LY_ND_Label,
     # Node classes
-    TGR_ViewNode,
-    TGR_PanelNode,
-    TGR_RowNode,
-    TGR_ColumnNode,
-    TGR_BoxNode,
-    TGR_ValueNode,
-    TGR_IntegerNode,
-    TGR_BooleanNode,
-    TGR_StringNode,
-    TGR_VectorNode,
-    TGR_ColorNode,
-    TGR_ObjectNode,
-    TGR_PropertiesNode,
-    TGR_FloatPropertyNode,
-    TGR_IntegerPropertyNode,
-    TGR_BooleanPropertyNode,
-    TGR_StringPropertyNode,
-    TGR_VectorPropertyNode,
-    TGR_ColorPropertyNode,
-    TGR_EnumPropertyNode,
-    TGR_EnumItemNode,
+    TGR_DT_ND_Float,
+    TGR_DT_ND_Integer,
+    TGR_DT_ND_Boolean,
+    TGR_DT_ND_String,
+    TGR_DT_ND_Vector,
+    TGR_DT_ND_Color,
+    TGR_DT_ND_Object,
+    TGR_DT_ND_Enum,
+    TGR_DT_ND_EnumItem,
+    TGR_DT_ND_PropertyGroup,
+    TGR_OP_ND_Executable,
 )
 
 # ----- PROPERTIES -----
@@ -157,6 +165,7 @@ CLASSES_TO_REGISTER = (
     TGR_OT_BoneOnPoints,
     TGR_OT_BonesOnVertices,
     TGR_OT_CleanNameUp,
+    TGR_OT_CreateExecutable,
     TGR_OT_ConnectBones,
     TGR_OT_CopyTransforms,
     TGR_OT_CopyTransformsToChain,
@@ -206,31 +215,37 @@ CLASSES_TO_REGISTER = (
     TGR_MT_TrackNewLayer,
     TGR_MT_PoseMode_Constraints_PieMenu,
     # Node Editor
-    TGR_RigNodeTree,
-    TGR_PanelNode,
-    TGR_ViewNode,
-    TGR_RowNode,
-    TGR_ColumnNode,
-    TGR_BoxNode,
-    TGR_UISocket,
-    TGR_PropertySocket,
-    TGR_EnumItemSocket,
-    TGR_ValueNode,
-    TGR_IntegerNode,
-    TGR_BooleanNode,
-    TGR_StringNode,
-    TGR_VectorNode,
-    TGR_ColorNode,
-    TGR_ObjectNode,
-    TGR_EnumItemNode,
-    TGR_PropertiesNode,
-    TGR_FloatPropertyNode,
-    TGR_IntegerPropertyNode,
-    TGR_BooleanPropertyNode,
-    TGR_StringPropertyNode,
-    TGR_VectorPropertyNode,
-    TGR_ColorPropertyNode,
-    TGR_EnumPropertyNode,
+    TGR_NT_Data,
+    TGR_NT_UI,
+    TGR_DT_ND_Float,
+    TGR_DT_ND_Integer,
+    TGR_DT_ND_Boolean,
+    TGR_DT_ND_String,
+    TGR_DT_ND_Vector,
+    TGR_DT_ND_Color,
+    TGR_DT_ND_Object,
+    TGR_DT_ND_Enum,
+    TGR_DT_ND_EnumItem,
+    TGR_DT_ND_PropertyGroup,
+    TGR_OP_ND_Executable,
+    TGR_LY_ND_Row,
+    TGR_LY_ND_Column,
+    TGR_LY_ND_Box,
+    TGR_LY_ND_SplitItem,
+    TGR_LY_ND_Split,
+    TGR_LY_ND_Grid,
+    TGR_LY_ND_Panel,
+    TGR_LY_ND_Separator,
+    TGR_LY_ND_BoneCollection,
+    TGR_LY_ND_Prop,
+    TGR_LY_ND_Operator,
+    TGR_LY_ND_Label,
+    TGR_SKT_Enum,
+    TGR_SKT_EnumItem,
+    TGR_SKT_Property,
+    TGR_SKT_Executable,
+    TGR_SKT_Layout,
+    TGR_SKT_SplitItem,
     # Properties
     TGR_Properties,
     TGR_RIG_UI_Properties,
@@ -239,42 +254,64 @@ CLASSES_TO_REGISTER = (
 
 
 # Node Editor categories
-class TGR_NodeCategory(NodeCategory):
+class TGR_DT_NodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
-        return context.space_data.tree_type == 'TGR_RigNodeTree'
+        return context.space_data.tree_type == 'TGR_NT_Data'
+
+
+class TGR_UI_NodeCategory(NodeCategory):
+    @classmethod
+    def poll(cls, context):
+        return context.space_data.tree_type == 'TGR_NT_UI'
+
+def tgr_node_separator(self, layout, context):
+    layout.separator()
 
 node_categories = [
-    TGR_NodeCategory("TGR_OUTPUT", "Output", items=[
-        NodeItem("TGR_ViewNode"),
+    TGR_DT_NodeCategory("DATA_NODES", "Data", items=[
+        NodeItem("TGR_DT_ND_Float"),
+        NodeItem("TGR_DT_ND_Integer"),
+        NodeItem("TGR_DT_ND_Boolean"),
+        NodeItem("TGR_DT_ND_String"),
+        NodeItem("TGR_DT_ND_Vector"),
+        NodeItem("TGR_DT_ND_Color"),
+        NodeItem("TGR_DT_ND_Object"),
+        NodeItem("TGR_DT_ND_Enum"),
+        NodeItem("TGR_DT_ND_EnumItem"),
+        # Spacer
+        NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_DT_ND_PropertyGroup"),
     ]),
-    TGR_NodeCategory("INPUT_NODES", "Input", items=[
-        NodeItem("TGR_StringNode"),
-        NodeItem("TGR_IntegerNode"),
-        NodeItem("TGR_ValueNode"),
-        NodeItem("TGR_BooleanNode"),
-        NodeItem("TGR_VectorNode"),
-        NodeItem("TGR_ColorNode"),
-        NodeItem("TGR_ObjectNode"),
-        NodeItem("TGR_EnumItemNode"),
+    
+    TGR_DT_NodeCategory("EXECUTABLE_NODES", "Executable", items=[
+        NodeItem("TGR_OP_ND_Executable"),
     ]),
-    TGR_NodeCategory("TGR_UI", "UI", items=[
-        NodeItem("TGR_PanelNode"),
-        NodeItem("TGR_RowNode"),
-        NodeItem("TGR_ColumnNode"),
-        NodeItem("TGR_BoxNode"),
+    
+    TGR_UI_NodeCategory("UI_NODES", "Layout", items=[
+        NodeItem("TGR_LY_ND_Panel"),
+        NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_LY_ND_Row"),
+        NodeItem("TGR_LY_ND_Column"),
+        NodeItem("TGR_LY_ND_Box"),
+        NodeItem("TGR_LY_ND_Grid"),
+        NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_LY_ND_Separator"),
+        NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_LY_ND_SplitItem"),
+        NodeItem("TGR_LY_ND_Split"),
     ]),
-    TGR_NodeCategory("PROPERTY_NODES", "Property", items=[
-        NodeItem("TGR_PropertiesNode"),
-        NodeItem("TGR_FloatPropertyNode"),
-        NodeItem("TGR_IntegerPropertyNode"),
-        NodeItem("TGR_BooleanPropertyNode"),
-        NodeItem("TGR_StringPropertyNode"),
-        NodeItem("TGR_VectorPropertyNode"),
-        NodeItem("TGR_ColorPropertyNode"),
-        NodeItem("TGR_EnumPropertyNode"),
+    
+    TGR_UI_NodeCategory("UI_OPERATOR", "Operator", items=[
+        NodeItem("TGR_LY_ND_Operator"),
     ]),
-]
+    
+    TGR_UI_NodeCategory("UI_ELEMENTS", "Elements", items=[
+        NodeItem("TGR_LY_ND_Prop"),
+        NodeItem("TGR_LY_ND_BoneCollection"),
+        NodeItem("TGR_LY_ND_Label"),
+    ]),
+]    
 
 
 # Keymaps reference
@@ -306,7 +343,7 @@ def register():
     # Add properties to the armature object
     bpy.types.Object.tgr_props = bpy.props.PointerProperty(type=TGR_Properties)
     bpy.types.Object.tgr_collections = bpy.props.PointerProperty(type=TGR_Collection_Properties)
-    bpy.types.Object.tgr_rig_ui_props = bpy.props.PointerProperty(type=TGR_RIG_UI_Properties)
+    # bpy.types.Object.tgr_rig_ui_props = bpy.props.PointerProperty(type=TGR_RIG_UI_Properties)
 
     wm = bpy.context.window_manager
     # Add new Keymap
@@ -349,8 +386,8 @@ def register():
 
     # Append the Add TGR rig to the add menu
     bpy.types.VIEW3D_MT_add.append(object_add_draw_menu)
-    # Append the Generate UI button to the node editor header
-    bpy.types.NODE_HT_header.append(header_draw_menu)
+    # # Append the Generate UI button to the node editor header
+    # bpy.types.NODE_HT_header.append(header_draw_menu)
 
 
 def unregister():
@@ -359,7 +396,7 @@ def unregister():
     # Remove the Add TGR rig from the add menu
     bpy.types.VIEW3D_MT_add.remove(object_add_draw_menu)
     # Remove the Generate UI button from the node editor header
-    bpy.types.NODE_HT_header.remove(header_draw_menu)
+    # bpy.types.NODE_HT_header.remove(header_draw_menu)
 
     # Clear keymaps
     for km, kmi in keymaps:
