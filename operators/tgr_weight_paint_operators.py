@@ -31,3 +31,42 @@ class TGR_OT_ToggleDeformerConstraint(bpy.types.Operator):
                         constraint.mute = not constraint.mute
                         break
         return {'FINISHED'}
+    
+
+class TGR_OT_ActivateBrush(bpy.types.Operator):
+    """Activate a specific weight paint brush"""
+    bl_idname = "tgr.activate_brush"
+    bl_label = "Activate Brush"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    brush: bpy.props.EnumProperty(
+        name="Brush",
+        description="Brush to activate",
+        items=[
+            ("Average", "Average", "Average brush"),
+            ("Paint", "Paint", "Paint brush"),
+            ("Blur", "Blur", "Blur brush"),
+            ("Smear", "Smear", "Smear brush")
+        ],
+        default="Average"
+    )
+    
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'PAINT_WEIGHT'
+    
+    def execute(self, context):
+        # Set brush
+        match self.brush:
+            case "Average":
+                bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Average")
+            case "Paint":
+                bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Paint")
+            case "Blur":
+                bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Blur")
+            case "Smear":
+                bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Smear")
+            case _:
+                self.report({'ERROR'}, "Invalid brush type")
+        
+        return {'FINISHED'}

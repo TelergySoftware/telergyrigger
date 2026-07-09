@@ -1,4 +1,5 @@
 import bpy
+from typing import Callable, Optional, Tuple
 
 
 class TGR_Properties(bpy.types.PropertyGroup):
@@ -42,4 +43,3 @@ class TGR_RIG_UI_Properties(bpy.types.PropertyGroup):
     )
     
     ui_structure: dict = {}
-    

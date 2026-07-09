@@ -246,10 +246,6 @@ CLASSES_TO_REGISTER = (
     TGR_SKT_Executable,
     TGR_SKT_Layout,
     TGR_SKT_SplitItem,
-    # Properties
-    TGR_Properties,
-    TGR_RIG_UI_Properties,
-    TGR_Collection_Properties,
 )
 
 
@@ -334,6 +330,8 @@ def header_draw_menu(self, context):
 
 def register():
     # Register classes
+    properties.register()
+
     for cls in CLASSES_TO_REGISTER:
         bpy.utils.register_class(cls)
         
@@ -410,3 +408,5 @@ def unregister():
     # Unregister classes
     for cls in CLASSES_TO_REGISTER:
         bpy.utils.unregister_class(cls)
+    
+    properties.unregister()

@@ -68,7 +68,7 @@ from .panels import (
     TGR_PT_View3D_Panel_PoseMode,
     TGR_PT_View3D_Panel_PoseMode_ORG,
     TGR_PT_View3D_Panel_PoseMode_Constraints,
-    
+
     # Utilities panels
     TGR_PT_View3D_Panel_Utilities,
     TGR_PT_View3D_Panel_Utilities_Naming,

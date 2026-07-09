@@ -1,3 +1,4 @@
+import bpy
 # Add classes from tgr_edit_mode_operators
 from .tgr_edit_mode_operators import (TGR_OT_AddDeformBone,
                                       TGR_OT_AddNonDeformBone,
@@ -50,3 +51,4 @@ from .tgr_utilities_operators import (TGR_OT_AddPrefix,
                                       TGR_OT_SetCollectionActive,)
 # Add classes from tgr_weight_paint_operators
 from .tgr_weight_paint_operators import (TGR_OT_ToggleDeformerConstraint,)
+
