@@ -72,6 +72,10 @@ class TGR_PT_View3D_Panel_BoneCollections(TGR_PT_BASE):
         
         row = layout.row(align=True)
         row.operator('tgr.toggle_deformer_constraint', icon='CONSTRAINT_BONE', text="Toggle Deformer")
+
+        row = layout.row(align=True)
+        row.operator('tgr.save_collections', icon='FILE_TICK', text="Save Collections")
+        row.operator('tgr.load_collections', icon='FILE_FOLDER', text="Load Collections")
         
         edit_mode = armature.tgr_collections.edit_mode
 
