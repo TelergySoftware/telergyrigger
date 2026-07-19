@@ -90,6 +90,7 @@ def header_draw_menu(self, context):
 
 def register():
     # Register classes
+    bpy.utils.register_class(TGR_Preferences)
     properties.register()
     operators.register()
     ui.register()
@@ -175,7 +176,7 @@ def unregister():
     ui.unregister()
     operators.unregister()
     properties.unregister()
-
+    bpy.utils.unregister_class(TGR_Preferences)
 
 if __name__ == "__main__":
     register()
