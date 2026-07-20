@@ -129,6 +129,14 @@ def register():
     keymaps.append((km, kmi))
 
     # Add new Keymap
+    km = wm.keyconfigs.addon.keymaps.new(name='Weight Paint', space_type='EMPTY')
+    # Add new Keymap items to call the TGR_MT_WP_Extras_PieMenu pie menu
+    kmi = km.keymap_items.new('wm.call_menu_pie', 'X', 'PRESS')
+    kmi.properties.name = 'TGR_MT_WP_Extras_PieMenu'
+    kmi.active = True
+    keymaps.append((km, kmi))
+
+    # Add new Keymap
     km = wm.keyconfigs.addon.keymaps.new(name='Armature', space_type='EMPTY')
     # Add new Keymap items to call the TGR_MT_EditMode_AddBone pie menu
     kmi = km.keymap_items.new('wm.call_menu', 'A', 'PRESS', shift=True)

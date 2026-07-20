@@ -8,13 +8,14 @@ from .tgr_edit_mode_menu import TGR_MT_EditMode_AddBone
 # Add classes from tgr_layers_menu
 from .tgr_layers_menu import TGR_MT_TrackNewLayer
 # Add classes from tgr_weight_paint_pie_menu
-from .tgr_weight_paint_pie_menu import TGR_MT_WP_PieMenu
+from .tgr_weight_paint_pie_menu import TGR_MT_WP_PieMenu, TGR_MT_WP_Extras_PieMenu
 
 MENU_CLASSES = [TGR_MT_EditMode_PieMenu,
                 TGR_MT_PoseMode_Constraints_PieMenu,
                 TGR_MT_EditMode_AddBone,
                 TGR_MT_TrackNewLayer,
-                TGR_MT_WP_PieMenu
+                TGR_MT_WP_PieMenu,
+                TGR_MT_WP_Extras_PieMenu,
                 ]
 
 def register():

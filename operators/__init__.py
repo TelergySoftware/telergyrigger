@@ -51,7 +51,10 @@ from .tgr_utilities_operators import (TGR_OT_AddPrefix,
                                       TGR_OT_SelectCollectionBones,
                                       TGR_OT_SetCollectionActive,)
 # Add classes from tgr_weight_paint_operators
-from .tgr_weight_paint_operators import (TGR_OT_ToggleDeformerConstraint, TGR_OT_ActivateBrush)
+from .tgr_weight_paint_operators import (TGR_OT_ToggleDeformerConstraint,
+                                         TGR_OT_ActivateBrush,
+                                         TGR_OT_LoadWPBrushes,
+                                         TGR_OT_WP_CleanUp,)
 
 
 
@@ -113,6 +116,8 @@ OPERATOR_CLASSES = [
     # Weight Paint Operators
     TGR_OT_ToggleDeformerConstraint,
     TGR_OT_ActivateBrush,
+    TGR_OT_LoadWPBrushes,
+    TGR_OT_WP_CleanUp,
 ]
 
 
