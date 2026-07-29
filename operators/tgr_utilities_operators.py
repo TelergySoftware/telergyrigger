@@ -1,4 +1,7 @@
+from __future__ import annotations
 import bpy
+from dataclasses import dataclass, field
+import cattrs
 import json
 
 
@@ -820,6 +823,13 @@ class TGR_OT_AutoColorBones(bpy.types.Operator):
         return {"FINISHED"}
 
 
+@dataclass
+class BoneCollection:
+    name: str
+    is_visible: bool = True
+    is_solo: bool = False
+    children: list[BoneCollection] = field(default_factory=list)
+
 class TGR_OT_SaveCollections(bpy.types.Operator):
     """Save all collections of this armature to a JSON file"""
 
@@ -856,34 +866,37 @@ class TGR_OT_SaveCollections(bpy.types.Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
-    
-    def _recursive_collection_to_dict(self, collections):
-        """Recursively convert a collection and its children to a dictionary"""
 
-        collection_dict = {}
-        for collection in collections:
-            collection_dict[collection.name] = {
-                "children": self._recursive_collection_to_dict(collection.children)
-            }
+    def _populate_bone_collections(self, parent) -> list[BoneCollection]:
+        if not parent.children:
+            return []
+        
+        children = []
+        for child in parent.children:
+            collection = BoneCollection(name=child.name)
+            collection.is_solo = child.is_solo
+            collection.is_visible = child.is_visible
+            if child.children:
+                collection.children = self._populate_bone_collections(child)
+            children.append(collection)
 
-        return collection_dict
+        return children
 
     def execute(self, context):
         armature = context.active_object
         collections = armature.data.collections
 
-        # Dictionary to store the collections hierarchy
-        collections_hierarchy = self._recursive_collection_to_dict(collections)
-        
-        # Save the collections hierarchy to a JSON file to the path specified by the user, with a .json extension
-        final_path = self.file_path if self.file_path.endswith(".json") else self.file_path + ".json"
-        try:
-            with open(final_path, 'w') as f:
-                json.dump(collections_hierarchy, f, indent=4)
-            self.report({'INFO'}, f"Collections saved to {final_path}")
-        except Exception as e:
-            self.report({'ERROR'}, f"Failed to save collections: {e}")
-            return {'CANCELLED'}
+        collection_hierarchy = []
+        for collection in collections:
+            bone_collection = BoneCollection(name=collection.name)
+            bone_collection.is_visible = collection.is_visible
+            bone_collection.is_solo = collection.is_solo
+            bone_collection.children = self._populate_bone_collections(collection)
+            collection_hierarchy.append(bone_collection)
+
+        converter = cattrs.preconf.json.JsonConverter(omit_if_default=True)
+        with open(self.file_path, "w") as file:
+            file.write(converter.dumps(collection_hierarchy, indent=2))
         
         return {'FINISHED'}
 
@@ -921,20 +934,25 @@ class TGR_OT_LoadCollections(bpy.types.Operator):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
-    def _recursive_dict_to_collection(self, collection_dict, parent_collection=None):
+    def _recursive_dict_to_collection(self, bone_collections: list[BoneCollection], parent_collection=None):
         """Recursively create collections from a dictionary"""
-        for collection_name, collection_data in collection_dict.items():
+        for collection in bone_collections:
             # Create a new collection if it doesn't exist
             new_collection = None
-            if collection_name not in bpy.context.object.tgr_props.armature.data.collections_all:
-                new_collection = bpy.context.object.tgr_props.armature.data.collections.new(collection_name)
+            if collection.name not in bpy.context.object.tgr_props.armature.data.collections_all:
+                new_collection = bpy.context.object.tgr_props.armature.data.collections.new(collection.name)
+            else:
+                new_collection = bpy.context.object.tgr_props.armature.data.collections_all[collection.name]
             
             if parent_collection:
                 new_collection.parent = parent_collection
             
             # Recursively create child collections
-            if collection_data["children"]:
-                self._recursive_dict_to_collection(collection_data["children"], parent_collection=new_collection)
+            if collection.children:
+                self._recursive_dict_to_collection(collection.children, parent_collection=new_collection)
+
+            new_collection.is_visible = collection.is_visible
+            new_collection.is_solo = collection.is_solo
 
     def execute(self, context):
         armature = context.active_object
@@ -947,6 +965,8 @@ class TGR_OT_LoadCollections(bpy.types.Operator):
             self.report({'ERROR'}, f"Failed to load collections: {e}")
             return {'CANCELLED'}
 
-        self._recursive_dict_to_collection(collections_hierarchy, parent_collection=None)
+        converter = cattrs.preconf.json.JsonConverter(omit_if_default=True)
+        loaded = converter.structure(collections_hierarchy, list[BoneCollection])
+        self._recursive_dict_to_collection(loaded, parent_collection=None)
 
         return {'FINISHED'}

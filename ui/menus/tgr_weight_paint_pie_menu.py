@@ -21,7 +21,10 @@ class TGR_MT_WP_PieMenu(bpy.types.Menu):
 
         brush_icons = {}
         for brush in wp_brushes:
-            brush_icons[brush.name] = brush.preview.icon_id
+            try:
+                brush_icons[brush.name] = brush.preview.icon_id
+            except AttributeError:
+                pass
 
         pie.operator("tgr.activate_brush", text="Paint", icon_value=brush_icons['Paint']).brush = 'Paint'
         pie.operator("tgr.activate_brush", text="Blur", icon_value=brush_icons['Blur']).brush = 'Blur'
@@ -45,6 +48,7 @@ class TGR_MT_WP_Extras_PieMenu(bpy.types.Menu):
 
         pie.separator()
         pie.separator()
+        # South
         pie.operator("tgr.wp_clean_up", text="Clean All", icon="BRUSH_DATA")
         # North
         icon = "HIDE_OFF" if context.space_data.overlay.show_bones else "HIDE_ON"
