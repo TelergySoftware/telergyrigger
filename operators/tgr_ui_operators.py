@@ -1,4 +1,5 @@
 import bpy
+from bpy.types import Node
 from dataclasses import dataclass, field
 
 
@@ -60,199 +61,242 @@ class TGR_OT_UIPicker(bpy.types.Operator):
         context.window.cursor_set('EYEDROPPER')
         context.window_manager.modal_handler_add(self)
         context.workspace.status_text_set("Hover over a UI area and click to select. Right click or Esc to cancel.")
-        return {'RUNNING_MODAL'}       
-
-
+        return {'RUNNING_MODAL'}
 
 @dataclass
-class Panel:
-    """Data class to represent a UI panel"""
+class TGR_Panel:
+    """Data structure to hold panel information"""
     name: str
-    space_type: str
-    region_type: str
-    category: str = ""
-    parent_id: str = ""
-    draw_code: list = field(default_factory=list)
-    code_lines: list = field(default_factory=list)
-    indent_level: int = 0
-    
-    def _add_line(self, line):
-        """Add a line of code with proper indentation"""
-        indent = "    " * self.indent_level
-        self.code_lines.append(f"{indent}{line}")
-    
-    @property
-    def class_name(self):
-        """Generate a valid class name based on the panel name"""
-        return f"TGR_PT_{self.name.replace(' ', '_')}"
+    category: str
+    layout_inputs: list[Node] = field(default_factory=list)
 
 @dataclass
-class PropertyGroup:
-    """Data class to represent a property group"""
-    name: str
-    properties: list = field(default_factory=list)
-    code_lines: list = field(default_factory=list)
-    indent_level: int = 0
-    
-    def _add_line(self, line):
-        """Add a line of code with proper indentation"""
-        indent = "    " * self.indent_level
-        self.code_lines.append(f"{indent}{line}")
-    
-    @property
-    def class_name(self):
-        """Generate a valid class name based on the property group name"""
-        return f"TGR_PG_{self.name.replace(' ', '_')}"
+class TGR_Row:
+    """Data structure to hold row information"""
+    aligned: bool = False
+    height: int = 0
+    parent: object = None
+    layout_inputs: list[Node] = field(default_factory=list)
 
+@dataclass
+class TGR_Column:
+    """Data structure to hold column information"""
+    aligned: bool = False
+    width: int = 0
+    parent: object = None
+    layout_inputs: list[Node] = field(default_factory=list)
+
+@dataclass
+class TGR_BoneCollection:
+    """Data structure to hold bone collection information"""
+    name: str
+    use_visibility: bool = True
+    use_solo: bool = False
 
 class NodeTreeCompiler:
     """Compiler for TGR node trees to generate UI code"""
-    
-    def __init__(self, node_tree, armature):
-        self.node_tree = node_tree
+
+    def __init__(self, data_tree, layout_tree, armature):
+        self.data_tree = data_tree
+        self.layout_tree = layout_tree
         self.armature = armature
-        self.panels = {}
-        self.property_groups = {}
-        self.output_lines = []
+        self.panel_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_LY_ND_Panel"]
+        self.operator_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_Operator"]
+        self.property_group_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_PropertyGroup"]
         self.indent_level = 0
-        self.visited_nodes = set()
-        self.compilers = {
-            "TGR_ViewNode": self._compile_view_node,
-            "TGR_PanelNode": self._compile_panel_node,}
-    
-    def compile(self):
-        """Main compilation method"""
-        self.output_lines = [
-            "# ===== GENERATED UI SCRIPT BY TELERGY RIGGER =====",
-            "import bpy",
-            "",
-            "",
-            "# ===== RIG CONSTANTS =====",
-            f"ARMATURE_NAME = '{self.armature.name}'",
-            "",
-            "# ===== UI CLASSES =====",
-            "",
-        ]
-        
-        # Find output nodes (nodes with no outputs connected)
-        output_nodes = self._find_output_nodes()
-        
-        # Find 3D View nodes to generate panels
-        view_nodes = [node for node in output_nodes if node.bl_idname == "TGR_ViewNode"]
-        properties_nodes = [node for node in output_nodes if node.bl_idname == "TGR_PropertiesNode"]
-        
-        if view_nodes:
-            for view_node in view_nodes:
-                self._compile_view_node(view_node)
-        else:
-            # If no view nodes found, raise an error
-            raise RuntimeError("No TGR_ViewNode found in the node tree.")
-        
-        if properties_nodes:
-            for prop_node in properties_nodes:
-                self._compile_properties_node(prop_node)
-        
-        # Add registration code
-        self._add_registration_code()
-        
-        return "\n".join(self.output_lines)
-    
-    def _add_line(self, line):
-        """Add a line to the output with proper indentation"""
-        indent = "    " * self.indent_level
-        self.output_lines.append(f"{indent}{line}")
-    
-    def _find_output_nodes(self):
-        """Find nodes that have no output connections"""
-        output_nodes = []
-        for node in self.node_tree.nodes:
-            has_output_connection = False
-            for output in node.outputs:
-                if output.links:
-                    has_output_connection = True
-                    break
-            if not has_output_connection:
-                output_nodes.append(node)
-        return output_nodes
-    
-    def _compile_view_node(self, node):
-        """Compile a View Node into a Blender panel class"""
-        for ui_socket in node.inputs:
-            if ui_socket.type == 'CUSTOM' and ui_socket.is_linked:
-                for link in ui_socket.links:
-                    panel_node = link.from_node
-                    self.compilers[panel_node.bl_idname](panel_node, node)
-    
-    def _compile_panel_node(self, panel_node, node):
-        """Compile a Panel Node into a Blender panel class"""
-        panel_name = ""
-        if panel_node.inputs['Name'].is_linked:
-            from_node = panel_node.inputs['Name'].links[0].from_node
-            if from_node.bl_idname == "TGR_StringNode":
-                panel_name = from_node.value
-        else:
-            panel_name = panel_node.inputs['Name'].default_value
-            
+        self._generated_code = []
 
-        class_name = f"TGR_PT_{panel_name.replace(' ', '_')}"
-        self.output_lines.append(f"class {class_name}(bpy.types.Panel):")
-        self.indent_level += 1
-        self._add_line(f'bl_idname = "{class_name}"')
-        self._add_line(f'bl_label = "{panel_name}"')
-        self._add_line(f'bl_space_type = "{node.space_type}"')
-        self._add_line(f'bl_region_type = "{node.region_type}"')
-        self._add_line(f'bl_category = "{node.inputs["Category"].default_value}"')
-        if node.bl_idname == "TGR_PanelNode":
-            parent_id = ""
-            if node.inputs['Name'].is_linked:
-                from_node = node.inputs['Name'].links[0].from_node
-            if from_node.bl_idname == "TGR_StringNode":
-                parent_id = from_node.value
-            else:
-                parent_id = node.inputs['Name'].default_value
-            self._add_line(f"bl_parent_id = '{parent_id}'")
-        
-        self._add_line("")
-        self._add_line("def draw(self, context):")
-        self.indent_level += 1
-        self._add_line("layout = self.layout")
-        for ui_socket in panel_node.inputs:
-            if ui_socket.type == 'CUSTOM' and ui_socket.is_linked:
-                for link in ui_socket.links:
-                    from_node = link.from_node
-                    self.compilers[from_node.bl_idname](from_node, node)
-        self.indent_level -= 2
-        self._add_line("")
-        self._add_line("")
+    @property
+    def generated_code(self) -> str:
+        return "\n".join(self._generated_code)
 
-    def _add_registration_code(self):
-        """Add registration code for all generated classes"""
-        self.output_lines.append("")
-        self.output_lines.append("classes = [")
-        for line in self.output_lines:
-            if line.startswith("class TGR_PT_") or line.startswith("class TGR_OT_"):
-                class_name = line.split()[1].split("(")[0]
-                self.output_lines.append(f"    {class_name},")
-        self.output_lines.append("]")
-        self.output_lines.append("")
-        self.output_lines.append("def register():")
+    def _indent(self) -> str:
+        return "    " * self.indent_level
+
+    def _new_line(self, line: str):
+        self._generated_code.append(f"{self._indent()}{line}")
+
+    def _set_boilerplate(self):
+        """Set the boilerplate code for the generated script"""
+        self._new_line("# This script is auto-generated by the Telergy Rigger UI Compiler")
+        self._new_line("import bpy")
+        self._new_line("from bpy.types import Panel, PropertyGroup")
+        self._new_line("")
+        self._new_line("")
+
+    def _set_classes_to_register(self):
+        """Set the classes to register in the generated script"""
+        self._new_line("")
+        self._new_line("")
+        self._new_line("# Add all the classes to register here:")
+        self._new_line("CLASSES = [")
         self.indent_level += 1
-        self._add_line("for cls in classes:")
-        self.indent_level += 1
-        self._add_line("bpy.utils.register_class(cls)")
-        self.indent_level -= 2
-        self.output_lines.append("")
-        self.output_lines.append("def unregister():")
-        self.indent_level += 1
-        self._add_line("for cls in reversed(classes):")
-        self.indent_level += 1
-        self._add_line("bpy.utils.unregister_class(cls)")
-        self.indent_level -= 2
-        self.output_lines.append("")
-        self.output_lines.append("if __name__ == '__main__':")
-        self.indent_level += 1
-        self._add_line("register()")
+        self._new_line("#Property Groups")
+        for node in self.property_group_nodes:
+            self._new_line(f"TGR_PG_{node.name.replace(' ', '_')},")
+        self._new_line("#Operators")
+        for node in self.operator_nodes:
+            self._new_line(f"TGR_OT_{node.name.replace(' ', '_')},")
+        self._new_line("#Panels")
+        for node in self.panel_nodes:
+            self._new_line(f"TGR_PT_{node.name.replace(' ', '_')},")
         self.indent_level -= 1
+        self._new_line("]")
+
+    def _compile_property_groups(self):
+        """Compile property group nodes into Python code"""
+
+    def _compile_operators(self):
+        """Compile operator nodes into Python code"""
+
+    def _compile_layout_nodes(self, layout_node: Node, parent_layout, level=0):
+        """Compile layout nodes into Python code"""
+        match layout_node.bl_idname:
+            case "TGR_LY_ND_Row":
+                self._compile_row(layout_node, parent_layout=parent_layout, level=level)
+            case "TGR_LY_ND_Column":
+                self._compile_column(layout_node, parent_layout=parent_layout, level=level)
+            case "TGR_LY_ND_BoneCollection":
+                self._compile_bone_collection(layout_node, parent_layout=parent_layout, visibility=layout_node.use_visibility, solo=layout_node.use_solo)
+            case "TGR_LY_ND_Separator":
+                self._compile_separator(layout_node, parent_layout=parent_layout)
+            case "TGR_LY_ND_Label":
+                self._compile_label(layout_node, parent_layout=parent_layout)
+            case "TGR_LY_ND_CustomProp":
+                self._compile_custom_prop(layout_node, parent_layout=parent_layout)
+            case "TGR_LY_ND_Box":
+                self._compile_box(layout_node, parent_layout=parent_layout, level=level)
+
+    def _compile_row(self, row_node: Node, parent_layout, level=0):
+        """Compile row nodes into Python code"""
+        self._new_line(f"row_{level} = {parent_layout}.row(align={row_node.align})")
+        if row_node.height > 0:
+            self._new_line(f"row_{level}.scale_y = {row_node.height}")
+        for input_socket in row_node.inputs:
+            if input_socket.is_linked:
+                input_node = input_socket.links[0].from_node
+                self._compile_layout_nodes(input_node, parent_layout=f"row_{level}", level=level + 1)
+
+    def _compile_bone_collection(self, bone_collection_node: Node, parent_layout, visibility=True, solo=False):
+        """Compile bone collection nodes into Python code"""
+        if visibility:
+            self._new_line(f"{parent_layout}.prop(armature.collections_all['{bone_collection_node.collection_name}'], 'is_visible', text='{bone_collection_node.collection_name}', toggle=True)")
+        if solo:
+            self._new_line(f"{parent_layout}.prop(armature.collections_all['{bone_collection_node.collection_name}'],"
+                           f" 'is_solo', text='', toggle=True, icon='SOLO_ON' if armature.collections_all['{bone_collection_node.collection_name}'].is_solo else 'SOLO_OFF')")
+
+    def _compile_separator(self, separator_node: Node, parent_layout):
+        """Compile separator nodes into Python code"""
+        self._new_line(f"{parent_layout}.separator()")
+    
+    def _compile_label(self, label_node: Node, parent_layout):
+        """Compile label nodes into Python code"""
+        self._new_line(f"{parent_layout}.label(text='{label_node.text}')")
+
+    def _compile_custom_prop(self, custom_prop_node: Node, parent_layout):
+        """Compile custom property nodes into Python code"""
+        if custom_prop_node.target.type == 'ARMATURE' and custom_prop_node.subtarget:
+            text = custom_prop_node.alias if custom_prop_node.alias else custom_prop_node.property_name
+            self._new_line(f"{parent_layout}.prop(bpy.data.objects['{custom_prop_node.target.name}'].pose.bones['{custom_prop_node.subtarget}'], '[\"{custom_prop_node.property_name}\"]', text='{text}')")
+        else:
+            self._new_line(f"{parent_layout}.prop(bpy.data.objects['{custom_prop_node.target.name}'], '[\"{custom_prop_node.property_name}\"]', text='{text}')")
+
+    def _compile_column(self, column_node: Node, parent_layout, level=0):
+        """Compile column nodes into Python code"""
+        self._new_line(f"col_{level} = {parent_layout}.column(align={column_node.align})")
+        if column_node.height > 0:
+            self._new_line(f"col_{level}.scale_y = {column_node.height}")
+        for input_socket in column_node.inputs:
+            if input_socket.is_linked:
+                input_node = input_socket.links[0].from_node
+                self._compile_layout_nodes(input_node, parent_layout=f"col_{level}", level=level + 1)
+
+    def _compile_box(self, box_node: Node, parent_layout, level=0):
+        """Compile box nodes into Python code"""
+        self._new_line(f"box_{level} = {parent_layout}.box()")
+        for input_socket in box_node.inputs:
+            if input_socket.is_linked:
+                input_node = input_socket.links[0].from_node
+                self._compile_layout_nodes(input_node, parent_layout=f"box_{level}", level=level + 1)
+
+    def _compile_layout(self, panel: Node):
+        """Compile layout nodes into Python code"""
+        self._new_line("def draw(self, context):")
+        self.indent_level += 1
+        self._new_line("layout = self.layout")
+        self._new_line(f"armature = bpy.data.objects['{self.armature.name}'].data")
+        self._new_line("")
+
+        for input_socket in panel.inputs:
+            if input_socket.is_linked:
+                input_node = input_socket.links[0].from_node
+                self._compile_layout_nodes(input_node, parent_layout="layout", level=0)
+
+        self.indent_level -= 1
+
+    def _compile_panels(self):
+        """Compile panel nodes into Python code"""
+
+        # Simplified version for fast iteration. In a full implementation, this would handle layout nodes and their properties.
+        for panel in self.panel_nodes:
+            self._new_line(f"class TGR_PT_{panel.name.replace(' ', '_')}(Panel):")
+            self.indent_level += 1
+            self._new_line(f"bl_label = '{panel.name}'")
+            self._new_line(f"bl_idname = 'TGR_PT_{panel.name.replace(' ', '_')}'")
+            self._new_line(f"bl_space_type = 'VIEW_3D'")
+            self._new_line(f"bl_region_type = 'UI'")
+            self._new_line(f"bl_category = '{self.layout_tree.name}'")
+            if panel.parent != 'NONE':
+                self._new_line(f"bl_parent_id = 'TGR_PT_{panel.parent.replace(' ', '_')}'")
+            self._new_line("")
+            self._compile_layout(panel)
+            self.indent_level -= 1
+            self._new_line("")
+            self._new_line("")
+
+
+    def _register_classes(self):
+        """Generate the register function for the generated classes"""
+        self._new_line("def register():")
+        self.indent_level += 1
+        self._new_line("for cls in CLASSES:")
+        self.indent_level += 1
+        self._new_line("bpy.utils.register_class(cls)")
+        self.indent_level -= 2
+        self._new_line("")
+        self._new_line("")
+
+    def _unregister_classes(self):
+        """Generate the unregister function for the generated classes"""
+
+        self._new_line("def unregister():")
+        self.indent_level += 1
+        self._new_line("for cls in CLASSES:")
+        self.indent_level += 1
+        self._new_line("bpy.utils.unregister_class(cls)")
+        self.indent_level -= 2
+        self._new_line("")
+        self._new_line("")
+
+
+    def _main(self):
+        """Generate the main execution block for the script"""
+        self._new_line("if __name__ == '__main__':")
+        self.indent_level += 1
+        self._new_line("register()")
+        self.indent_level -= 1
+
+    def compile(self):
+        """Compile the node trees into a Python script"""
+        self._set_boilerplate()
+        self._compile_property_groups()
+        self._compile_panels()
+        self._set_classes_to_register()
+        self._register_classes()
+        self._unregister_classes()
+        self._main()
+        return self.generated_code
+        
         
 
 class TGR_OT_GenerateUI(bpy.types.Operator):
@@ -266,22 +310,23 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
     def poll(cls, context):
         if context.active_object is None or context.space_data is None:
             return False
-        is_armature = context.active_object.type == 'ARMATURE'
-        is_node_tree_active = context.space_data.tree_type == 'TGR_RigNodeTree'
-        return is_armature and is_node_tree_active
+        return context.active_object.type == 'ARMATURE'
 
     def execute(self, context):
-        node_tree = context.space_data.node_tree
+        layout_tree = [tree for tree in bpy.data.node_groups if tree.bl_idname == "TGR_NT_UI"]
+        data_tree = [tree for tree in bpy.data.node_groups if tree.bl_idname == "TGR_NT_Data"]
         armature = context.active_object
         
-        if not node_tree:
-            self.report({'ERROR'}, "No active node tree found")
+        if not layout_tree:
+            self.report({'ERROR'}, "No active layout node tree found")
             return {"CANCELLED"}
-        
-        print("Compiling UI script:", node_tree.name, "for armature:", armature.name)
+
+        layout_tree = layout_tree[0]  # Get the first matching node tree
+        data_tree = data_tree[0] if data_tree else None  # Get the first matching data node tree, if any
+        print("Compiling UI script:", layout_tree.name, "for armature:", armature.name)
         
         # Create or overwrite the text block for the UI script
-        script_name = f"{node_tree.name.replace(' ', '_').lower()}.py"
+        script_name = f"{layout_tree.name.replace(' ', '_').lower()}.py"
         if script_name in bpy.data.texts:
             text_block = bpy.data.texts[script_name]
             text_block.clear()
@@ -289,13 +334,10 @@ class TGR_OT_GenerateUI(bpy.types.Operator):
             text_block = bpy.data.texts.new(script_name)
         
         # Compile the node tree
-        try:
-            compiler = NodeTreeCompiler(node_tree, armature)
-            generated_code = compiler.compile()
-        except RuntimeError:
-            self.report({'ERROR'}, "No Area Node found in the node tree.")
-            return {"CANCELLED"}
-        
+
+        compiler = NodeTreeCompiler(data_tree, layout_tree, armature)
+        generated_code = compiler.compile()
+
         # Write the generated code to the text block
         text_block.write(generated_code)
         

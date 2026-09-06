@@ -935,7 +935,7 @@ class TGR_OT_LoadCollections(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def _recursive_dict_to_collection(self, bone_collections: list[BoneCollection], parent_collection=None):
-        """Recursively create collections from a dictionary"""
+        """Recursively create collections from a list of BoneCollection"""
         for collection in bone_collections:
             # Create a new collection if it doesn't exist
             new_collection = None
@@ -955,8 +955,6 @@ class TGR_OT_LoadCollections(bpy.types.Operator):
             new_collection.is_solo = collection.is_solo
 
     def execute(self, context):
-        armature = context.active_object
-
         # Load the collections hierarchy from the JSON file
         try:
             with open(self.file_path, 'r') as f:

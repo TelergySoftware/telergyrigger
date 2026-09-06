@@ -31,6 +31,7 @@ from .tgr_pose_mode_operators import (TGR_OT_AddPivotController,
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (
                                TGR_OT_CreateExecutable,
+                               TGR_OT_GenerateUI,
                                )
 # Add classes from tgr_utilities_operators
 from .tgr_utilities_operators import (TGR_OT_AddPrefix,
@@ -93,6 +94,7 @@ OPERATOR_CLASSES = [
 
     # UI Operators
     TGR_OT_CreateExecutable,
+    TGR_OT_GenerateUI,
 
     # Utilities Operators
     TGR_OT_AddPrefix,

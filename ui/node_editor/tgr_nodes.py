@@ -7,12 +7,18 @@ from .tgr_node_tree import TGR_NT_Data, TGR_NT_UI
 # ===========================================================
 # DATA TREE NODES
 # ===========================================================
-class TGR_DT_ND_Float(Node):
+class BaseDataNode(Node):
+    """Base class for all data tree nodes"""
+    name: bpy.props.StringProperty(name="Name", default="")
+    description: bpy.props.StringProperty(name="Description", default="")
+    overridable: bpy.props.BoolProperty(name="Overridable", default=False, description="Whether this property can be overridden")
+
+
+class TGR_DT_ND_Float(BaseDataNode):
     bl_idname = "TGR_DT_ND_Float"
     bl_label = "Float"
     bl_icon = 'EVENT_F'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     default_value: bpy.props.FloatProperty(name="Value", default=0.0, description="Default value for the float output")
     min_value: bpy.props.FloatProperty(name="Min Value", default=0.0, description="Minimum value for the float output")
     max_value: bpy.props.FloatProperty(name="Max Value", default=1.0, description="Maximum value for the float output")
@@ -28,12 +34,11 @@ class TGR_DT_ND_Float(Node):
         layout.prop(self, "max_value", text="Max")
 
 
-class TGR_DT_ND_Integer(Node):
+class TGR_DT_ND_Integer(BaseDataNode):
     bl_idname = "TGR_DT_ND_Integer"
     bl_label = "Integer"
     bl_icon = 'EVENT_I'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     default_value: bpy.props.IntProperty(name="Value", default=0, description="Default value for the integer output")
     min_value: bpy.props.IntProperty(name="Min Value", default=0, description="Minimum value for the integer output")
     max_value: bpy.props.IntProperty(name="Max Value", default=100, description="Maximum value for the integer output")
@@ -48,12 +53,11 @@ class TGR_DT_ND_Integer(Node):
         layout.prop(self, "max_value", text="Max")
 
 
-class TGR_DT_ND_String(Node):
+class TGR_DT_ND_String(BaseDataNode):
     bl_idname = "TGR_DT_ND_String"
     bl_label = "String"
     bl_icon = 'EVENT_S'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     default_value: bpy.props.StringProperty(name="Value", default="", description="Default value for the string output")
     
     def init(self, context):
@@ -65,12 +69,11 @@ class TGR_DT_ND_String(Node):
         layout.prop(self, "default_value", text="", placeholder="String Value")
 
 
-class TGR_DT_ND_Boolean(Node):
+class TGR_DT_ND_Boolean(BaseDataNode):
     bl_idname = "TGR_DT_ND_Boolean"
     bl_label = "Boolean"
     bl_icon = 'EVENT_B'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     default_value: bpy.props.BoolProperty(name="Value", default=False, description="Default value for the boolean output")
     
     def init(self, context):
@@ -82,12 +85,11 @@ class TGR_DT_ND_Boolean(Node):
         layout.prop(self, "default_value", text="Value")
 
 
-class TGR_DT_ND_Vector(Node):
+class TGR_DT_ND_Vector(BaseDataNode):
     bl_idname = "TGR_DT_ND_Vector"
     bl_label = "Vector"
     bl_icon = 'EVENT_V'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     default_value: bpy.props.FloatVectorProperty(name="Value", default=(0.0, 0.0, 0.0), description="Default value for the vector output")
     min_value: bpy.props.FloatVectorProperty(name="Min Value", default=(0.0, 0.0, 0.0), description="Minimum value for the vector output")
     max_value: bpy.props.FloatVectorProperty(name="Max Value", default=(1.0, 1.0, 1.0), description="Maximum value for the vector output")
@@ -104,12 +106,11 @@ class TGR_DT_ND_Vector(Node):
         col.prop(self, "max_value")
 
 
-class TGR_DT_ND_Color(Node):
+class TGR_DT_ND_Color(BaseDataNode):
     bl_idname = "TGR_DT_ND_Color"
     bl_label = "Color"
     bl_icon = 'IMAGE_RGB_ALPHA'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     default_value: bpy.props.FloatVectorProperty(name="Value", subtype='COLOR', default=(1.0, 1.0, 1.0), description="Default value for the color output")
     
     def init(self, context):
@@ -121,12 +122,11 @@ class TGR_DT_ND_Color(Node):
         layout.prop(self, "default_value", text="")
         
 
-class TGR_DT_ND_Enum(Node):
+class TGR_DT_ND_Enum(BaseDataNode):
     bl_idname = "TGR_DT_ND_Enum"
     bl_label = "Enum"
     bl_icon = 'LINENUMBERS_OFF'
     
-    name: bpy.props.StringProperty(name="Name", default="")
     
     def init(self, context):
         self.inputs.new('TGR_SKT_Executable', "Update")
@@ -148,14 +148,11 @@ class TGR_DT_ND_Enum(Node):
         layout.prop(self, "name", text="", placeholder="Name")
 
 
-class TGR_DT_ND_EnumItem(Node):
+class TGR_DT_ND_EnumItem(BaseDataNode):
     bl_idname = "TGR_DT_ND_EnumItem"
     bl_label = "Enum Item"
     bl_icon = 'LINENUMBERS_ON'
-    
-    name: bpy.props.StringProperty(name="Name", default="")
-    description: bpy.props.StringProperty(name="Description", default="", description="Description for the enum item")
-    
+        
     def init(self, context):
         self.outputs.new('TGR_SKT_EnumItem', "Enum")
     
@@ -164,7 +161,7 @@ class TGR_DT_ND_EnumItem(Node):
         layout.prop(self, "description", text="", placeholder="Description")
 
 
-class TGR_DT_ND_Object(Node):
+class TGR_DT_ND_Object(BaseDataNode):
     bl_idname = "TGR_DT_ND_Object"
     bl_label = "Object"
     bl_icon = 'OBJECT_DATAMODE'
@@ -421,7 +418,7 @@ class TGR_LY_ND_Separator(Node):
 
 class TGR_LY_ND_Prop(Node):
     bl_idname = "TGR_LY_ND_Prop"
-    bl_label = "Property"
+    bl_label = "PG Property"
     bl_icon = 'ALIGN_JUSTIFY'
     
     def _draw_float(self, context, layout):
@@ -513,6 +510,47 @@ class TGR_LY_ND_Prop(Node):
         else:
             self._draw_default(context, layout)
 
+
+class TGR_LY_ND_CustomProp(Node):
+    bl_idname = "TGR_LY_ND_CustomProp"
+    bl_label = "Custom Property"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    def _get_custom_property_enum_items(self, context):
+        """Dynamically generate enum items based on the custom properties available in the target object"""
+        items = []
+        target = self.target
+        if self.target:
+            if self.target.type == 'ARMATURE' and self.subtarget:
+                target = self.target.pose.bones[self.subtarget]
+                for prop_name in target.keys():
+                    if not prop_name.startswith("_"):
+                        items.append((prop_name, prop_name, ""))
+            else:
+                for prop_name in target.keys():
+                    if not prop_name.startswith("_"):
+                        items.append((prop_name, prop_name, ""))
+
+                for prop_name in target.data.keys():
+                    if not prop_name.startswith("_"):
+                        items.append((prop_name, prop_name, ""))
+        return items
+
+    alias: bpy.props.StringProperty(name="Alias", default="", description="Alias for the custom property (optional)")
+    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the custom property")
+    subtarget: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the custom property (optional)")
+    property_name: bpy.props.EnumProperty(name="Custom Property", items=_get_custom_property_enum_items, description="Custom property to display in the UI")
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
+    
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "alias", text="", placeholder="Alias")
+        layout.prop(self, "target", text="", placeholder="Target Object")
+        if self.target and self.target.type == 'ARMATURE':
+            layout.prop_search(self, "subtarget", self.target.data, "bones", text="Bone", icon='BONE_DATA')
+        layout.prop(self, "property_name", text="", placeholder="Property Name")
+
 class TGR_LY_ND_Operator(Node):
     bl_idname = "TGR_LY_ND_Operator"
     bl_label = "Operator"
@@ -559,6 +597,9 @@ class TGR_LY_ND_BoneCollection(Node):
     bl_idname = "TGR_LY_ND_BoneCollection"
     bl_label = "Bone Collection"
     bl_icon = 'ALIGN_JUSTIFY'
+
+    use_visibility: bpy.props.BoolProperty(name="Use Visibility", default=True)
+    use_solo: bpy.props.BoolProperty(name="Use Solo", default=False)
     
     def _get_bone_collection_items(self, context):
         """Dynamically generate enum items based on the bone collections available in the armature"""
@@ -570,11 +611,12 @@ class TGR_LY_ND_BoneCollection(Node):
         return items
     
     collection_name: bpy.props.EnumProperty(name="Bone Collection", items=_get_bone_collection_items)
-    property: bpy.props.EnumProperty(name="Property", items=[("VISIBILITY", "Visibility", "Control the visibility of the bone collection"), ("SOLO", "Solo", "Control the solo state of the bone collection")], default="VISIBILITY")
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
     
     def draw_buttons(self, context, layout):
-        layout.prop(self, "property", text="Property")
-        layout.prop(self, "collection_name", text="Collection")
+        layout.prop(self, "collection_name", text="")
+        row = layout.row(align=True)
+        row.prop(self, "use_visibility", text="Use Visibility", toggle=True)
+        row.prop(self, "use_solo", text="Use Solo", toggle=True)
