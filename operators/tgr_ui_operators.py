@@ -63,12 +63,14 @@ class TGR_OT_UIPicker(bpy.types.Operator):
         context.workspace.status_text_set("Hover over a UI area and click to select. Right click or Esc to cancel.")
         return {'RUNNING_MODAL'}
 
+
 @dataclass
 class TGR_Panel:
     """Data structure to hold panel information"""
     name: str
     category: str
     layout_inputs: list[Node] = field(default_factory=list)
+
 
 @dataclass
 class TGR_Row:
@@ -77,6 +79,7 @@ class TGR_Row:
     height: int = 0
     parent: object = None
     layout_inputs: list[Node] = field(default_factory=list)
+
 
 @dataclass
 class TGR_Column:
@@ -283,7 +286,6 @@ class NodeTreeCompiler:
             self._new_line("")
             self._new_line("")
 
-
     def _register_classes(self):
         """Generate the register function for the generated classes"""
         self._new_line("def register():")
@@ -307,7 +309,6 @@ class NodeTreeCompiler:
         self._new_line("")
         self._new_line("")
 
-
     def _main(self):
         """Generate the main execution block for the script"""
         self._new_line("if __name__ == '__main__':")
@@ -325,8 +326,7 @@ class NodeTreeCompiler:
         self._unregister_classes()
         self._main()
         return self.generated_code
-        
-        
+
 
 class TGR_OT_GenerateUI(bpy.types.Operator):
     """Generate the UI python script"""
