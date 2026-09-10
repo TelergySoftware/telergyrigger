@@ -8,6 +8,7 @@ from .tgr_socket import (
     TGR_SKT_Executable,
     TGR_SKT_Layout,
     TGR_SKT_SplitItem,
+    TGR_SKT_Any,
 )
 
 # Node classes
@@ -16,6 +17,7 @@ from .tgr_nodes import (
     
     
     # UI layout nodes
+    TGR_LY_ND_Empty,
     TGR_LY_ND_Row,
     TGR_LY_ND_Column,
     TGR_LY_ND_Box,
@@ -41,7 +43,10 @@ from .tgr_nodes import (
     TGR_DT_ND_EnumItem,
     TGR_DT_ND_PropertyGroup,
     # Operator nodes
-    TGR_OP_ND_Executable
+    TGR_OP_ND_Executable,
+    # Flow control nodes
+    TGR_FC_ND_If,
+    TGR_FC_ND_Compare,
 )
 
 
@@ -56,7 +61,9 @@ NODE_CLASSES = [
     TGR_SKT_Executable,
     TGR_SKT_Layout,
     TGR_SKT_SplitItem,
+    TGR_SKT_Any,
     # Layout nodes
+    TGR_LY_ND_Empty,
     TGR_LY_ND_Row,
     TGR_LY_ND_Column,
     TGR_LY_ND_Box,
@@ -82,7 +89,10 @@ NODE_CLASSES = [
     TGR_DT_ND_EnumItem,
     TGR_DT_ND_PropertyGroup,
     # Operator nodes
-    TGR_OP_ND_Executable
+    TGR_OP_ND_Executable,
+    # Flow control nodes
+    TGR_FC_ND_If,
+    TGR_FC_ND_Compare,
 ]
 
 

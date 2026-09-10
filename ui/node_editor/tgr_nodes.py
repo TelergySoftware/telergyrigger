@@ -305,10 +305,9 @@ class TGR_LY_ND_SplitItem(Node):
     bl_label = "Split Item"
     bl_icon = 'ALIGN_JUSTIFY'
     
-    label: bpy.props.StringProperty(name="Label", default="", description="Label for the split item (optional)")
-    factor: bpy.props.FloatProperty(name="Factor", default=0.5, min=0.0, max=1.0, description="Split factor between 0 and 1")
-    
     def init(self, context):
+        self.inputs.new('NodeSocketString', "Label")
+        self.inputs.new('NodeSocketFloat', "Factor")
         self.inputs.new('TGR_SKT_Layout', "Input")
         self.outputs.new('TGR_SKT_SplitItem', "Layout")
     
@@ -374,6 +373,15 @@ class TGR_LY_ND_Grid(BaseDynamicLayoutNode):
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
         self.inputs.new('TGR_SKT_Layout', "Item 001")
+
+
+class TGR_LY_ND_Empty(Node):
+    bl_idname = "TGR_LY_ND_Empty"
+    bl_label = "Empty"
+    bl_icon = 'ALIGN_JUSTIFY'
+    
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Layout', "Layout")
 
 
 class TGR_LY_ND_Panel(BaseDynamicLayoutNode):
@@ -511,6 +519,10 @@ class TGR_LY_ND_Prop(Node):
             self._draw_default(context, layout)
 
 
+def update(self, context):
+    prop = self._property_get()
+    self._relink_if_possible(self._socket_type_get(prop))
+
 class TGR_LY_ND_CustomProp(Node):
     bl_idname = "TGR_LY_ND_CustomProp"
     bl_label = "Custom Property"
@@ -536,20 +548,106 @@ class TGR_LY_ND_CustomProp(Node):
                         items.append((prop_name, prop_name, ""))
         return items
 
-    alias: bpy.props.StringProperty(name="Alias", default="", description="Alias for the custom property (optional)")
-    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the custom property")
-    subtarget: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the custom property (optional)")
-    property_name: bpy.props.EnumProperty(name="Custom Property", items=_get_custom_property_enum_items, description="Custom property to display in the UI")
+    alias: bpy.props.StringProperty(name="Alias", default="", description="Alias for the custom property (optional)", update=update)
+    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the custom property", update=update)
+    subtarget: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the custom property (optional)", update=update)
+    property_name: bpy.props.EnumProperty(name="Custom Property", items=_get_custom_property_enum_items, description="Custom property to display in the UI", update=update)
+    # Float, Int
+    use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties")
+    subtype: bpy.props.EnumProperty(name="Unit",
+                                    items=[
+                                        ('NONE', "None", "No subtype"),
+                                        ('LENGTH', "Length", "Display as length"),
+                                        ('ANGLE', "Angle", "Display as angle"),
+                                        ('TIME', "Time", "Display as time"),
+                                        ('PERCENTAGE', "Percentage", "Display as percentage"),
+                                        ('PIXELS', "Pixels", "Display as pixels"),],
+                                    default='NONE', description="Subtype to display for numeric properties")
+    
+    # Boolean
+    toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button")
+    invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property")
+    
+    # Vector
+    orientation: bpy.props.EnumProperty(name="Orientation",
+                                        items=[
+                                            ('HORIZONTAL', "Horizontal", "Arrange vector components horizontally"),
+                                            ('VERTICAL', "Vertical", "Arrange vector components vertically")],
+                                        default='HORIZONTAL')
     
     def init(self, context):
-        self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.outputs.new('TGR_SKT_Any', "Value")
+
+    def _property_get(self):
+        prop = None
+        if self.subtarget:
+            prop = self.target.pose.bones[self.subtarget][self.property_name]
+        else:
+            try:
+                if self.target:
+                    prop = self.target[self.property_name]
+            except KeyError:
+                prop = self.target.data[self.property_name]
+
+        return prop
+
+    def _socket_type_get(self, value):
+        if isinstance(value, bool):
+            return "NodeSocketBool"
+        if isinstance(value, int):
+            return "NodeSocketInt"
+        if isinstance(value, float):
+            return "NodeSocketFloat"
+        if isinstance(value, str):
+            return "NodeSocketString"
+        if isinstance(value, (tuple, list)):
+            return "NodeSocketVector"
+        return "TGR_SKT_Any"
+
+    def _relink_if_possible(self, socket_type):
+        if self.outputs and self.outputs[0].bl_idname != socket_type:
+            links = [(link.to_socket, link.from_socket) for link in self.outputs[0].links]
+            self.outputs.remove(self.outputs[0])
+
+            output = self.outputs.new(socket_type, "Value")
+
+            # Reconnect only if the new socket is compatible.
+            for to_socket, from_socket in links:
+                try:
+                    self.id_data.links.new(output, to_socket)
+                except RuntimeError:
+                    pass
+
+    def _draw_float(self, context, layout):
+        layout.prop(self, "use_slider", text="Use Slider")
+        layout.prop(self, "subtype", text="Subtype")
+        
+    def _draw_boolean(self, context, layout):
+        layout.prop(self, "toggle", text="Toggle")
+        layout.prop(self, "invert_boolean", text="Invert Boolean")
     
+    def _draw_vector(self, context, layout):
+        layout.prop(self, "subtype", text="Subtype")
+        layout.prop(self, "orientation", text="Orientation")
+
     def draw_buttons(self, context, layout):
         layout.prop(self, "alias", text="", placeholder="Alias")
         layout.prop(self, "target", text="", placeholder="Target Object")
         if self.target and self.target.type == 'ARMATURE':
-            layout.prop_search(self, "subtarget", self.target.data, "bones", text="Bone", icon='BONE_DATA')
+            layout.prop_search(self, "subtarget", self.target.data, "bones", text="", icon='BONE_DATA')
         layout.prop(self, "property_name", text="", placeholder="Property Name")
+
+        skt_type = self._socket_type_get(self._property_get())
+
+        if skt_type == "NodeSocketFloat":
+            self._draw_float(context, layout)
+        elif skt_type == "NodeSocketInt":
+            self._draw_float(context, layout)
+        elif skt_type == "NodeSocketBool":
+            self._draw_boolean(context, layout)
+        elif skt_type == "NodeSocketVector":
+            self._draw_vector(context, layout)
+
 
 class TGR_LY_ND_Operator(Node):
     bl_idname = "TGR_LY_ND_Operator"
@@ -584,9 +682,8 @@ class TGR_LY_ND_Label(Node):
     bl_label = "Label"
     bl_icon = 'ALIGN_JUSTIFY'
     
-    text: bpy.props.StringProperty(name="Text", default="")
-    
     def init(self, context):
+        self.inputs.new('NodeSocketString', "Text")
         self.outputs.new('TGR_SKT_Layout', "Layout")
     
     def draw_buttons(self, context, layout):
@@ -620,3 +717,55 @@ class TGR_LY_ND_BoneCollection(Node):
         row = layout.row(align=True)
         row.prop(self, "use_visibility", text="Use Visibility", toggle=True)
         row.prop(self, "use_solo", text="Use Solo", toggle=True)
+
+# =========================================================
+# Flow Control Nodes
+# =========================================================
+class TGR_FC_ND_If(Node):
+    bl_idname = "TGR_FC_ND_If"
+    bl_label = "If"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    default_condition: bpy.props.BoolProperty(name="Default Condition", default=True, description="Default condition for the If node when no input is connected")
+    
+    def init(self, context):
+        self.inputs.new('NodeSocketBool', "Condition")
+        self.inputs.new('TGR_SKT_Any', "True")
+        self.inputs.new('TGR_SKT_Any', "False")
+
+        self.outputs.new('TGR_SKT_Any', "Result")
+
+
+class TGR_FC_ND_Compare(Node):
+    bl_idname = "TGR_FC_ND_Compare"
+    bl_label = "Compare"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    operation: bpy.props.EnumProperty(
+        name="Operation",
+        items=[
+            ('EQUAL', "Equal", ""),
+            ('NOT_EQUAL', "Not Equal", ""),
+            ('LESS', "Less Than", ""),
+            ('GREATER', "Greater Than", ""),
+            ('LESS_EQUAL', "Less or Equal", ""),
+            ('GREATER_EQUAL', "Greater or Equal", ""),
+            ('EXPRESSION', "Python Expression", ""),
+        ],
+        default='EQUAL',
+    )
+    expression: bpy.props.StringProperty(
+        name="Expression",
+        default="A == B",
+        description="Python Expression using A and B as variables"
+    )
+
+    def init(self, context):
+        self.inputs.new('TGR_SKT_Any', 'A')
+        self.inputs.new('TGR_SKT_Any', 'B')
+        self.outputs.new('NodeSocketBool', 'Condition')
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "operation", text="", placeholder="Operation")
+        if self.operation == 'EXPRESSION':
+            layout.prop(self, "expression", text="", placeholder="Expression")

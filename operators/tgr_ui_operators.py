@@ -143,6 +143,28 @@ class NodeTreeCompiler:
         self.indent_level -= 1
         self._new_line("]")
 
+    def _compile_if(self, if_node: Node, parent_layout, level=0):
+        """Compile if nodes into Python code"""
+        if if_node.inputs[0].is_linked:
+            condition_node = if_node.inputs[0].links[0].from_node
+            match condition_node.bl_idname:
+                case _:
+                    pass
+        else:
+            self._new_line(f"if {if_node.inputs[0].default_value}:")
+            self.indent_level += 1
+            if if_node.inputs[0].default_value:
+                true_node = if_node.inputs[1].links[0].from_node
+                match true_node.outputs[0].bl_idname:
+                    case 'TGR_SKT_Layout':
+                        self._compile_layout_nodes(true_node, parent_layout, level)
+            else:
+                false_node = if_node.inputs[2].links[0].from_node
+                match false_node.outputs[0].bl_idname:
+                    case 'TGR_SKT_Layout':
+                        self._compile_layout_nodes(false_node, parent_layout, level)
+            self.indent_level -= 1
+
     def _compile_property_groups(self):
         """Compile property group nodes into Python code"""
 
@@ -166,6 +188,8 @@ class NodeTreeCompiler:
                 self._compile_custom_prop(layout_node, parent_layout=parent_layout)
             case "TGR_LY_ND_Box":
                 self._compile_box(layout_node, parent_layout=parent_layout, level=level)
+            case "TGR_FC_ND_If":
+                self._compile_if(layout_node, parent_layout=parent_layout, level=level)
 
     def _compile_row(self, row_node: Node, parent_layout, level=0):
         """Compile row nodes into Python code"""
@@ -191,7 +215,12 @@ class NodeTreeCompiler:
     
     def _compile_label(self, label_node: Node, parent_layout):
         """Compile label nodes into Python code"""
-        self._new_line(f"{parent_layout}.label(text='{label_node.text}')")
+        if label_node.inputs[0].is_linked and label_node.inputs[0].links[0].from_node.bl_idname == "TGR_DT_ND_String":
+            input_node = label_node.inputs[0].links[0].from_node
+            self._new_line(f"{parent_layout}.label(text='{input_node.text}')")
+        else:
+            text = label_node.inputs[0].default_value
+            self._new_line(f"{parent_layout}.label(text='{text}')")
 
     def _compile_custom_prop(self, custom_prop_node: Node, parent_layout):
         """Compile custom property nodes into Python code"""

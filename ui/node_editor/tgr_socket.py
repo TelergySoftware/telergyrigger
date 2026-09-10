@@ -66,3 +66,14 @@ class TGR_SKT_SplitItem(NodeSocket):
     
     def draw_color(self, context, node):
         return (0.5, 0.5, 0.5, 1.0)
+
+
+class TGR_SKT_Any(NodeSocket):
+    bl_idname = "TGR_SKT_Any"
+    bl_label = "Any"
+    
+    def draw(self, context, layout, node, text):
+        layout.label(text=text)
+    
+    def draw_color(self, context, node):
+        return (0.5, 0.5, 0.5, 1.0)
