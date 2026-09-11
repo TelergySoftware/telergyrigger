@@ -57,7 +57,8 @@ from .tgr_weight_paint_operators import (TGR_OT_ToggleDeformerConstraint,
                                          TGR_OT_LoadWPBrushes,
                                          TGR_OT_WP_CleanUp,)
 # Add classes from tgr_presset_operators
-from .tgr_presset_operators import (TGR_OT_Create_Tweak_FK_Chain,)
+from .tgr_presset_operators import (TGR_OT_Create_Tweak_FK_Chain,
+                                    TGR_OT_Create_IKFK_Switch,)
 
 
 
@@ -125,6 +126,7 @@ OPERATOR_CLASSES = [
 
     # Presset Operators
     TGR_OT_Create_Tweak_FK_Chain,
+    TGR_OT_Create_IKFK_Switch,
 ]
 
 

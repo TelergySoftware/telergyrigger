@@ -19,6 +19,7 @@ class TGR_PT_View3D_Panel_Pressets(TGR_PT_BASE):
     def draw(self, context):
         layout = self.layout
         row = layout.row()
-
         row.operator("tgr.create_tweak_fk_chain")
+        row = layout.row()
+        row.operator("tgr.create_ikfk_switch")
         
