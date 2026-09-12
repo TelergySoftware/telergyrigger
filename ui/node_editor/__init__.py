@@ -29,6 +29,7 @@ from .tgr_nodes import (
     TGR_LY_ND_BoneCollection,
     TGR_LY_ND_Prop,
     TGR_LY_ND_CustomProp,
+    TGR_LY_ND_Value,
     TGR_LY_ND_Operator,
     TGR_LY_ND_Label,
     # Data nodes
@@ -75,6 +76,7 @@ NODE_CLASSES = [
     TGR_LY_ND_BoneCollection,
     TGR_LY_ND_Prop,
     TGR_LY_ND_CustomProp,
+    TGR_LY_ND_Value,
     TGR_LY_ND_Operator,
     TGR_LY_ND_Label,
     # Data nodes

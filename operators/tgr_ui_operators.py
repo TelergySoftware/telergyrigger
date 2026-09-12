@@ -146,16 +146,20 @@ class NodeTreeCompiler:
         self.indent_level -= 1
         self._new_line("]")
 
+    def _compile_compare_node(self, compare_node: Node, parent_layout, level=0):
+        """Compile compare nodes into Python code"""
+        
+
     def _compile_if(self, if_node: Node, parent_layout, level=0):
         """Compile if nodes into Python code"""
         if if_node.inputs[0].is_linked:
             condition_node = if_node.inputs[0].links[0].from_node
-            match condition_node.bl_idname:
-                case _:
-                    pass
+            if not condition_node.bl_idname == 'TGR_FC_ND_Compare':
+                # TODO: Show warning
+                pass
+            else:
+                self._compile_compare_node(condition_node, parent_layout, level)
         else:
-            self._new_line(f"if {if_node.inputs[0].default_value}:")
-            self.indent_level += 1
             if if_node.inputs[0].default_value:
                 true_node = if_node.inputs[1].links[0].from_node
                 match true_node.outputs[0].bl_idname:
@@ -166,7 +170,6 @@ class NodeTreeCompiler:
                 match false_node.outputs[0].bl_idname:
                     case 'TGR_SKT_Layout':
                         self._compile_layout_nodes(false_node, parent_layout, level)
-            self.indent_level -= 1
 
     def _compile_property_groups(self):
         """Compile property group nodes into Python code"""

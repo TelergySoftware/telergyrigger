@@ -519,7 +519,7 @@ class TGR_LY_ND_Prop(Node):
             self._draw_default(context, layout)
 
 
-def update(self, context):
+def update_custom_prop(self, context):
     prop = self._property_get()
     self._relink_if_possible(self._socket_type_get(prop))
 
@@ -548,10 +548,10 @@ class TGR_LY_ND_CustomProp(Node):
                         items.append((prop_name, prop_name, ""))
         return items
 
-    alias: bpy.props.StringProperty(name="Alias", default="", description="Alias for the custom property (optional)", update=update)
-    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the custom property", update=update)
-    subtarget: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the custom property (optional)", update=update)
-    property_name: bpy.props.EnumProperty(name="Custom Property", items=_get_custom_property_enum_items, description="Custom property to display in the UI", update=update)
+    alias: bpy.props.StringProperty(name="Alias", default="", description="Alias for the custom property (optional)", update=update_custom_prop)
+    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the custom property", update=update_custom_prop)
+    subtarget: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the custom property (optional)", update=update_custom_prop)
+    property_name: bpy.props.EnumProperty(name="Custom Property", items=_get_custom_property_enum_items, description="Custom property to display in the UI", update=update_custom_prop)
     # Float, Int
     use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties")
     subtype: bpy.props.EnumProperty(name="Unit",
@@ -647,6 +647,85 @@ class TGR_LY_ND_CustomProp(Node):
             self._draw_boolean(context, layout)
         elif skt_type == "NodeSocketVector":
             self._draw_vector(context, layout)
+
+
+
+def update_value_node(self, context):
+    socket_type = ""
+    match self.value_type:
+        case 'STRING':
+            socket_type = "NodeSocketString"
+        case 'FLOAT':
+            socket_type = "NodeSocketFloat"
+        case 'INTEGER':
+            socket_type = "NodeSocketInt"
+        case 'BOOL':
+            socket_type = "NodeSocketBool"
+        case _:
+            socket_type = "TGR_SKT_Any"
+
+    self._relink_if_possible(socket_type)
+
+
+class TGR_LY_ND_Value(Node):
+    bl_idname = "TGR_LY_ND_Value"
+    bl_label = "Value"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    value_type: bpy.props.EnumProperty(name="Value Type", items=[('STRING', 'String', 'Set value type to String'),
+                                                                 ('FLOAT', 'Float', 'Set value type to Float'),
+                                                                 ('INTEGER', 'Integer', 'Set value type to Integer'),
+                                                                 ('BOOL', 'Bool', 'Set value type to Bool')],
+                                                          default='STRING',
+                                                          update=update_value_node)
+
+    string_value: bpy.props.StringProperty(name="Value")
+    float_value: bpy.props.FloatProperty(name="Value")
+    int_value: bpy.props.IntProperty(name="Value")
+    bool_value: bpy.props.BoolProperty(name="Value")
+
+    def _relink_if_possible(self, socket_type):
+        if self.outputs and self.outputs[0].bl_idname != socket_type:
+            links = [(link.to_socket, link.from_socket) for link in self.outputs[0].links]
+            self.outputs.remove(self.outputs[0])
+
+            output = self.outputs.new(socket_type, "Value")
+
+            # Reconnect only if the new socket is compatible.
+            for to_socket, from_socket in links:
+                try:
+                    self.id_data.links.new(output, to_socket)
+                except RuntimeError:
+                    pass
+
+    def _draw_string(self, context, layout):
+        layout.prop(self, "string_value", text="", placeholder="Text")
+
+    def _draw_float(self, context, layout):
+        layout.prop(self, "float_value", text="")
+
+    def _draw_integer(self, context, layout):
+        layout.prop(self, "int_value", text="")
+
+    def _draw_bool(self, context, layout):
+        layout.prop(self, "bool_value", text="True" if self.bool_value else "False", toggle=True)
+
+    def init(self, context):
+        self.outputs.new('TGR_SKT_Any', "Value")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "value_type", text='')
+        match self.value_type:
+            case 'STRING':
+                self._draw_string(context, layout)
+            case 'FLOAT':
+                self._draw_float(context, layout)
+            case 'INTEGER':
+                self._draw_integer(context, layout)
+            case 'BOOL':
+                self._draw_bool(context, layout)
+            case _:
+                pass
 
 
 class TGR_LY_ND_Operator(Node):

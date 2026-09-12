@@ -58,6 +58,12 @@ node_categories = [
         NodeItem("TGR_LY_ND_SplitItem"),
         NodeItem("TGR_LY_ND_Split"),
     ]),
+
+    TGR_UI_NodeCategory("UI_VALUES", "Values", items=[
+        NodeItem("TGR_LY_ND_Prop"),
+        NodeItem("TGR_LY_ND_CustomProp"),
+        NodeItem("TGR_LY_ND_Value"),
+    ]),
     
     TGR_UI_NodeCategory("UI_OPERATOR", "Operator", items=[
         NodeItem("TGR_LY_ND_Operator"),
@@ -76,19 +82,6 @@ node_categories = [
         NodeItem("TGR_FC_ND_Compare"),
     ]),
 
-    TGR_UI_NodeCategory("UI_PROPERTIES", "Properties", items=[
-        NodeItem("TGR_DT_ND_Float"),
-        NodeItem("TGR_DT_ND_Integer"),
-        NodeItem("TGR_DT_ND_Boolean"),
-        NodeItem("TGR_DT_ND_String"),
-        NodeItem("TGR_DT_ND_Vector"),
-        NodeItem("TGR_DT_ND_Color"),
-        NodeItem("TGR_DT_ND_Object"),
-        NodeItem("TGR_DT_ND_Enum"),
-        NodeItem("TGR_DT_ND_EnumItem"),
-        NodeItemCustom(draw=tgr_node_separator),
-        NodeItem("TGR_DT_ND_PropertyGroup"),
-        ]),
 ]    
 
 
