@@ -1,6 +1,7 @@
 import bpy
 from bpy.types import Node
 
+from ...node_tree_compilation import run_tgr_ui_generator
 from .tgr_node_tree import TGR_NT_Data, TGR_NT_UI
 
 
@@ -257,13 +258,17 @@ class BaseDynamicLayoutNode(Node):
             self.inputs.remove(self.inputs[-1])
 
 
+def compile_rig_ui(self, context):
+    run_tgr_ui_generator()
+
+
 class TGR_LY_ND_Row(BaseDynamicLayoutNode):
     bl_idname = "TGR_LY_ND_Row"
     bl_label = "Row"
     bl_icon = 'ALIGN_JUSTIFY'
     
-    align: bpy.props.BoolProperty(name="Align", default=False, description="Align items in the row")
-    height: bpy.props.IntProperty(name="Height", default=0, min=0, description="Height of the row (0 for automatic)")
+    align: bpy.props.BoolProperty(name="Align", default=False, description="Align items in the row", update=compile_rig_ui)
+    height: bpy.props.IntProperty(name="Height", default=0, min=0, description="Height of the row (0 for automatic)", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
@@ -279,8 +284,8 @@ class TGR_LY_ND_Column(BaseDynamicLayoutNode):
     bl_label = "Column"
     bl_icon = 'ALIGN_JUSTIFY'
     
-    align: bpy.props.BoolProperty(name="Align", default=False, description="Align items in the column")
-    height: bpy.props.IntProperty(name="Height", default=0, min=0, description="Height of the column (0 for automatic)")
+    align: bpy.props.BoolProperty(name="Align", default=False, description="Align items in the column", update=compile_rig_ui)
+    height: bpy.props.IntProperty(name="Height", default=0, min=0, description="Height of the column (0 for automatic)", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
@@ -403,11 +408,10 @@ class TGR_LY_ND_Panel(BaseDynamicLayoutNode):
                     items.append((node.name, node.name, ""))
         return items
     
-    name: bpy.props.StringProperty(name="Panel Name", default="", description="Name of the panel")
-    parent: bpy.props.EnumProperty(name="Parent Panel", items=_get_panel_enum_items, description="Parent panel for nesting (optional)")
+    name: bpy.props.StringProperty(name="Panel Name", default="", description="Name of the panel", update=compile_rig_ui)
+    parent: bpy.props.EnumProperty(name="Parent Panel", items=_get_panel_enum_items, description="Parent panel for nesting (optional)", update=compile_rig_ui)
     
     def init(self, context):
-        self.outputs.new('TGR_SKT_Layout', "Layout")
         self.inputs.new('TGR_SKT_Layout', "Item 001")
     
     def draw_buttons(self, context, layout):
@@ -477,10 +481,10 @@ class TGR_LY_ND_Prop(Node):
                     return type(node)
         return None
     
-    property_name: bpy.props.EnumProperty(name="Property", items=_get_property_enum_items)
+    property_name: bpy.props.EnumProperty(name="Property", items=_get_property_enum_items, update=compile_rig_ui)
     
     # Float, Int
-    use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties")
+    use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties", update=compile_rig_ui)
     subtype: bpy.props.EnumProperty(name="Unit",
                                  items=[
                                      ('NONE', "None", "No subtype"),
@@ -489,18 +493,20 @@ class TGR_LY_ND_Prop(Node):
                                      ('TIME', "Time", "Display as time"),
                                      ('PERCENTAGE', "Percentage", "Display as percentage"),
                                      ('PIXELS', "Pixels", "Display as pixels"),],
-                                 default='NONE', description="Subtype to display for numeric properties")
+                                 default='NONE', description="Subtype to display for numeric properties",
+                                 update=compile_rig_ui)
     
     # Boolean
-    toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button")
-    invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property")
+    toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button", update=compile_rig_ui)
+    invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property", update=compile_rig_ui)
     
     # Vector
     orientation: bpy.props.EnumProperty(name="Orientation",
                                         items=[
                                             ('HORIZONTAL', "Horizontal", "Arrange vector components horizontally"),
                                             ('VERTICAL', "Vertical", "Arrange vector components vertically")],
-                                        default='HORIZONTAL')
+                                        default='HORIZONTAL',
+                                        update=compile_rig_ui)
 
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
@@ -522,6 +528,7 @@ class TGR_LY_ND_Prop(Node):
 def update_custom_prop(self, context):
     prop = self._property_get()
     self._relink_if_possible(self._socket_type_get(prop))
+    compile_rig_ui(self, context)
 
 class TGR_LY_ND_CustomProp(Node):
     bl_idname = "TGR_LY_ND_CustomProp"
@@ -553,7 +560,7 @@ class TGR_LY_ND_CustomProp(Node):
     subtarget: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the custom property (optional)", update=update_custom_prop)
     property_name: bpy.props.EnumProperty(name="Custom Property", items=_get_custom_property_enum_items, description="Custom property to display in the UI", update=update_custom_prop)
     # Float, Int
-    use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties")
+    use_slider: bpy.props.BoolProperty(name="Use Slider", default=False, description="Display a slider for numeric properties", update=compile_rig_ui)
     subtype: bpy.props.EnumProperty(name="Unit",
                                     items=[
                                         ('NONE', "None", "No subtype"),
@@ -562,18 +569,20 @@ class TGR_LY_ND_CustomProp(Node):
                                         ('TIME', "Time", "Display as time"),
                                         ('PERCENTAGE', "Percentage", "Display as percentage"),
                                         ('PIXELS', "Pixels", "Display as pixels"),],
-                                    default='NONE', description="Subtype to display for numeric properties")
+                                    default='NONE', description="Subtype to display for numeric properties",
+                                    update=compile_rig_ui)
     
     # Boolean
-    toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button")
-    invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property")
+    toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button", update=compile_rig_ui)
+    invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property", update=compile_rig_ui)
     
     # Vector
     orientation: bpy.props.EnumProperty(name="Orientation",
                                         items=[
                                             ('HORIZONTAL', "Horizontal", "Arrange vector components horizontally"),
                                             ('VERTICAL', "Vertical", "Arrange vector components vertically")],
-                                        default='HORIZONTAL')
+                                        default='HORIZONTAL',
+                                        update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Any', "Value")
@@ -665,6 +674,7 @@ def update_value_node(self, context):
             socket_type = "TGR_SKT_Any"
 
     self._relink_if_possible(socket_type)
+    compile_rig_ui(self, context)
 
 
 class TGR_LY_ND_Value(Node):
@@ -679,10 +689,22 @@ class TGR_LY_ND_Value(Node):
                                                           default='STRING',
                                                           update=update_value_node)
 
-    string_value: bpy.props.StringProperty(name="Value")
-    float_value: bpy.props.FloatProperty(name="Value")
-    int_value: bpy.props.IntProperty(name="Value")
-    bool_value: bpy.props.BoolProperty(name="Value")
+    string_value: bpy.props.StringProperty(name="Value", update=compile_rig_ui)
+    float_value: bpy.props.FloatProperty(name="Value", update=compile_rig_ui)
+    int_value: bpy.props.IntProperty(name="Value", update=compile_rig_ui)
+    bool_value: bpy.props.BoolProperty(name="Value", update=compile_rig_ui)
+
+    @property
+    def value(self):
+        match self.value_type:
+            case 'STRING':
+                return self.string_value
+            case 'FLOAT':
+                return self.float_value
+            case 'INTEGER':
+                return self.int_value
+            case 'BOOL':
+                return self.bool_value
 
     def _relink_if_possible(self, socket_type):
         if self.outputs and self.outputs[0].bl_idname != socket_type:
@@ -747,7 +769,7 @@ class TGR_LY_ND_Operator(Node):
                     items.append((node.name, node.name, ""))
         return items
     
-    operator_name: bpy.props.EnumProperty(name="Operator", items=_get_operator_enum_items)
+    operator_name: bpy.props.EnumProperty(name="Operator", items=_get_operator_enum_items, update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
@@ -774,8 +796,8 @@ class TGR_LY_ND_BoneCollection(Node):
     bl_label = "Bone Collection"
     bl_icon = 'ALIGN_JUSTIFY'
 
-    use_visibility: bpy.props.BoolProperty(name="Use Visibility", default=True)
-    use_solo: bpy.props.BoolProperty(name="Use Solo", default=False)
+    use_visibility: bpy.props.BoolProperty(name="Use Visibility", default=True, update=compile_rig_ui)
+    use_solo: bpy.props.BoolProperty(name="Use Solo", default=False, update=compile_rig_ui)
     
     def _get_bone_collection_items(self, context):
         """Dynamically generate enum items based on the bone collections available in the armature"""
@@ -786,7 +808,7 @@ class TGR_LY_ND_BoneCollection(Node):
                 items.append((collection.name, collection.name, ""))
         return items
     
-    collection_name: bpy.props.EnumProperty(name="Bone Collection", items=_get_bone_collection_items)
+    collection_name: bpy.props.EnumProperty(name="Bone Collection", items=_get_bone_collection_items, update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
@@ -805,7 +827,10 @@ class TGR_FC_ND_If(Node):
     bl_label = "If"
     bl_icon = 'ALIGN_JUSTIFY'
 
-    default_condition: bpy.props.BoolProperty(name="Default Condition", default=True, description="Default condition for the If node when no input is connected")
+    default_condition: bpy.props.BoolProperty(name="Default Condition",
+                                              default=True,
+                                              description="Default condition for the If node when no input is connected",
+                                              update=compile_rig_ui)
     
     def init(self, context):
         self.inputs.new('NodeSocketBool', "Condition")
@@ -832,11 +857,13 @@ class TGR_FC_ND_Compare(Node):
             ('EXPRESSION', "Python Expression", ""),
         ],
         default='EQUAL',
+        update=compile_rig_ui
     )
     expression: bpy.props.StringProperty(
         name="Expression",
         default="A == B",
-        description="Python Expression using A and B as variables"
+        description="Python Expression using A and B as variables",
+        update=compile_rig_ui
     )
 
     def init(self, context):
