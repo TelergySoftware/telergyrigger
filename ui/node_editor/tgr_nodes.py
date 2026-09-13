@@ -303,72 +303,28 @@ class TGR_LY_ND_Box(BaseDynamicLayoutNode):
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
         self.inputs.new('TGR_SKT_Layout', "Item 001")
-        
-        
-class TGR_LY_ND_SplitItem(Node):
-    bl_idname = "TGR_LY_ND_SplitItem"
-    bl_label = "Split Item"
-    bl_icon = 'ALIGN_JUSTIFY'
-    
-    def init(self, context):
-        self.inputs.new('NodeSocketString', "Label")
-        self.inputs.new('NodeSocketFloat', "Factor")
-        self.inputs.new('TGR_SKT_Layout', "Input")
-        self.outputs.new('TGR_SKT_SplitItem', "Layout")
-    
-    def draw_buttons(self, context, layout):
-        layout.prop(self, "label", text="", placeholder="Label")
-        layout.prop(self, "factor", text="Factor")
 
 
 class TGR_LY_ND_Split(Node):
     bl_idname = "TGR_LY_ND_Split"
     bl_label = "Split"
     bl_icon = 'ALIGN_JUSTIFY'
-    
-    def _check_invalid_links(self):
-        for input in self.inputs:
-            for link in input.links:
-                if link.from_socket.bl_idname != 'TGR_SKT_SplitItem':
-                    return True
-        return False
+
+    factor: bpy.props.FloatProperty(name="Factor",
+                                    default=0.5,
+                                    min=0.0,
+                                    max=1.0,
+                                    subtype='FACTOR',
+                                    description="Width ratio of the left side (0.0 for auto-balance)",
+                                    update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
-        self.inputs.new('TGR_SKT_SplitItem', "Item 001")
-    
-    def insert_link(self, link):
-        if link.to_node != self:
-            return
-        # Show an error message if the user tries to connect something that is not a Split Item socket to the Split node
-        if link.from_socket.bl_idname != 'TGR_SKT_SplitItem' and link.from_socket:
-            self["_link_error"] = "Only Split Item sockets can be connected to the Split node"
-        else:
-            if "_link_error" in self:
-                del self["_link_error"]
-    
-    def update(self):
-        if self._check_invalid_links():
-            self["_link_error"] = "Only Split Item sockets can be connected to the Split node"
-        else:
-            if "_link_error" in self:
-                del self["_link_error"]
-        
-        if not self.inputs:
-            return
-        
-        if self.inputs[-1].is_linked:
-            new_index = len(self.inputs) + 1
-            self.inputs.new('TGR_SKT_SplitItem', f"Item {new_index:03d}")
-        
-        while len(self.inputs) > 1 and not self.inputs[-2].is_linked:
-            self.inputs.remove(self.inputs[-1])
-        
-    
-    def draw_buttons(self, context, layout):
-        if "_link_error" in self and self["_link_error"]:
-            layout.label(text=self["_link_error"], icon='ERROR')
+        self.inputs.new('TGR_SKT_Layout', "Item 001")
+        self.inputs.new('TGR_SKT_Layout', "Item 002")
 
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "factor", text="Factor")
 
 class TGR_LY_ND_Grid(BaseDynamicLayoutNode):
     bl_idname = "TGR_LY_ND_Grid"

@@ -51,12 +51,10 @@ node_categories = [
         NodeItem("TGR_LY_ND_Column"),
         NodeItem("TGR_LY_ND_Box"),
         NodeItem("TGR_LY_ND_Grid"),
+        NodeItem("TGR_LY_ND_Split"),
         NodeItemCustom(draw=tgr_node_separator),
         NodeItem("TGR_LY_ND_Empty"),
         NodeItem("TGR_LY_ND_Separator"),
-        NodeItemCustom(draw=tgr_node_separator),
-        NodeItem("TGR_LY_ND_SplitItem"),
-        NodeItem("TGR_LY_ND_Split"),
     ]),
 
     TGR_UI_NodeCategory("UI_VALUES", "Values", items=[
@@ -175,8 +173,8 @@ def register():
 
     # Append the Add TGR rig to the add menu
     bpy.types.VIEW3D_MT_add.append(object_add_draw_menu)
-    # # Append the Generate UI button to the node editor header
-    bpy.types.NODE_HT_header.append(header_draw_menu)
+    # Append the Generate UI button to the node editor header
+    # bpy.types.NODE_HT_header.append(header_draw_menu)
 
 
 def unregister():
@@ -185,7 +183,7 @@ def unregister():
     # Remove the Add TGR rig from the add menu
     bpy.types.VIEW3D_MT_add.remove(object_add_draw_menu)
     # Remove the Generate UI button from the node editor header
-    bpy.types.NODE_HT_header.remove(header_draw_menu)
+    # bpy.types.NODE_HT_header.remove(header_draw_menu)
 
     # Clear keymaps
     for km, kmi in keymaps:

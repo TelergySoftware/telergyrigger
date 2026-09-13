@@ -159,6 +159,8 @@ class NodeTreeCompiler:
                 self._compile_box(layout_node, parent_layout=parent_layout, level=level)
             case "TGR_FC_ND_If":
                 self._compile_if(layout_node, parent_layout=parent_layout, level=level)
+            case "TGR_LY_ND_Split":
+                self._compile_split(layout_node, parent_layout=parent_layout, level=level)
 
     def _compile_row(self, row_node: Node, parent_layout, level=0):
         """Compile row nodes into Python code"""
@@ -216,6 +218,19 @@ class NodeTreeCompiler:
             if input_socket.is_linked:
                 input_node = input_socket.links[0].from_node
                 self._compile_layout_nodes(input_node, parent_layout=f"box_{level}", level=level + 1)
+
+    def _compile_split(self, split_node: Node, parent_layout, level=0):
+        """Compile split nodes into Python code"""
+        if not (split_node.inputs[0].is_linked or split_node.inputs[1].is_linked):
+            print("[TGR COMPILE SPLIT] Both input nodes must be connected")
+            return
+        left_node = split_node.inputs[0].links[0].from_node
+        right_node = split_node.inputs[1].links[0].from_node
+        self._new_line(f"split_{level} = {parent_layout}.split(factor={split_node.factor})")
+        self._new_line(f"split_{level}_left = split_{level}.column()")
+        self._new_line(f"split_{level}_right = split_{level}.column()")
+        self._compile_layout_nodes(left_node, parent_layout=f"split_{level}_left", level=level)
+        self._compile_layout_nodes(right_node, parent_layout=f"split_{level}_right", level=level)
 
     def _compile_layout(self, panel: Node):
         """Compile layout nodes into Python code"""
