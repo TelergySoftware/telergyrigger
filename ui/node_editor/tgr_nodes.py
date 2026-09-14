@@ -448,6 +448,7 @@ class TGR_LY_ND_Prop(Node):
                                      ('ANGLE', "Angle", "Display as angle"),
                                      ('TIME', "Time", "Display as time"),
                                      ('PERCENTAGE', "Percentage", "Display as percentage"),
+                                     ('FACTOR', "Factor", "Display as factor"),
                                      ('PIXELS', "Pixels", "Display as pixels"),],
                                  default='NONE', description="Subtype to display for numeric properties",
                                  update=compile_rig_ui)
@@ -524,6 +525,7 @@ class TGR_LY_ND_CustomProp(Node):
                                         ('ANGLE', "Angle", "Display as angle"),
                                         ('TIME', "Time", "Display as time"),
                                         ('PERCENTAGE', "Percentage", "Display as percentage"),
+                                        ('FACTOR', "Factor", "Display as factor"),
                                         ('PIXELS', "Pixels", "Display as pixels"),],
                                     default='NONE', description="Subtype to display for numeric properties",
                                     update=compile_rig_ui)

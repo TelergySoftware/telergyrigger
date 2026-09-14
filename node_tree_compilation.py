@@ -39,8 +39,6 @@ class NodeTreeCompiler:
 
     def _set_classes_to_register(self):
         """Set the classes to register in the generated script"""
-        self._new_line("")
-        self._new_line("")
         self._new_line("# Add all the classes to register here:")
         self._new_line("CLASSES = [")
         self.indent_level += 1
@@ -74,8 +72,12 @@ class NodeTreeCompiler:
 
     def _compile_compare_node(self, compare_node: Node, parent_layout, level=0):
         """Compile compare nodes into Python code"""
-        value_a = self._value_node_string_get(compare_node.inputs[0].links[0].from_node)
-        value_b = self._value_node_string_get(compare_node.inputs[1].links[0].from_node)
+        try:
+            value_a = self._value_node_string_get(compare_node.inputs[0].links[0].from_node)
+            value_b = self._value_node_string_get(compare_node.inputs[1].links[0].from_node)
+        except IndexError:
+            print("[TGR COMPILE COMPARE] Both input nodes must be connected")
+            return
         condition = ""
         match compare_node.operation:
             case 'EQUAL':
@@ -197,7 +199,10 @@ class NodeTreeCompiler:
         """Compile custom property nodes into Python code"""
         if custom_prop_node.target.type == 'ARMATURE' and custom_prop_node.subtarget:
             text = custom_prop_node.alias if custom_prop_node.alias else custom_prop_node.property_name
-            self._new_line(f"{parent_layout}.prop(bpy.data.objects['{custom_prop_node.target.name}'].pose.bones['{custom_prop_node.subtarget}'], '[\"{custom_prop_node.property_name}\"]', text='{text}')")
+            self._new_line(f"{parent_layout}.prop(bpy.data.objects['{custom_prop_node.target.name}'].pose.bones['{custom_prop_node.subtarget}'], "
+                           f"'[\"{custom_prop_node.property_name}\"]', text='{text}'"
+                           f"{", slider=True" if custom_prop_node.use_slider else ""}"
+                           ")")
         else:
             self._new_line(f"{parent_layout}.prop(bpy.data.objects['{custom_prop_node.target.name}'], '[\"{custom_prop_node.property_name}\"]', text='{text}')")
 
@@ -344,13 +349,10 @@ def run_tgr_ui_generator(armature=None):
     text_block.use_module = True
 
     # 1. Compile Code
-    try:
-        compiler = NodeTreeCompiler(data_tree, layout_tree, armature)
-        generated_code = compiler.compile()
-        text_block.write(generated_code)
-    except Exception as e:
-        print(f"[TGR Auto-Compile Error]: Compilation failed: {e}")
-        return False
+    compiler = NodeTreeCompiler(data_tree, layout_tree, armature)
+    generated_code = compiler.compile()
+    text_block.write(generated_code)
+
 
     # 2. Execute Code
     exec_globals = {
