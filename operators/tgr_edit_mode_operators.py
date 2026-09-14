@@ -356,8 +356,8 @@ class TGR_OT_AlignBoneToWorld(bpy.types.Operator):
                 bone.roll = 0
                 # Set the bone's matrix to the new matrix
                 bone.matrix = bone_matrix
-            # Update the armature
-            update_armature(context)
+                # Update the armature
+                update_armature(context)
             return {'FINISHED'}
         else:
             return {'CANCELLED'}

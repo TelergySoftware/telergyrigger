@@ -5,6 +5,12 @@ import cattrs
 import json
 
 
+def update_armature(context):
+    # Hack to update the armature
+    context.object.data.bones.update()
+    context.scene.view_layers.update()
+
+
 # ------------- ADD PREFIX OR SUFFIX -------------
 def add_prefix_suffix(context, bones, prefix="", suffix=""):
     tgr_props = context.active_object.tgr_props
@@ -533,6 +539,8 @@ class TGR_OT_AssignBonesToCollection(bpy.types.Operator):
                         if collection.name == self.name:
                             continue
                         collection.unassign(bone)
+
+        update_armature(context)
                         
         return {"FINISHED"}
 
