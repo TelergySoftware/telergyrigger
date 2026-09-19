@@ -5,6 +5,19 @@ from bpy.types import Node
 # Global scope storage for registered panels
 TGR_EXEC_SCOPES = {}
 
+def get_cached_blender_icons():
+    """Dynamic EnumProperty callback that displays all icons with visual previews"""
+    items = bpy.types.UILayout.bl_rna.functions['label'].parameters['icon'].enum_items
+    
+    # Format: (identifier, label, description, icon_name, numeric_id)
+    return [
+        (item.identifier, item.name, item.description, item.identifier, idx)
+        for idx, item in enumerate(items)
+    ]
+
+# Cached Blender icons
+BLENDER_ICONS = get_cached_blender_icons()
+
 
 class NodeTreeCompiler:
     """Compiler for TGR node trees to generate UI code"""
@@ -163,6 +176,8 @@ class NodeTreeCompiler:
                 self._compile_if(layout_node, parent_layout=parent_layout, level=level)
             case "TGR_LY_ND_Split":
                 self._compile_split(layout_node, parent_layout=parent_layout, level=level)
+            case "TGR_LY_ND_Grid":
+                self._compile_grid(layout_node, parent_layout=parent_layout, level=level)
 
     def _compile_row(self, row_node: Node, parent_layout, level=0):
         """Compile row nodes into Python code"""
@@ -223,6 +238,14 @@ class NodeTreeCompiler:
             if input_socket.is_linked:
                 input_node = input_socket.links[0].from_node
                 self._compile_layout_nodes(input_node, parent_layout=f"box_{level}", level=level + 1)
+
+    def _compile_grid(self, grid_node: Node, parent_layout, level=0):
+        """Compile grid nodes into Python code"""
+        self._new_line(f"grid_{level} = {parent_layout}.grid_flow(columns={grid_node.columns}, even_columns={grid_node.even_columns}, align={grid_node.align})")
+        for input_socket in grid_node.inputs:
+            if input_socket.is_linked:
+                input_node = input_socket.links[0].from_node
+                self._compile_layout_nodes(input_node, parent_layout=f"grid_{level}", level=level + 1)
 
     def _compile_split(self, split_node: Node, parent_layout, level=0):
         """Compile split nodes into Python code"""

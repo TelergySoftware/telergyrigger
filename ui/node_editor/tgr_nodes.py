@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Node
 
-from ...node_tree_compilation import run_tgr_ui_generator
+from ...node_tree_compilation import run_tgr_ui_generator, BLENDER_ICONS
 from .tgr_node_tree import TGR_NT_Data, TGR_NT_UI
 
 
@@ -330,10 +330,35 @@ class TGR_LY_ND_Grid(BaseDynamicLayoutNode):
     bl_idname = "TGR_LY_ND_Grid"
     bl_label = "Grid"
     bl_icon = 'ALIGN_JUSTIFY'
+
+    columns: bpy.props.IntProperty(
+        name="Columns",
+        default=2,
+        min=0,
+        description="Number of columns (0 for auto-fit)",
+        update=compile_rig_ui
+    )
+    even_columns: bpy.props.BoolProperty(
+        name="Even Columns",
+        default=True,
+        description="Keep all the columns with the same width",
+        update=compile_rig_ui
+    )
+    align: bpy.props.BoolProperty(
+        name="Align",
+        default=False,
+        description="Remove spaces between layout items",
+        update=compile_rig_ui
+    )
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
         self.inputs.new('TGR_SKT_Layout', "Item 001")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "columns")
+        layout.prop(self, "even_columns", toggle=True)
+        layout.prop(self, "align", toggle=True)
 
 
 class TGR_LY_ND_Empty(Node):
@@ -382,7 +407,6 @@ class TGR_LY_ND_Separator(Node):
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
-
 
 class TGR_LY_ND_Prop(Node):
     bl_idname = "TGR_LY_ND_Prop"
@@ -740,13 +764,27 @@ class TGR_LY_ND_Label(Node):
     bl_idname = "TGR_LY_ND_Label"
     bl_label = "Label"
     bl_icon = 'ALIGN_JUSTIFY'
+
+    use_icon: bpy.props.BoolProperty(
+        name="Use Icon",
+        default=False,
+        update=compile_rig_ui
+    )
+    icon: bpy.props.EnumProperty(
+        name="Icon",
+        description="Select an icon to be used",
+        items=tuple(BLENDER_ICONS),
+        update=compile_rig_ui
+    )
     
     def init(self, context):
         self.inputs.new('NodeSocketString', "Text")
         self.outputs.new('TGR_SKT_Layout', "Layout")
     
     def draw_buttons(self, context, layout):
-        layout.prop(self, "text", text="", placeholder="Text")
+        layout.prop(self, "use_icon", toggle=True)
+        if self.use_icon:
+            layout.template_icon_view(self, "icon", scale=2.0, scale_popup=2.0)
 
 
 class TGR_LY_ND_BoneCollection(Node):

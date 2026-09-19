@@ -2,7 +2,7 @@ import bpy
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem, NodeItemCustom
 
-from . import properties, operators, ui
+from . import properties, operators, ui, node_tree_compilation
 from .properties import TGR_Properties, TGR_Collection_Properties
 
 # ----- PREFERENCES -----
@@ -100,8 +100,8 @@ def header_draw_menu(self, context):
     layout.separator()
     layout.operator("tgr.generate_ui", text="Generate UI", icon="PLAY")
 
-
 def register():
+
     # Register classes
     bpy.utils.register_class(TGR_Preferences)
     properties.register()
@@ -177,6 +177,7 @@ def register():
     # bpy.types.NODE_HT_header.append(header_draw_menu)
 
 
+
 def unregister():
     # Unregister node categories
     nodeitems_utils.unregister_node_categories("TGR_NODE_CATEGORIES")
@@ -198,6 +199,7 @@ def unregister():
     operators.unregister()
     properties.unregister()
     bpy.utils.unregister_class(TGR_Preferences)
+
 
 if __name__ == "__main__":
     register()
