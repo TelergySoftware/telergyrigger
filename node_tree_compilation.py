@@ -26,9 +26,18 @@ class NodeTreeCompiler:
         self.data_tree = data_tree
         self.layout_tree = layout_tree
         self.armature = armature
-        self.panel_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_LY_ND_Panel"]
-        self.operator_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_Operator"]
-        self.property_group_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_PropertyGroup"]
+        try:
+            self.panel_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_LY_ND_Panel"]
+        except AttributeError:
+            self.panel_nodes = []
+        try:
+            self.operator_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_Operator"]
+        except AttributeError:
+            self.operator_nodes = []
+        try:
+            self.property_group_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_PropertyGroup"]
+        except AttributeError:
+            self.property_group_nodes = []
         self.indent_level = 0
         self._generated_code = []
 
