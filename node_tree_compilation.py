@@ -203,12 +203,15 @@ class NodeTreeCompiler:
     
     def _compile_label(self, label_node: Node, parent_layout):
         """Compile label nodes into Python code"""
+        icon_code = ""
+        if label_node.use_icon:
+            icon_code = f", icon='{label_node.icon}'"
         if label_node.inputs[0].is_linked and label_node.inputs[0].links[0].from_node.bl_idname == "TGR_DT_ND_String":
             input_node = label_node.inputs[0].links[0].from_node
-            self._new_line(f"{parent_layout}.label(text='{input_node.text}')")
+            self._new_line(f"{parent_layout}.label(text='{input_node.text}'{icon_code})")
         else:
             text = label_node.inputs[0].default_value
-            self._new_line(f"{parent_layout}.label(text='{text}')")
+            self._new_line(f"{parent_layout}.label(text='{text}'{icon_code})")
 
     def _compile_custom_prop(self, custom_prop_node: Node, parent_layout):
         """Compile custom property nodes into Python code"""
