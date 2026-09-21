@@ -133,14 +133,11 @@ class NodeTreeCompiler:
 
     def _compile_if(self, if_node: Node, parent_layout, level=0):
         """Compile if nodes into Python code"""
+        true_node = if_node.inputs[1].links[0].from_node if if_node.inputs[1].is_linked else None
+        false_node = if_node.inputs[2].links[0].from_node if if_node.inputs[2].is_linked else None
         if if_node.inputs[0].is_linked:
             condition_node = if_node.inputs[0].links[0].from_node
-            true_node = if_node.inputs[1].links[0].from_node
-            false_node = if_node.inputs[2].links[0].from_node
-            if not condition_node.bl_idname == 'TGR_FC_ND_Compare':
-                # TODO: Show warning
-                pass
-            else:
+            if condition_node.bl_idname == 'TGR_FC_ND_Compare':
                 self._compile_compare_node(condition_node, parent_layout, level)
                 self._compile_layout_nodes(layout_node=true_node, parent_layout=parent_layout, level=level)
                 self.indent_level -= 1
@@ -148,12 +145,45 @@ class NodeTreeCompiler:
                 self.indent_level += 1
                 self._compile_layout_nodes(layout_node=false_node, parent_layout=parent_layout, level=level)
                 self.indent_level -= 1
+            elif condition_node.bl_idname == 'TGR_LY_ND_BoneCollection':
+                vis_condition = ""
+                solo_condition = ""
+                if condition_node.use_visibility:
+                    vis_condition = f"armature.collections_all['{condition_node.collection_name}'].is_visible"
+                if condition_node.use_solo:
+                    solo_condition = f"armature.collections_all['{condition_node.collection_name}'].is_solo"
+
+                if vis_condition and not solo_condition:
+                    condition = vis_condition
+                elif solo_condition and not vis_condition:
+                    condtion = solo_condition
+                elif vis_condition and solo_condition:
+                    condition = f"{vis_condition} and {solo_condition}"
+                self._new_line(f"if {condition}:")
+                self.indent_level += 1
+                if true_node and true_node.bl_idname != 'TGR_LY_ND_Empty':
+                    self._compile_layout_nodes(layout_node=true_node, parent_layout=parent_layout, level=level)
+                else:
+                    self._new_line("pass")
+                self.indent_level -= 1
+                self._new_line("else:")
+                self.indent_level += 1
+                if false_node and false_node.bl_idname != 'TGR_LY_ND_Empty':
+                    self._compile_layout_nodes(layout_node=false_node, parent_layout=parent_layout, level=level)
+                else:
+                    self._new_line("pass")
+                self.indent_level -= 1
+
         else:
             if if_node.inputs[0].default_value:
+                if not true_node:
+                    return
                 match true_node.outputs[0].bl_idname:
                     case 'TGR_SKT_Layout':
                         self._compile_layout_nodes(true_node, parent_layout, level)
             else:
+                if not false_node:
+                    return
                 match false_node.outputs[0].bl_idname:
                     case 'TGR_SKT_Layout':
                         self._compile_layout_nodes(false_node, parent_layout, level)
@@ -166,6 +196,8 @@ class NodeTreeCompiler:
 
     def _compile_layout_nodes(self, layout_node: Node, parent_layout, level=0):
         """Compile layout nodes into Python code"""
+        if not layout_node:
+            return
         match layout_node.bl_idname:
             case "TGR_LY_ND_Row":
                 self._compile_row(layout_node, parent_layout=parent_layout, level=level)
