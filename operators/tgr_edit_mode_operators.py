@@ -616,7 +616,7 @@ class TGR_OT_CreateIntermediateBone(bpy.types.Operator):
             bpy.ops.armature.duplicate()
             mch_bone = context.selected_editable_bones[0]
             # Scale bones to the defined scale
-            bpy.ops.transform.resize(value=(self.scale, self.scale, self.scale))
+            mch_bone.tail = mch_bone.head + (mch_bone.tail - mch_bone.head) * self.scale
             # Change bone prefix to the mch_prefix or mch_prefix + "INT" if the selected bone is already an MCH bone and remove the .### from the bone name
             # Set the current bone as the parent of the original bone
             bone.parent = mch_bone
