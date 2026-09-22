@@ -815,9 +815,19 @@ class TGR_OT_AutoColorBones(bpy.types.Operator):
     def execute(self, context):
         
         armature = context.active_object
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        def_prefix = preferences.def_prefix
+        org_prefix = preferences.org_prefix
+        mch_prefix = preferences.mch_prefix
         
         for bone in armature.data.bones:
-            if "TWEAK" in bone.name.upper():
+            if bone.name.startswith(def_prefix):
+                bone.color.palette = "DEFAULT"
+            elif bone.name.startswith(org_prefix):
+                bone.color.palette = "THEME15"
+            elif bone.name.startswith(mch_prefix):
+                bone.color.palette = "THEME14"
+            elif "TWEAK" in bone.name.upper():
                 bone.color.palette = "THEME03"
             elif bone.name.endswith(".L"):
                 bone.color.palette = "THEME01"
