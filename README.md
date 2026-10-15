@@ -1,362 +1,198 @@
 # Telergy Rigger
 
-Our advanced toolset empowers riggers with an array of specialized features and shortcuts, significantly accelerating
-the rigging workflow.
+Telergy Rigger is a Blender addon for building, organizing, and automating rigging workflows around a clear collection-based structure. The current codebase focuses on a modern TGR rig setup with a root armature, bone collections, ORG/MCH/CTRL naming conventions, pose-mode rig helpers, and a node-based UI generation workflow.
 
-Harness the power of automated rigging processes, intuitive controls, and a comprehensive set of tools, all designed to
-optimize efficiency and precision. Say goodbye to repetitive tasks and welcome a seamless rigging experience.
+This project is intended for Blender riggers who want a structured way to create deform bones, control bones, helper bones, and custom rig interfaces without manually rebuilding the same setup every time.
 
-## For whom is it for?
+## Donations
 
-It was designed for more experienced Blender riggers to automate tasks such as copying the
-transforms of a chain of bones to another chain. It doesn't mean that less experienced riggers can't use the power of
-our addon. It also comes with tools to help with the more basic parts of rigging such as parenting and creating simple
-constraints.
+If you find this addon useful, consider supporting its development through donations.
+<form action="https://www.paypal.com/donate" method="post" target="_top">
+<input type="hidden" name="hosted_button_id" value="2LB4PF8MEGAMY" />
+<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+<img alt="" border="0" src="https://www.paypal.com/en_BR/i/scr/pixel.gif" width="1" height="1" />
+</form>
 
-## Manual
 
-Here you'll find all the explanations of every functionality of this addon
+## Features
 
-1. ### How to install
-   To install this addon you'll need to go to the Blender edit menu on the top toolbar, select Preferences, navigate to
-   the
-   Add-ons tab, click the install button on the top right and find your .zip file containing this addon. After
-   installing
-   it, you'll need to mark the check-box to enable it.
-2. ### Creating a TGR rig
-   If you didn't yet creat an Armature object, the easiest way to start with the **TelergyRigger** addon is to add an
-   armature using the `SHIFT+A` command and choosing the **TGR Armature** option, it should be one of last in the add
-   menu.
-   This will create a bone called 'ROOT' and set it up as the armature root bone and orient it to the world so the axis
-   of
-   both world and bone are aligned. It will also set your armature viewport
-   display to be shaded as wire, to be in front of the other objects, to show the bone names and the axis of each bone.
+- Create a TGR armature with a root bone and default collection layout
+- Manage bone organization through collections and collection-based controls
+- Add deform and non-deform bones directly from edit mode
+- Build rigs with ORG-based helpers, rotation chains, tweak chains, and switch logic
+- Use pose-mode utilities for IK, transform sampling, isolate bone behavior, and pivot controls
+- Rename, select, auto-color, and organize bones with utility operators
+- Generate custom rig UI layouts from node-based editor graphs
+- Configure default naming prefixes and separators from addon preferences
 
-   If you already created an armature you will have to set up the configurations manually. The main one is to set the
-   root
-   bone, **TelergyRigger** requires that you have a root bone to function correctly in many operators, the other
-   configurations are optional. To set up the root bone you'll need to be in edit mode and open the *Telergy Rigger* tab
-   on
-   the N-Panel, there you will find a field to choose your armature and when you do, it will open another field to
-   choose a
-   bone to be used as the root. After that you're all set to use all the functionalities of this addon.
-3. ### Prefixes (DEF, TGT, MCH, CTRL)
-   This addon depends heavily on bones prefixes, so it's really important to understand what they mean:
-    * **DEF:** Bones with this prefix are the only bones that are capable of deforming the mesh, they're not meant to be
-      controlled directly;
-    * **TGT:** Bones with this prefix are bones that the DEF bones will copy the transforms from, they can also become
-      CTRL bones if needed;
-    * **MCH:** Bones with this prefix are mechanism bones, they're used to isolate, calculate, replace, intermediate and
-      so on, they're also not meant to be controlled directly;
-    * **CTRL:** Bones with this prefix are the only bones that should be able to be controlled by the end user.
+## Installation
 
-   These prefixes can be changed in the addon's preferences.
-4. ### Edit Mode
-   While in edit mode, the operators shown in the *Telergy Rigger* tab and the operators that are available will be
-   different from the ones shown in pose mode. In this section we'll take a look at all the operators and panels
-   available in this mode.
-    1. #### Adding a bone
-       While using this addon, when you press `SHIFT-A` it won't create a bone directly, instead it will show an add
-       menu with two options: *Deform Bone* and *Non-Deform Bone*. As the name says, the first one will create a bone
-       with the option *deform* of the bone turned on, and it will also spawn the bone aligned with the world, another
-       thing is that it will already be parented with the root bone. The second will do the same thing, but this time
-       with the *deform* option turned off.
-    2. #### Pie Menu
-       <img src="images/EditMode_PieMenu.png">
+1. Download the addon as a zip archive.
+2. Open Blender.
+3. Go to Edit > Preferences > Add-ons.
+4. Click Install and select the addon zip file.
+5. Enable the addon in the list.
+6. You can now create a rig from Add > Armature > TGR Armature.
 
-       In edit mode you'll have a new pie menu that will be spawned when pressing the letter `D` by default. This pie
-       menu
-       contains some operators to keep things organized in a simple and intuitive place. It comes with the following
-       options:
-        * **Set Parent:** It does the exact same thing as when you press `CTRL+P` in armature edit mode to parent bones;
-        * **Clear Parent:** It does the exact same thing as when you press `ALT+P` in armature edit mode to un-parent
-          bones;
-        * **Parent to Root:** It parents the selected bones to the root bone that was set up for the armature,
-          regardless if
-          it's hidden;
-        * **Copy Transforms:** It copies the transformation of the active bone to the selected bones;
-        * **Copy Location:** It copies the location of the active bone to the selected bones, selected bones will
-          maintain
-          size
-          and orientation and will be placed at the head of the active bone;
-        * **Copy Rotation:** It copies the rotation of the active bone to the selected bones, selected bones will
-          maintain
-          size
-          and location and will be oriented in the same way as the active bone;
-        * **Copy Scale:** It copies the scale of the active bone to the selected bones, selected bones will maintain
-          orientation and location and will be scaled to be the same size as the active bone.
-    3. #### Create Sub-Panel
-       In the *Telergy Rigger* panel you'll find a sub-panel called **Create**, inside this panel there are a few
-       buttons to trigger some operators:
-        * **Bones on Points:** Creates bones on every joint of the selected bones, the new bones are parented to the
-          root bone. It's able to choose the size and if the bone is deform on the last action panel;
-        * **Create TGT:** Makes a copy of all the DEF bones, rename them to be TGT and send them to the TGT layer. TGT
-          bones are non-deform.
-        * **Remove TGT:** Deletes all TGT bones.
-    4. #### Parenting Sub-Panel
-       The parenting sub-panel comes with two buttons:
-        * **Parent to Root:** Parents the selected bone with the root bone;
-        * **Connect Bones:** Connects the selected bones, but instead of making the tail of the parent bone go to the
-          head of the child bone, the head of the child bone goes to the tail of the parent bone.
-5. ### Pose Mode
-   In this section you'll see the operators and panels that are exclusive to the pose mode.
-    1. #### Custom Properties
-       When first creating the DEF and TGT bones, this panel should be empty. It shows all the custom properties added
-       to all the bones separated by bone names, so you can access these properties faster without having to select a
-       particular bone and search for its custom properties.
-    2. #### Pie Menu
-       <img src="images/PoseMode_PieMenu.png" alt="Edit Mode Pie Menu">
+![TGR Preferences](images/TGR_Preferences.png)
 
-       Ind pose mode you'll have a new pie menu that will be spawned when pressing the letter `D` by default. This pie
-       menu contains some frequent used constraints to be accessed in a faster way. It comes with the following
-       constraints:
-        * **Inverse Kinematics**;
-        * **Copy Transforms**;
-        * **Copy Location**;
-        * **Copy Rotation**;
-        * **Copy Scale**;
-        * **Limit Distance**;
-        * **Limit Location**;
-        * **Limit Rotation**;
-        * **Limit Scale**;
-        * **Damped Track**;
-        * **Stretch To**.
-    3. #### Constraints
-       This one is a sub-panel containing operators that end up creating constraints in one or more bones, these
-       properties are:
-        * **Isolate Rotation:** Isolates the rotation of the selected bones from their parent. When the parent rotates,
-          the bones which were isolated will keep their orientation but will follow the parent's tail location;
-        * **Create Rotation Chain:** Creates a chain of copy rotation to the selected bones, it also creates a secondary
-          bone that when rotated will not rotate the chain as well;
-        * **Copy Transforms to Chain:** Add the *Copy Transforms* constraint to all the bones of the selected chain
-          according to the prefixes set. Bones with the *From Prefix* will be the target of the bones with the
-          *To Prefix*, apart from the prefixes, the name of the bones from both chains must be equal;
-        * **Create IK Pole Target:** Creates and sets the pole target for a chain with the *IK* constraint. The
-          parameter *First Bone* is the name of the first bones of the chain (e.g. Thigh, Upper Leg, Upper Arm), the
-          *Last
-          Bone* is the bone with the *IK* constraint on, *Placement Bone* is the bone from where you'd like your pole
-          to be made. The *Pole Distance* parameter dictates the distance that the pole target will be from the
-          *Placement
-          Bone*'s head and *Pole Angle* is the same as we see in the *IK* constraint.
-    4. #### TGT
-       This sub-panel shows operators that are related to the **TGT** bones, at the moment only operators are available:
-        * **Bind TGT:** Creates a copy transforms to all the DEF bones targeting their TGT pairs. E.g. DEF_PELVIS and
-          TGT_PELVIS;
-        * **Unbind TGT:** Removes all the copy transforms from the DEF bones targeting their TGT pairs.
-6. ### Utilities
-   The utilities panel is available in both edit and pose modes, it comes with some naming and selecting utilities.
-    1. #### Naming
-       This sub-panel contains some operators that will change the name of one or more bones, if no bones are selected
-       the effect will be done on all the bones. The operators are:
-        * **Add Prefix:** Adds a prefix to the bones names;
-        * **Remove Prefix:** Removes a prefix from the bones names;
-        * **Add Suffix:** Adds a suffix to the bones names;
-        * **Remove Suffix:** Removes a suffix from the bones names;
-        * **Clean Name Up:** Moves numbered suffixes to before the left and right suffixes if they exist and change the
-          separators to the one default from the preferences.
-    2. #### Selection
-       This sub-panel has for now a single operator, the **Search and Select**. Just like the name says, it will search
-       and select the bones that match the value given. E.g. Searching DEF will select all the bones with the DEF piece
-       in their name.
-7. ### Bone Layers
-   In this panel you'll find by default three layers, **DEF**, **TGT** and **MCH** these are the layers that the addon
-   use to organise the bones. Using the *Track New* button you'll be able to track a new layer and add some data to it,
-   like name, description, index and UI name. UI name is the name that will be shown in the panel. Using the *Edit*
-   button you'll be able to choose a layer and edit its properties. You can change the three default ones, but it's not
-   advisable. The last one is the *Remove* button, with this one you'll be able to choose a layer to be removed.
+## Quick Start
 
-   Each layer that is being tracked shows three icons on its side, the first one, a filled circle icon, allows you to
-   send the selected bones to that layer, if clicked with the `SHIFT` key pressed, the bones will be added to that
-   layer and also keep in the current ones. The second icon, a filled arrow, allows you to select all the bones from
-   that layer, with the `SHIFT` key pressed, it will keep the current selections and add the new ones. The last one, a
-   lock icon, allows you to block the selection of the bones from that layer.
-8. ### Rig UI
-   In this panel you'll be able to create your own rig ui and generate the script to be sent to with the blend file. To
-   do so, first you'll need layers tracked in the *Bone Layers* panel, you can only add layers that are already tracked.
-    1. #### Creating the Rig UI
-       To start adding elements to the rig ui, you'll need to press the '+' button. In the menu popped-up you can
-       choose the type of element that you want to add to the rig ui. If you choose 'LABEL' you'll only need to add a
-       value/text and choose in which line you want it to be placed at. If you choose 'LAYER', you'll need to add a
-       value, this will be the name that will show on your Layer toggle button, you'll also need to choose the layer
-       name, this is the name that you gave to the tracked layer, and at last, the line that you'd like it to be placed
-       at.
-    2. #### Editing the elements
-       When adding the elements you might have noticed that you can click on them, even the labels, and when you click
-       on them two new options appear: *Remove Item* and *Modify Item*. If you select one or multiple elements and
-       click the remove item button, the selected items will be deleted. If you select the modify item button, you'll
-       be able to alter the elements type, value, line and layer that it represents.
-    3. #### Clear
-       This one is quite straight forward, if you click it you'll be prompted with a dialog asking you if you really
-       want to clear all the elements, if you click okay, all the elements will be deleted.
-    4. #### Generate UI
-       Clicking it will generate a python file that if you run, it will add a panel with a rig UI just like what you've
-       created. It will also add the **Custom Properties** panel, so you can access those parameters easily even without
-       the *Telergy Rigger* addon.
+### Create a TGR armature
 
-## Python API
+In Object Mode, use Add > Armature > TGR Armature.
 
-If you'd like to use the operators from this addon in your blender scripts, here's the place for you!
+![TGR Armature](images/TGR_Armature_Add.png)
 
-### Operators
+This creates:
 
-```Python
-# Adds a deform bone to the 3D cursor location
-# Must be in Edit Mode
-bpy.ops.tgr.add_deform_bone()
-```
+- a root bone named ROOT
+- the default TGR collection structure
+- armature display settings tuned for rigging work
+- a basic setup ready for editing and rig-building
 
-```Python
-# Adds a non deform bone to the 3D cursor location
-# Must be in Edit Mode
-bpy.ops.tgr.add_non_deform_bone()
-```
+![TGR New Armature](images/TGR_Edit_Mode_New_Armature.png)
 
-```Python
-# Adds a prefix to the selected bones, default prefix is empty
-# Must be in Edit or Pose mode
-bpy.ops.tgr.add_prefix(prefix: str = "")
-```
+### Naming conventions
 
-```Python
-# Adds a suffix to the selected bones, default suffix is empty
-# Must be in Edit or Pose mode
-bpy.ops.tgr.add_suffix(suffix: str = "")
-```
+The addon expects a clear prefix-driven naming system. The defaults are configured in the addon preferences and can be adjusted per project:
 
-```Python
-# Adds an armature and a bone aligned with the world as the root bone
-# Must be in Object mode
-bpy.ops.tgr.add_tgr_armature()
-```
+- DEF: deformation bones that drive the mesh
+- ORG: organization/target bones used for setup, offsets, and targets
+- MCH: mechanism/helper bones used for automation and rig logic
+- CTRL: controller bones for user-facing animation control
 
-```Python
-# Aligns the bone to the world
-# Must be in Edit Mode
-bpy.ops.tgr.align_bone_to_world()
-```
+This convention helps maintain a readable rig hierarchy and makes pose, selection, and collection tools much easier to work with.
 
-```Python
-# Add copy transform constraints to the pairs of TGT and DEF bones
-# Must be in Pose Mode
-bpy.ops.tgr.bind_tgt()
-```
+## Main workflow
 
-```Python
-# Create bones on every joint of the selected bones
-# Must be in Edit Mode
-# You can choose the created bones scale and if they deform or not
-bpy.ops.tgr.bones_on_points(bone_scale: float = 1.0, deform: bool = False)
-```
+### Edit Mode tools
 
-```Python
-# Cleans the selected bones names see section 6.1 for more
-# Must be in Edit or Pose mode
-bpy.ops.tgr.clean_name_up()
-```
+The edit-mode panel contains the core rig construction tools. Common operations include:
 
-```Python
-# Connect the head of the child bone to the tail of the parent bone
-# Works on selected bones
-# Must be in Edit Mdde
-bpy.ops.tgr.connect_bones()
-```
+- Add Deform Bone — creates a new deforming bone at the cursor for the main mesh skeleton.
+- Add Non-Deform Bone — creates helper or target bones that do not affect deformation.
+- Align Bone to World — resets the active bone to the global orientation so it follows world axes.
+- Bones on Points — creates a bone at each selected joint position to build a clean chain or intermediate structure.
+- Bones on Vertices — generates bones based on vertex-based references when you are working from mesh-driven topology.
+- Create Intermediate Bone — inserts a helper bone between existing bones for offsets, mechanics, or control spacing.
+- Create Switch Chains — builds 3 copies of the selected chain of bones ready for IK FK switching.
+- Create ORG — creates organization bones that keep rig setup separate from the actual deformation chain.
+- Remove ORG — deletes the generated ORG setup when a section is no longer needed.
+- Parent to Root — parents selected bones to the armature root for consistent hierarchy organization.
+- Connect Bones — links bones with a head-to-tail relationship for cleaner mechanical connections.
 
-```Python
-# Copy the transforms of the active bone to the selected ones
-# Must be in Edit Mode
-# Can choose to copy the location, rotation and scale
-bpy.ops.tgr.copy_transforms(copy_location: bool = True, copy_rotation: bool = True, copy_scale: bool = True)
-```
+These tools help establish skeletal structure before the rig is driven in pose mode.
 
-```Python
-# Copy the transforms of a chain of bones to another chain of bones
-# from_prefix describes the prefix of the target chain
-# to_prefix describes the prefix of the selected chain
-# constraint_name is the name that will be given to the copy transforms constraint
-# Must be in Pose Mode
-bpy.ops.tgr.copy_transforms_to_chain(from_prefix: str = "", to_prefix: str = "", constraint_name: str = "")
-```
+![TGR Edit Mode Panel](images/TGR_Edit_Mode_Panel.png)
 
-```Python
-# Creates the pole target to the specified IK chain
-# For more see section 5.3
-# Must be in Pose Mode
-bpy.ops.tgr.create_ik_pole_target(
-    first_bone_name: str = "",
-last_bone_name: str = "",
-placement_bone_name: str = "",
-pole_distance: list[float, float, float] = [0.0, -0.5, 0.0],
-pole_angle: float = 0
-)
-```
+In edit mode, you also have access to a pie menu for quick bone parenting and orientation
 
-```Python
-# Creates a rotation chain with the selected bones
-# For more see section 5.3
-# Must be in Pose Mode
-bpy.ops.tgr.create_rotation_chain()
-```
+![TGR Edit Mode Pie Menu](images/TGR_Edit_Mode_Pie_Menu.png)
 
-```Python
-# Creates a duplicate of the DEF bones and rename them to TGT
-# Also send them to the TGT layer
-# If no bones are selected, create TGT from all bones except the root
-# Must be in Edit Mode
-bpy.ops.tgr.create_tgt()
-```
+### Bone Collections
 
-```Python
-# Isolate the selected bones rotation from their parent
-# Must be in Pose Mode
-bpy.ops.tgr.isolate_bone_rotation()
-```
+The addon uses bone collections as the primary organization system. This is a more modern structure than older per-layer conventions and is designed for a cleaner rig hierarchy.
 
-```Python
-# Parent selected bones to the root bone
-# Must be in Edit Mode
-bpy.ops.tgr.parent_to_root()
-```
+Key collection features include:
 
-```Python
-# Removes the specified prefix from the bones names
-# Must be in Edit or Pose Mode
-bpy.ops.tgr.remove_prefix(prefix: str = "")
-```
+- Active collection selection — chooses which collection is currently driving the rig setup.
+- Solo and visibility toggles — isolate or hide specific collection groups while building the rig.
+- Lock states — prevent accidental selection or editing of bones from a locked collection.
+- Collection creation and renaming — add new rig groups and keep naming consistent as the setup grows.
+- Assigning selected bones to a collection — puts bones into the correct rig group without manual cleanup later.
+- Saving and loading collection layouts — keeps a reusable rig organization state between sessions.
+- Deformer toggling and deform fix utilities — helps keep the animation rig clean and stable.
 
-```Python
-# Removes the specified suffix from the bones names
-# Must be in Edit or Pose Mode
-bpy.ops.tgr.remove_suffix(suffix: str = "")
-```
+This panel is central to keeping large rigs readable and manageable.
 
-```Python
-# Deletes all bones that starts with the TGT prefix
-# Must be in Edit Mode
-bpy.ops.tgr.remove_tgt()
-```
+![TGR Bone Collections](images/TGR_Bone_Collections.png)
 
-```Python
-# Select all the bones that has the bone_name value in their names
-# Must be in Edit or Pose Mode
-bpy.ops.tgr.select_bones_by_name(bone_name: str = "")
-```
+### Pose Mode tools
 
-```Python
-# Select all the bones that are in the specified layer
-# min value is 0 and max is 31
-# Must be in Edit or Pose Mode
-bpy.ops.tgr.select_layer_bones(layer: int = 0)
-```
+The pose-mode panel focuses on rig behavior and control setup. Common operators include:
 
-```Python
-# Set the layer of the selected bones
-# min value is 0 and max is 31
-# Must be in Edit or Pose Mode
-bpy.ops.tgr.assign_bones_to_collection(layer: int = 0)
-```
+- Bind ORG — attaches ORG-based setup to the rig so helper transforms drive the correct target structure.
+- Unbind ORG — removes that binding when the setup needs to be replaced or cleaned up.
+- Isolate Bone — keeps a bone's local orientation stable while the parent continues to move.
+- Sample Transforms — samples the world transforms of a bone for use as a reference.
+- Create Tweak Chain — creates tweak bones that can use stretch or damped track inside of a bone chain.
+- FK from Tweak Chain — uses the tweak chain to create a new FK-style control layout.
+- Create Rotation Chain — creates a rotational hierarchy for cleaner, controlled chain motion.
+- Create Single Controller Stretch — adds a control to the tip of the chain of selected bones, that allows for simple stretch behavior.
+- Copy Transforms to Chain — replicates transforms across a matching chain based on prefix naming.
+- Bind Switch — uses a data-path to drive IK FK switching chains.
+- Add Pivot Controller — adds a pivot-driven controller for localized rotation and motion handling.
+- Create IK Chain — builds an inverse-kinematics setup for limbs and connected chains.
+- Create IK Pole Target — creates a pole target so IK chains like elbows and knees orient correctly. (deprecated)
 
-```Python
-# Deletes all the copy transforms constraints from the DEF bones targeting the TGT bones
-# Must be in Pose Mode
-bpy.ops.tgr.unbind_tgt()
-```
+These operations are intended for building clean control systems around a rig while keeping the deformation setup organized.
+
+![TGR Pose Mode Panel](images/TGR_Pose_Mode_Panel.png)
+
+In pose mode, you also have access to a pie menu for quick constraints.
+
+![TGR Pose Mode Pie Menu](images/TGR_Pose_Mode_Pie_Menu.png)
+
+### Utilities
+
+The utilities area includes support for:
+
+- Naming prefixes and suffixes — adds or removes rig naming conventions such as DEF, ORG, MCH, or CTRL.
+- Cleaning names — standardizes bone naming and fixes separators so the rig remains readable and consistent.
+- Selecting bones by name — finds bones quickly across a large hierarchy using string matching.
+- Auto-coloring bones — assigns consistent colors for cleaner visual hierarchy and easier debugging.
+- General selection shortcuts — helps you grab the right bone groups without manually searching through the armature.
+
+This reduces repetitive cleanup work when a rig grows in size.
+
+![TGR Utilities](images/TGR_Utilities_Panel.png)
+
+## Node-based Rig UI generation (Under Development)
+
+The codebase includes a node editor system for building custom UI layouts. This is one of the more significant additions versus the older documentation and is implemented through the node tree and compilation modules.
+
+The node editor lets you build UI structures using nodes such as:
+
+- panel nodes
+- rows, columns, boxes, splits, and grids
+- value nodes and custom property nodes
+- operator nodes
+- bone collection nodes
+- labels and layout elements
+
+Once the layout is configured, the project can generate Python code that creates a matching UI. This is useful for building custom rig control panels that stay consistent with the rig structure.
+
+## Preferences
+
+The addon preferences expose the default naming values used across the rigging workflow:
+
+- Deformer Prefix
+- ORG Prefix
+- MCH Prefix
+- CTRL Prefix
+- Separator
+- Suffix Separator
+
+These defaults are helpful when you want a consistent naming convention for every armature created from TGR.
+
+## Typical rigging pipeline
+
+1. Create a TGR armature.
+2. Build the deform hierarchy and helper structure in Edit Mode.
+3. Use bone collections to organize the rig by responsibility.
+4. Create ORG or MCH setup where needed.
+5. Add control logic in Pose Mode with chains, switches, IK, and constraints.
+6. Generate or refine a custom UI for user-facing controls.
+7. Use naming and selection utilities to keep the rig clean and readable.
+
+## Discord
+
+If you have questions, want to report bugs, or discuss rigging workflows, join the Discord server: [https://discord.gg/h42TdeN5Rb](https://discord.gg/h42TdeN5Rb)
+
+## Notes
+
+This README reflects the current addon structure and may differ from older legacy documentation. Some older operator names and workflow descriptions from earlier TGR versions are no longer the main representation of the project.
+
+For the latest behavior, it is best to inspect the current source modules in the addon itself, especially the operators, preferences, and UI panels.
+
