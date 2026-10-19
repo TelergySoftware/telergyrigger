@@ -27,7 +27,8 @@ from .tgr_pose_mode_operators import (TGR_OT_AddPivotController,
                                       TGR_OT_FKFromTweakChain,
                                       TGR_OT_IsolateBone,
                                       TGR_OT_UnbindORG,
-                                      TGR_OT_SampleTransforms,)
+                                      TGR_OT_SampleTransforms,
+                                      TGR_OT_Spline_IK_From_Bones,)
 # Add classes from tgr_ui_operators
 from .tgr_ui_operators import (
                                TGR_OT_CreateExecutable,
@@ -94,7 +95,7 @@ OPERATOR_CLASSES = [
     TGR_OT_IsolateBone,
     TGR_OT_UnbindORG,
     TGR_OT_SampleTransforms,
-
+    TGR_OT_Spline_IK_From_Bones,
     # UI Operators
     TGR_OT_CreateExecutable,
     TGR_OT_GenerateUI,

@@ -1342,3 +1342,106 @@ class TGR_OT_BindSwitch(bpy.types.Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
+
+
+class TGR_OT_Spline_IK_From_Bones(bpy.types.Operator):
+    """Create a spline IK from the selected bones"""
+
+    bl_idname = "tgr.spline_ik_from_bones"
+    bl_label = "Spline IK From Bones"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    spline_name: bpy.props.StringProperty(name="Spline Name",
+                                          default="SPLINE",
+                                          description="Name of the spline IK chain")
+    
+    control_count: bpy.props.IntProperty(name="Control Count",
+                                         default=3,
+                                         min=2,
+                                         description="Number of control bones to create")
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode and len(context.selected_pose_bones) > 1
+
+    def execute(self, context):
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        def_prefix = preferences.def_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
+
+        armature = context.active_object
+        tgr_props = armature.tgr_props
+
+        # Check if the selected bones are valid for the spline IK
+        for bone in context.selected_pose_bones:
+            if bone.name.startswith(def_prefix):
+                self.report({'ERROR'}, 'Cannot create spline IK from DEF bones')
+                return {'CANCELLED'}
+            if bone.name.startswith(mch_prefix + "SWITCH"):
+                self.report({'ERROR'}, 'Cannot create spline IK from SWITCH bones')
+                return {'CANCELLED'}
+            if bone.name.startswith(ctrl_prefix + "FK"):
+                self.report({'ERROR'}, 'Cannot create spline IK from FK bones')
+                return {'CANCELLED'}
+
+        selected_bones_names = [bone.name for bone in context.selected_pose_bones]
+        # Dictionary of cumulative length of the selected bones and joint positions of the selected bones
+        bone_data = {"cumulative_length": [], "joint_positions": [], "joint_tangents": []}
+        total_length = 0
+        for i, bone_name in enumerate(selected_bones_names):
+            bone = armature.pose.bones[bone_name]
+            bone_data["cumulative_length"].append(total_length)
+            bone_data["joint_positions"].append(bone.head)
+            total_length += armature.data.bones[bone_name].length
+            if i == 0:
+                joint_tangent = (bone.tail - bone.head).normalized()
+                bone_data["joint_tangents"].append(joint_tangent)
+            elif i == len(selected_bones_names) - 1:
+                bone_data["cumulative_length"].append(total_length)
+                bone_data["joint_positions"].append(bone.tail)
+                joint_tangent = (bone.tail - bone.head).normalized()
+                bone_data["joint_tangents"].append(joint_tangent)
+            else:
+                prev_bone = armature.pose.bones[selected_bones_names[i - 1]]
+                prev_tangent = (prev_bone.tail - prev_bone.head)
+                current_tangent = (bone.tail - bone.head)
+                joint_tangent = (prev_tangent + current_tangent) / (prev_tangent.length + current_tangent.length)
+                bone_data["joint_tangents"].append(joint_tangent.normalized())
+
+        # Bounding segments calculation
+        bounding_segments = []
+        control_tangents = []
+        for i in range(self.control_count):
+            target_spacing = 0
+            target_index = 0
+            control_tangent = bone_data["joint_tangents"][0]
+            if i == self.control_count - 1:
+                target_spacing = total_length
+                target_index = len(selected_bones_names) - 1
+            else:
+                target_spacing = total_length * i / (self.control_count - 1)
+                for j in range(len(bone_data["cumulative_length"]) - 1):
+                    if bone_data["cumulative_length"][j] <= target_spacing <= bone_data["cumulative_length"][j + 1]:
+                        target_index = j
+                        break
+                
+            local_fraction = (target_spacing - bone_data["cumulative_length"][target_index]) / (bone_data["cumulative_length"][target_index + 1] - bone_data["cumulative_length"][target_index])
+            bounding_segment = bone_data["joint_positions"][target_index] + (bone_data["joint_positions"][target_index + 1] - bone_data["joint_positions"][target_index]) * local_fraction
+            bounding_segments.append(bounding_segment)
+
+            # Use normalized linear interpolation of the tangents to get the control tangents
+            if target_index == 0:
+                control_tangent = bone_data["joint_tangents"][0]
+            elif target_index == len(bone_data["joint_tangents"]) - 1:
+                control_tangent = bone_data["joint_tangents"][-1]
+            else:
+                control_tangent = (1 - local_fraction) * bone_data["joint_tangents"][target_index] + local_fraction * bone_data["joint_tangents"][target_index + 1]
+            control_tangents.append(control_tangent)
+
+        return {'FINISHED'}
