@@ -2,6 +2,7 @@ import bpy
 import math
 from ..utils import move_bones_to_collection
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 
 def update_armature(context):
@@ -1443,5 +1444,170 @@ class TGR_OT_Spline_IK_From_Bones(bpy.types.Operator):
             else:
                 control_tangent = (1 - local_fraction) * bone_data["joint_tangents"][target_index] + local_fraction * bone_data["joint_tangents"][target_index + 1]
             control_tangents.append(control_tangent)
+
+        return {'FINISHED'}
+
+
+class TGR_OT_Armature_CT_From_Closest(bpy.types.Operator):
+    """Create an armature constraint using the weights of the closest surface to the selected bones"""
+    
+    bl_idname = "tgr.armature_ct_from_closest"
+    bl_label = "Copy Transforms From Closest Bone"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    sample_object: bpy.props.StringProperty(
+        name="Sample Object",
+        description="Name of the sample object to use for weight calculation",
+        default=""
+    )
+    
+    @classmethod
+    def poll(cls, context):
+        if not context.object:
+            return False
+        if not context.selected_pose_bones:
+            cls.poll_message_set("No bones selected")
+            return False
+        is_armature = context.active_object.type == 'ARMATURE'
+        is_pose_mode = context.active_object.mode == 'POSE'
+        return is_armature and is_pose_mode
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop_search(self, "sample_object", context.scene, "objects", text="Sample Object", icon='OBJECT_DATA')
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def _calculate_barycentric_coordinates(self, point, triangle):
+        v0 = triangle[1] - triangle[0]
+        v1 = triangle[2] - triangle[0]
+        v2 = point - triangle[0]
+
+        d00 = v0.dot(v0)
+        d01 = v0.dot(v1)
+        d11 = v1.dot(v1)
+        d20 = v2.dot(v0)
+        d21 = v2.dot(v1)
+
+        denom = d00 * d11 - d01 * d01
+        if denom == 0:
+            return None
+
+        v = (d11 * d20 - d01 * d21) / denom
+        w = (d00 * d21 - d01 * d20) / denom
+        u = 1.0 - v - w
+
+        u = max(0.0, u)
+        v = max(0.0, v)
+        w = max(0.0, w)
+        total = u + v + w
+
+        return (u / total, v / total, w / total) if total > 0.0 else (1/3, 1/3, 1/3)
+
+    def _get_vertex_weights(self, point, obj):
+        mesh = obj.data
+        mesh.calc_loop_triangles()
+
+        inverted_world_matrix = obj.matrix_world.inverted()
+        local_point = inverted_world_matrix @ point
+
+        verttices = [v.co for v in mesh.vertices]
+        triangle_indices = [tri.vertices for tri in mesh.loop_triangles]
+        bvh = BVHTree.FromPolygons(verttices, triangle_indices)
+
+        location, _, index, _ = bvh.find_nearest(local_point)
+        if location is None or index is None:
+            return {}
+
+        triangle = mesh.loop_triangles[index]
+        i0, i1, i2 = triangle.vertices
+        u, v, w = self._calculate_barycentric_coordinates(local_point, [verttices[i0], verttices[i1], verttices[i2]])
+
+        def get_vertex_weights(vertex_index):
+            return {
+                obj.vertex_groups[g.group].name: g.weight
+                for g in mesh.vertices[vertex_index].groups
+                if g.group < len(obj.vertex_groups)
+            }
+
+        w0 = get_vertex_weights(i0)
+        w1 = get_vertex_weights(i1)
+        w2 = get_vertex_weights(i2)
+
+        all_groups = set(w0) | set(w1) | set(w2)
+        interpolated = {}
+
+        for group in all_groups:
+            weight = (
+                u * w0.get(group, 0.0) +
+                v * w1.get(group, 0.0) +
+                w * w2.get(group, 0.0)
+            )
+            if weight > 0.001:
+                interpolated[group] = weight
+
+        total_weight = sum(interpolated.values())
+        if total_weight > 0:
+            interpolated = {k: v / total_weight for k, v in interpolated.items()}
+
+        return interpolated
+
+    
+    def execute(self, context):
+        armature = context.active_object
+        preferences = context.preferences.addons["bl_ext.user_default.telergyrigger"].preferences
+        mch_prefix = preferences.mch_prefix + preferences.separator
+        ctrl_prefix = preferences.ctrl_prefix + preferences.separator
+        def_prefix = preferences.def_prefix + preferences.separator
+        org_prefix = preferences.org_prefix + preferences.separator
+
+        selected_bones = [bone for bone in context.selected_pose_bones]
+
+        if not self.sample_object:
+            self.report({'ERROR'}, "No sample object provided")
+            return {'CANCELLED'}
+
+        sample_object = bpy.data.objects.get(self.sample_object)
+        if not sample_object or sample_object.type != 'MESH':
+            self.report({'ERROR'}, "Sample object must be a mesh")
+            return {'CANCELLED'}
+
+        # No DEF bones are allowed
+        for bone in selected_bones:
+            if bone.name.startswith(def_prefix):
+                self.report({'ERROR'}, f"Bone {bone.name} is a DEF bone and cannot be used")
+                return {'CANCELLED'}
+
+        # Edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.tgr.create_intermediate_bone()
+        for bone in context.selected_editable_bones:
+            if not bone.name.startswith(mch_prefix):
+                bone.select_head = bone.select_tail = False
+                continue
+            bone.use_connect = False
+            bone.parent = None
+
+        update_armature(context)
+
+        # Pose mode
+        bpy.ops.object.mode_set(mode='POSE')
+        for bone in context.selected_pose_bones:
+            constraint = bone.constraints.new('ARMATURE')
+            constraint.name = "TGR Armature CT From Closest"
+            for group, weight in self._get_vertex_weights(bone.head, sample_object).items():
+                if group not in armature.pose.bones:
+                    continue
+                constraint.targets.new()
+                constraint.targets[-1].target = armature
+                if group.replace(def_prefix, org_prefix) in armature.pose.bones:
+                    constraint.targets[-1].subtarget = group.replace(def_prefix, org_prefix)
+                elif group.replace(def_prefix, ctrl_prefix) in armature.pose.bones:
+                    constraint.targets[-1].subtarget = group.replace(def_prefix, ctrl_prefix)
+                elif group.replace(def_prefix, mch_prefix) in armature.pose.bones:
+                    constraint.targets[-1].subtarget = group.replace(def_prefix, mch_prefix)
+                constraint.targets[-1].weight = weight
 
         return {'FINISHED'}

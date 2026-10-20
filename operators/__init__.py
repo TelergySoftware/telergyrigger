@@ -16,6 +16,7 @@ from .tgr_edit_mode_operators import (TGR_OT_AddDeformBone,
 from .tgr_object_mode_operators import (TGR_OT_AddTGRArmature,)
 # Add classes from tgr_pose_mode_operators
 from .tgr_pose_mode_operators import (TGR_OT_AddPivotController,
+                                      TGR_OT_Armature_CT_From_Closest,
                                       TGR_OT_BindORG,
                                       TGR_OT_BindSwitch,
                                       TGR_OT_CopyTransformsToChain,
@@ -83,6 +84,7 @@ OPERATOR_CLASSES = [
 
     # Pose Mode Operators
     TGR_OT_AddPivotController,
+    TGR_OT_Armature_CT_From_Closest,
     TGR_OT_BindORG,
     TGR_OT_BindSwitch,
     TGR_OT_CopyTransformsToChain,

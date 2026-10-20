@@ -102,3 +102,6 @@ class TGR_PT_View3D_Panel_PoseMode_Constraints(TGR_PT_BASE):
         
         row = layout.row()
         row.operator("tgr.add_pivot_controller", icon='PIVOT_CURSOR')
+
+        row = layout.row()
+        row.operator("tgr.armature_ct_from_closest", icon='ARMATURE_DATA', text="Transforms From Closest Surface")
