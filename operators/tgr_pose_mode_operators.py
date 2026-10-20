@@ -1585,7 +1585,7 @@ class TGR_OT_Armature_CT_From_Closest(bpy.types.Operator):
         bpy.ops.tgr.create_intermediate_bone()
         for bone in context.selected_editable_bones:
             if not bone.name.startswith(mch_prefix):
-                bone.select_head = bone.select_tail = False
+                bone.select_head = bone.select_tail = bone.select = False
                 continue
             bone.use_connect = False
             bone.parent = None
