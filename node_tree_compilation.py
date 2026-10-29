@@ -58,6 +58,11 @@ class NodeTreeCompiler:
         self._new_line("from bpy.types import Panel, PropertyGroup")
         self._new_line("")
         self._new_line("")
+        self._new_line("# =========================================================================")
+        self._new_line("# Global Variables")
+        self._new_line("# =========================================================================")
+        self._new_line(f"ARMATURE_NAME = '{bpy.context.active_object.name}'")
+        self._new_line(f"ARMATURE = bpy.data.objects[ARMATURE_NAME]")
 
     def _set_classes_to_register(self):
         """Set the classes to register in the generated script"""
@@ -153,9 +158,9 @@ class NodeTreeCompiler:
                 vis_condition = ""
                 solo_condition = ""
                 if condition_node.use_visibility:
-                    vis_condition = f"armature.collections_all['{condition_node.collection_name}'].is_visible"
+                    vis_condition = f"ARMATURE.data.collections_all['{condition_node.collection_name}'].is_visible"
                 if condition_node.use_solo:
-                    solo_condition = f"armature.collections_all['{condition_node.collection_name}'].is_solo"
+                    solo_condition = f"ARMATURE.data.collections_all['{condition_node.collection_name}'].is_solo"
 
                 if vis_condition and not solo_condition:
                     condition = vis_condition
@@ -346,10 +351,10 @@ class NodeTreeCompiler:
     def _compile_bone_collection(self, bone_collection_node: Node, parent_layout, visibility=True, solo=False):
         """Compile bone collection nodes into Python code"""
         if visibility:
-            self._new_line(f"{parent_layout}.prop(armature.collections_all['{bone_collection_node.collection_name}'], 'is_visible', text='{bone_collection_node.collection_name}', toggle=True)")
+            self._new_line(f"{parent_layout}.prop(ARMATURE.data.collections_all['{bone_collection_node.collection_name}'], 'is_visible', text='{bone_collection_node.collection_name}', toggle=True)")
         if solo:
-            self._new_line(f"{parent_layout}.prop(armature.collections_all['{bone_collection_node.collection_name}'],"
-                           f" 'is_solo', text='', toggle=True, icon='SOLO_ON' if armature.collections_all['{bone_collection_node.collection_name}'].is_solo else 'SOLO_OFF')")
+            self._new_line(f"{parent_layout}.prop(ARMATURE.data.collections_all['{bone_collection_node.collection_name}'],"
+                           f" 'is_solo', text='', toggle=True, icon='SOLO_ON' if ARMATURE.data.collections_all['{bone_collection_node.collection_name}'].is_solo else 'SOLO_OFF')")
 
     def _compile_separator(self, separator_node: Node, parent_layout):
         """Compile separator nodes into Python code"""
@@ -450,7 +455,6 @@ class NodeTreeCompiler:
         self._new_line("def draw(self, context):")
         self.indent_level += 1
         self._new_line("layout = self.layout")
-        self._new_line(f"armature = bpy.data.objects['{self.armature.name}'].data")
         self._new_line("")
 
         for input_socket in panel.inputs:
@@ -500,7 +504,6 @@ class NodeTreeCompiler:
                 self._new_line(f"bpy.types.PoseBone.{node.name.replace(' ', '_').lower()} = bpy.props.PointerProperty(type=TGR_PG_{node.name.replace(' ', '_')})")
         self.indent_level -= 1
         self._new_line("")
-        self._new_line("")
 
     def _unregister_classes(self):
         """Generate the unregister function for the generated classes"""
@@ -522,6 +525,19 @@ class NodeTreeCompiler:
         self._new_line("bpy.utils.unregister_class(cls)")
         self.indent_level -= 2
         self._new_line("")
+
+    def _relink_drivers(self):
+        """Generate the helper function to relink the drivers when running the UI script"""
+
+        self._new_line("def relink_drivers():")
+        self.indent_level += 1
+        self._new_line("")
+        self._new_line("if ARMATURE.animation_data:")
+        self.indent_level += 1
+        self._new_line("for driver in ARMATURE.animation_data.drivers:")
+        self.indent_level += 1
+        self._new_line("driver.driver.expression = driver.driver.expression")
+        self.indent_level -= 3
         self._new_line("")
 
     def _main(self):
@@ -529,6 +545,7 @@ class NodeTreeCompiler:
         self._new_line("if __name__ == '__main__':")
         self.indent_level += 1
         self._new_line("register()")
+        self._new_line("relink_drivers()")
         self.indent_level -= 1
 
     def compile(self):
@@ -552,6 +569,10 @@ class NodeTreeCompiler:
         self._new_line("# =========================================================================")
         self._register_classes()
         self._unregister_classes()
+        self._new_line("# =========================================================================")
+        self._new_line("# Helper Functions and Main")
+        self._new_line("# =========================================================================")
+        self._relink_drivers()
         self._main()
         return self.generated_code
 
