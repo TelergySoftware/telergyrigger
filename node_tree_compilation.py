@@ -31,11 +31,11 @@ class NodeTreeCompiler:
         except AttributeError:
             self.panel_nodes = []
         try:
-            self.operator_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_Operator"]
+            self.operator_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_LY_ND_Operator"]
         except AttributeError:
             self.operator_nodes = []
         try:
-            self.property_group_nodes = [node for node in self.data_tree.nodes if node.bl_idname == "TGR_LY_ND_PropertyGroup"]
+            self.property_group_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_DT_ND_PropertyGroup"]
         except AttributeError:
             self.property_group_nodes = []
         self.indent_level = 0
@@ -88,6 +88,10 @@ class NodeTreeCompiler:
                     return f"bpy.data.objects['{value_node.target.name}'].pose.bones['{value_node.subtarget}']['{value_node.property_name}']"
             case 'TGR_LY_ND_Prop':
                 pass
+            case 'TGR_ND_Float':
+                return f"{value_node.default_value}"
+            case 'TGR_ND_Integer':
+                return f"{value_node.default_value}"
             case _:
                 # TODO: Show the connection is not valid
                 pass
@@ -188,8 +192,115 @@ class NodeTreeCompiler:
                     case 'TGR_SKT_Layout':
                         self._compile_layout_nodes(false_node, parent_layout, level)
 
+    def _compile_float_data_node(self, float_node: Node) -> float:
+        """Compile float data nodes into Python code"""
+        if float_node.is_data:
+            name = float_node.name.replace(' ', '_').lower()
+            self._new_line(f"{name}: bpy.props.FloatProperty(name='{float_node.name}', default={float_node.default_value}, min={float_node.min_value}, max={float_node.max_value}, description='{float_node.description}')")
+        
+        return float_node.default_value
+
+    def _compile_integer_data_node(self, integer_node: Node) -> int:
+        """Compile integer data nodes into Python code"""
+        if integer_node.is_data:
+            name = integer_node.name.replace(' ', '_').lower()
+            self._new_line(f"{name}: bpy.props.IntProperty(name='{integer_node.name}', default={integer_node.default_value}, min={integer_node.min_value}, max={integer_node.max_value}, description='{integer_node.description}')")
+        
+        return integer_node.default_value
+
+    def _compile_string_data_node(self, string_node: Node) -> str:
+        """Compile string data nodes into Python code"""
+        name = string_node.name.replace(' ', '_').lower()
+        self._new_line(f"{name}: bpy.props.StringProperty(name='{string_node.name}', default='{string_node.default_value}', description='{string_node.description}')")
+
+        return string_node.default_value
+
+    def _compile_bool_data_node(self, bool_node: Node) -> bool:
+        """Compile boolean data nodes into Python code"""
+        if bool_node.is_data:
+            name = bool_node.name.replace(' ', '_').lower()
+            self._new_line(f"{name}: bpy.props.BoolProperty(name='{bool_node.name}', default={bool_node.default_value}, description='{bool_node.description}')")
+        
+        return bool_node.default_value
+
+    def _compile_vector_data_node(self, vector_node: Node) -> tuple[float]:
+        """Compile vector data nodes into Python code"""
+        if vector_node.is_data:
+            name = vector_node.name.replace(' ', '_').lower()
+            self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{vector_node.name}', default={vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2]}, min={vector_node.min_value}, max={vector_node.max_value}, description='{vector_node.description}')")
+        
+        return vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2] 
+
+    def _compile_color_data_node(self, color_node: Node) -> tuple[float]:
+        """Compile vector data nodes into Python code"""
+        if color_node.is_data:
+            name = color_node.name.replace(' ', '_').lower()
+            self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{color_node.name}', default={color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]}, description='{color_node.description}')")
+        
+        return color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]
+
+    def _compile_enum_item_data_node(self, item_node: Node) -> tuple[str]:
+        """Compile enum items into tuple of strings"""
+        return item_node.name.upper(), item_node.name, item_node.description
+
+    def _compile_enum_data_node(self, enum_node: Node):
+        """Compile enum nodes into Python code"""
+
+        if len(enum_node.inputs) <= 2 and not enum_node.inputs[0].is_linked:
+            return
+        
+        name = enum_node.name.replace(' ', '_').lower()
+        items = []
+        for item in enum_node.inputs:
+            if item.is_linked:
+                item_node = item.links[0].from_node
+                items.append(self._compile_enum_item_data_node(item_node))
+
+        self._new_line(f"{name}: bpy.props.EnumProperty(name='{enum_node.name}', items={items}, default='{items[0][0]}')")
+
+    def _compile_object_data_node(self, object_node: Node):
+        """Compile object nodes into Python code"""
+
+        name = object_node.name.replace(' ', '_').lower()
+        self._new_line(f"{name} = bpy.props.PointerProperty(name='{object_node.name}')")
+
+    def _compile_property_group_nodes(self, property_group_node: Node):
+        """Compile property group nodes into Python code"""
+        match property_group_node.bl_idname:
+            case 'TGR_ND_Float':
+                self._compile_float_data_node(property_group_node)
+            case 'TGR_ND_Integer':
+                self._compile_integer_data_node(property_group_node)
+            case 'TGR_ND_String':
+                self._compile_string_data_node(property_group_node)
+            case 'TGR_ND_Boolean':
+                self._compile_bool_data_node(property_group_node)
+            case 'TGR_ND_Vector':
+                self._compile_vector_data_node(property_group_node)
+            case 'TGR_ND_Color':
+                self._compile_color_data_node(property_group_node)
+            case 'TGR_ND_Enum':
+                self._compile_enum_data_node(property_group_node)
+            case 'TGR_ND_Object':
+                self._compile_object_data_node(property_group_node)
+
     def _compile_property_groups(self):
         """Compile property group nodes into Python code"""
+        for node in self.property_group_nodes:
+            self._new_line(f"class TGR_PG_{node.name.replace(' ', '_')}(PropertyGroup):")
+            self.indent_level += 1
+            if len(node.inputs) <= 2 and not (node.inputs[0].is_linked or node.inputs[1].is_linked):
+                self._new_line(f"# No properties defined for this property group")
+                self._new_line("pass")
+                self.indent_level -= 1
+                continue
+            for input_socket in node.inputs:
+                if input_socket.is_linked:
+                    input_node = input_socket.links[0].from_node
+                    self._compile_property_group_nodes(input_node)
+            self.indent_level -= 1
+            self._new_line("")
+            self._new_line("")
 
     def _compile_operators(self):
         """Compile operator nodes into Python code"""
@@ -219,6 +330,8 @@ class NodeTreeCompiler:
                 self._compile_split(layout_node, parent_layout=parent_layout, level=level)
             case "TGR_LY_ND_Grid":
                 self._compile_grid(layout_node, parent_layout=parent_layout, level=level)
+            case "TGR_LY_ND_Prop":
+                self._compile_pg_property(layout_node, parent_layout=parent_layout)
 
     def _compile_row(self, row_node: Node, parent_layout, level=0):
         """Compile row nodes into Python code"""
@@ -247,7 +360,7 @@ class NodeTreeCompiler:
         icon_code = ""
         if label_node.use_icon:
             icon_code = f", icon='{label_node.icon}'"
-        if label_node.inputs[0].is_linked and label_node.inputs[0].links[0].from_node.bl_idname == "TGR_DT_ND_String":
+        if label_node.inputs[0].is_linked and label_node.inputs[0].links[0].from_node.bl_idname == "TGR_ND_String":
             input_node = label_node.inputs[0].links[0].from_node
             self._new_line(f"{parent_layout}.label(text='{input_node.text}'{icon_code})")
         else:
@@ -304,6 +417,34 @@ class NodeTreeCompiler:
         self._compile_layout_nodes(left_node, parent_layout=f"split_{level}_left", level=level)
         self._compile_layout_nodes(right_node, parent_layout=f"split_{level}_right", level=level)
 
+    def _compile_pg_property(self, prop_node: Node, parent_layout):
+        """Compile PG Property nodes into Python code"""
+        real_prop_node = prop_node.current_node
+        prop_name = real_prop_node.name.replace(' ', '_').lower()
+        prop_group = real_prop_node.outputs[0].links[0].to_node
+        group_name = prop_group.name.replace(' ', '_').lower()
+        target_name = prop_group.target.name
+        bone_name = prop_group.bone
+        line = ""
+
+        if not prop_group.bone:
+            line = f"{parent_layout}.prop(bpy.data.objects['{target_name}'].{group_name}, '{prop_name}', text='{real_prop_node.name}'"
+        else:
+            line = f"{parent_layout}.prop(bpy.data.objects['{target_name}'].pose.bones['{bone_name}'].{group_name}, '{prop_name}', text='{real_prop_node.name}'"
+
+        for key, value in prop_node.prop_values.items():
+            if key == "name":
+                continue
+            line += f", {key}="
+            if type(value) != str:
+                line += f"{value}"
+            else:
+                line += f"'{value}'"
+
+        line += ")"
+
+        self._new_line(line)
+
     def _compile_layout(self, panel: Node):
         """Compile layout nodes into Python code"""
         self._new_line("def draw(self, context):")
@@ -346,7 +487,18 @@ class NodeTreeCompiler:
         self._new_line("for cls in CLASSES:")
         self.indent_level += 1
         self._new_line("bpy.utils.register_class(cls)")
-        self.indent_level -= 2
+        self.indent_level -= 1
+        self._new_line("")
+        for node in self.property_group_nodes:
+            if not node.target:
+                continue
+            if not node.bone:
+                self._new_line(f"# Add property group to the {node.target.name} object")
+                self._new_line(f"bpy.types.Object.{node.name.replace(' ', '_').lower()} = bpy.props.PointerProperty(type=TGR_PG_{node.name.replace(' ', '_')})")
+            else:
+                self._new_line(f"# Add property group to the {node.bone} bone of the {node.target.name} armature")
+                self._new_line(f"bpy.types.PoseBone.{node.name.replace(' ', '_').lower()} = bpy.props.PointerProperty(type=TGR_PG_{node.name.replace(' ', '_')})")
+        self.indent_level -= 1
         self._new_line("")
         self._new_line("")
 
@@ -355,6 +507,16 @@ class NodeTreeCompiler:
 
         self._new_line("def unregister():")
         self.indent_level += 1
+        for node in self.property_group_nodes:
+            if not node.target:
+                continue
+            if not node.bone:
+                self._new_line(f"# Remove property group from the {node.target.name} object")
+                self._new_line(f"del bpy.types.Object.{node.name.replace(' ', '_').lower()}")
+            else:
+                self._new_line(f"# Remove property group from the {node.bone} bone of the {node.target.name} armature")
+                self._new_line(f"del bpy.types.PoseBone.{node.name.replace(' ', '_').lower()}")
+        self._new_line("")
         self._new_line("for cls in CLASSES:")
         self.indent_level += 1
         self._new_line("bpy.utils.unregister_class(cls)")
@@ -372,9 +534,22 @@ class NodeTreeCompiler:
     def compile(self):
         """Compile the node trees into a Python script"""
         self._set_boilerplate()
+        self._new_line("# =========================================================================")
+        self._new_line("# Property Groups")
+        self._new_line("# =========================================================================")
         self._compile_property_groups()
+        self._new_line("# =========================================================================")
+        self._new_line("# Operators")
+        self._new_line("# =========================================================================")
+        self._compile_operators()
+        self._new_line("# =========================================================================")
+        self._new_line("# Panels")
+        self._new_line("# =========================================================================")
         self._compile_panels()
         self._set_classes_to_register()
+        self._new_line("# =========================================================================")
+        self._new_line("# Register and Unregister")
+        self._new_line("# =========================================================================")
         self._register_classes()
         self._unregister_classes()
         self._main()

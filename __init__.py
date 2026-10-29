@@ -9,14 +9,7 @@ from .properties import TGR_Properties, TGR_Collection_Properties
 from .tgr_preferences import TGR_Preferences
 
 
-# Node Editor categories
-class TGR_DT_NodeCategory(NodeCategory):
-    @classmethod
-    def poll(cls, context):
-        return context.space_data.tree_type == 'TGR_NT_Data'
-
-
-class TGR_UI_NodeCategory(NodeCategory):
+class TGR_NodeCategory(NodeCategory):
     @classmethod
     def poll(cls, context):
         return context.space_data.tree_type == 'TGR_NT_UI'
@@ -25,26 +18,8 @@ def tgr_node_separator(self, layout, context):
     layout.separator()
 
 node_categories = [
-    TGR_DT_NodeCategory("DATA_NODES", "Data", items=[
-        NodeItem("TGR_DT_ND_Float"),
-        NodeItem("TGR_DT_ND_Integer"),
-        NodeItem("TGR_DT_ND_Boolean"),
-        NodeItem("TGR_DT_ND_String"),
-        NodeItem("TGR_DT_ND_Vector"),
-        NodeItem("TGR_DT_ND_Color"),
-        NodeItem("TGR_DT_ND_Object"),
-        NodeItem("TGR_DT_ND_Enum"),
-        NodeItem("TGR_DT_ND_EnumItem"),
-        # Spacer
-        NodeItemCustom(draw=tgr_node_separator),
-        NodeItem("TGR_DT_ND_PropertyGroup"),
-    ]),
     
-    TGR_DT_NodeCategory("EXECUTABLE_NODES", "Executable", items=[
-        NodeItem("TGR_OP_ND_Executable"),
-    ]),
-    
-    TGR_UI_NodeCategory("UI_NODES", "Layout", items=[
+    TGR_NodeCategory("LAYOUT", "Layout", items=[
         NodeItem("TGR_LY_ND_Panel"),
         NodeItemCustom(draw=tgr_node_separator),
         NodeItem("TGR_LY_ND_Row"),
@@ -57,42 +32,43 @@ node_categories = [
         NodeItem("TGR_LY_ND_Separator"),
     ]),
 
-    TGR_UI_NodeCategory("UI_VALUES", "Values", items=[
+    TGR_NodeCategory("DATA", "Data", items=[
+        NodeItem("TGR_DT_ND_PropertyGroup"),
         NodeItem("TGR_LY_ND_Prop"),
-        NodeItem("TGR_LY_ND_CustomProp"),
-        NodeItem("TGR_LY_ND_Value"),
-    ]),
-    
-    TGR_UI_NodeCategory("UI_OPERATOR", "Operator", items=[
-        NodeItem("TGR_LY_ND_Operator"),
-    ]),
-    
-    TGR_UI_NodeCategory("UI_ELEMENTS", "Elements", items=[
-        NodeItem("TGR_LY_ND_Prop"),
-        NodeItem("TGR_LY_ND_CustomProp"),
         NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_ND_Float"),
+        NodeItem("TGR_ND_Integer"),
+        NodeItem("TGR_ND_String"),
+        NodeItem("TGR_ND_Boolean"),
+        NodeItem("TGR_ND_Vector"),
+        NodeItem("TGR_ND_Color"),
+        NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_ND_Enum"),
+        NodeItem("TGR_ND_EnumItem"),
+        NodeItemCustom(draw=tgr_node_separator),
+        NodeItem("TGR_ND_Object"),
+        NodeItem("TGR_LY_ND_CustomProp")
+    ]),
+    
+    TGR_NodeCategory("ELEMENTS", "Elements", items=[
         NodeItem("TGR_LY_ND_BoneCollection"),
         NodeItem("TGR_LY_ND_Label"),
     ]),
 
-    TGR_UI_NodeCategory("UI_FLOW_CONTROL", "Flow Control", items=[
+    TGR_NodeCategory("FLOW_CONTROL", "Flow Control", items=[
         NodeItem("TGR_FC_ND_If"),
         NodeItem("TGR_FC_ND_Compare"),
     ]),
-
 ]    
-
 
 # Keymaps reference
 keymaps = []
-
 
 # Object Mode Add menu appendix
 def object_add_draw_menu(self, context):
     layout = self.layout
     layout.separator()
     layout.operator("tgr.add_tgr_armature", text="TGR Armature", icon="OUTLINER_OB_ARMATURE")
-
 
 # Node Tree Header draw appendix
 def header_draw_menu(self, context):
@@ -176,8 +152,6 @@ def register():
     # Append the Generate UI button to the node editor header
     # bpy.types.NODE_HT_header.append(header_draw_menu)
 
-
-
 def unregister():
     # Unregister node categories
     nodeitems_utils.unregister_node_categories("TGR_NODE_CATEGORIES")
@@ -199,7 +173,6 @@ def unregister():
     operators.unregister()
     properties.unregister()
     bpy.utils.unregister_class(TGR_Preferences)
-
 
 if __name__ == "__main__":
     register()

@@ -2,8 +2,11 @@ import bpy
 from bpy.types import Node
 
 from ...node_tree_compilation import run_tgr_ui_generator, BLENDER_ICONS
-from .tgr_node_tree import TGR_NT_Data, TGR_NT_UI
+from .tgr_node_tree import TGR_NT_UI
 
+
+def compile_rig_ui(self, context):
+    run_tgr_ui_generator()
 
 # ===========================================================
 # DATA TREE NODES
@@ -15,122 +18,143 @@ class BaseDataNode(Node):
     overridable: bpy.props.BoolProperty(name="Overridable", default=False, description="Whether this property can be overridden")
 
 
-class TGR_DT_ND_Float(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Float"
+class TGR_ND_Float(BaseDataNode):
+    bl_idname = "TGR_ND_Float"
     bl_label = "Float"
     bl_icon = 'EVENT_F'
-    
-    default_value: bpy.props.FloatProperty(name="Value", default=0.0, description="Default value for the float output")
-    min_value: bpy.props.FloatProperty(name="Min Value", default=0.0, description="Minimum value for the float output")
-    max_value: bpy.props.FloatProperty(name="Max Value", default=1.0, description="Maximum value for the float output")
+
+    is_data: bpy.props.BoolProperty(name="Is Group Data", default=False, description="Whether this node is a data node", update=compile_rig_ui)
+    default_value: bpy.props.FloatProperty(name="Value", default=0.0, description="Default value for the float output", update=compile_rig_ui)
+    min_value: bpy.props.FloatProperty(name="Min Value", default=0.0, description="Minimum value for the float output", update=compile_rig_ui)
+    max_value: bpy.props.FloatProperty(name="Max Value", default=1.0, description="Maximum value for the float output", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('NodeSocketFloat', "Float")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
     
     def draw_buttons(self, context, layout):
-        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "is_data", text="Is Group Data", toggle=True)
+        if self.is_data:
+            layout.prop(self, "name", text="", placeholder="Name")
         layout.prop(self, "default_value", text="Value")
-        layout.prop(self, "min_value", text="Min")
-        layout.prop(self, "max_value", text="Max")
+        if self.is_data:
+            layout.prop(self, "min_value", text="Min")
+            layout.prop(self, "max_value", text="Max")
 
 
-class TGR_DT_ND_Integer(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Integer"
+class TGR_ND_Integer(BaseDataNode):
+    bl_idname = "TGR_ND_Integer"
     bl_label = "Integer"
     bl_icon = 'EVENT_I'
-    
-    default_value: bpy.props.IntProperty(name="Value", default=0, description="Default value for the integer output")
-    min_value: bpy.props.IntProperty(name="Min Value", default=0, description="Minimum value for the integer output")
-    max_value: bpy.props.IntProperty(name="Max Value", default=100, description="Maximum value for the integer output")
+
+    is_data: bpy.props.BoolProperty(name="Is Group Data", default=False, description="Whether this node is a data node", update=compile_rig_ui)
+    default_value: bpy.props.IntProperty(name="Value", default=0, description="Default value for the integer output", update=compile_rig_ui)
+    min_value: bpy.props.IntProperty(name="Min Value", default=0, description="Minimum value for the integer output", update=compile_rig_ui)
+    max_value: bpy.props.IntProperty(name="Max Value", default=100, description="Maximum value for the integer output", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('NodeSocketInt', "Integer")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
     def draw_buttons(self, context, layout):
-        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "is_data", text="Is Group Data", toggle=True)
+        if self.is_data:
+            layout.prop(self, "name", text="", placeholder="Name")
         layout.prop(self, "default_value", text="Value")
-        layout.prop(self, "min_value", text="Min")
-        layout.prop(self, "max_value", text="Max")
+        if self.is_data:
+            layout.prop(self, "min_value", text="Min")
+            layout.prop(self, "max_value", text="Max")
 
 
-class TGR_DT_ND_String(BaseDataNode):
-    bl_idname = "TGR_DT_ND_String"
+class TGR_ND_String(BaseDataNode):
+    bl_idname = "TGR_ND_String"
     bl_label = "String"
     bl_icon = 'EVENT_S'
     
-    default_value: bpy.props.StringProperty(name="Value", default="", description="Default value for the string output")
+    is_data: bpy.props.BoolProperty(name="Is Group Data", default=False, description="Whether this node is a data node", update=compile_rig_ui)
+    default_value: bpy.props.StringProperty(name="Value", default="", description="Default value for the string output", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('NodeSocketString', "String")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
     
     def draw_buttons(self, context, layout):
-        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "is_data", text="Is Group Data", toggle=True)
+        if self.is_data:
+            layout.prop(self, "name", text="", placeholder="Name")
         layout.prop(self, "default_value", text="", placeholder="String Value")
 
 
-class TGR_DT_ND_Boolean(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Boolean"
+class TGR_ND_Boolean(BaseDataNode):
+    bl_idname = "TGR_ND_Boolean"
     bl_label = "Boolean"
     bl_icon = 'EVENT_B'
-    
-    default_value: bpy.props.BoolProperty(name="Value", default=False, description="Default value for the boolean output")
+
+    is_data: bpy.props.BoolProperty(name="Is Group Data", default=False, description="Whether this node is a data node", update=compile_rig_ui)
+    default_value: bpy.props.BoolProperty(name="Value", default=False, description="Default value for the boolean output", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('NodeSocketBool', "Boolean")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
         
     def draw_buttons(self, context, layout):
-        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "is_data", text="Is Group Data", toggle=True)
+        if self.is_data:
+            layout.prop(self, "name", text="", placeholder="Name")
         layout.prop(self, "default_value", text="Value")
 
 
-class TGR_DT_ND_Vector(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Vector"
+class TGR_ND_Vector(BaseDataNode):
+    bl_idname = "TGR_ND_Vector"
     bl_label = "Vector"
     bl_icon = 'EVENT_V'
-    
-    default_value: bpy.props.FloatVectorProperty(name="Value", default=(0.0, 0.0, 0.0), description="Default value for the vector output")
-    min_value: bpy.props.FloatVectorProperty(name="Min Value", default=(0.0, 0.0, 0.0), description="Minimum value for the vector output")
-    max_value: bpy.props.FloatVectorProperty(name="Max Value", default=(1.0, 1.0, 1.0), description="Maximum value for the vector output")
+
+    is_data: bpy.props.BoolProperty(name="Is Group Data", default=False, description="Whether this node is a data node", update=compile_rig_ui)
+    default_value: bpy.props.FloatVectorProperty(name="Value", default=(0.0, 0.0, 0.0), description="Default value for the vector output", update=compile_rig_ui)
+    min_value: bpy.props.FloatProperty(name="Min Value", default=0.0, description="Minimum value for the vector output", update=compile_rig_ui)
+    max_value: bpy.props.FloatProperty(name="Max Value", default=1.0, description="Maximum value for the vector output", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('NodeSocketVector', "Vector")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
         
     def draw_buttons(self, context, layout):
-        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "is_data", text="Is Group Data", toggle=True)
+        if self.is_data:
+            layout.prop(self, "name", text="", placeholder="Name")
         col = layout.column(align=True)
         col.prop(self, "default_value")
-        col.prop(self, "min_value")
-        col.prop(self, "max_value")
+        if self.is_data:
+            col.separator()
+            col.prop(self, "min_value")
+            col.prop(self, "max_value")
 
 
-class TGR_DT_ND_Color(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Color"
+class TGR_ND_Color(BaseDataNode):
+    bl_idname = "TGR_ND_Color"
     bl_label = "Color"
     bl_icon = 'IMAGE_RGB_ALPHA'
-    
-    default_value: bpy.props.FloatVectorProperty(name="Value", subtype='COLOR', default=(1.0, 1.0, 1.0), description="Default value for the color output")
+
+    is_data: bpy.props.BoolProperty(name="Is Group Data", default=False, description="Whether this node is a data node", update=compile_rig_ui)
+    default_value: bpy.props.FloatVectorProperty(name="Value", subtype='COLOR', default=(1.0, 1.0, 1.0), description="Default value for the color output", update=compile_rig_ui)
     
     def init(self, context):
         self.outputs.new('NodeSocketColor', "Color")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
         
     def draw_buttons(self, context, layout):
-        layout.prop(self, "name", text="", placeholder="Name")
+        layout.prop(self, "is_data", text="Is Group Data", toggle=True)
+        if self.is_data:
+            layout.prop(self, "name", text="", placeholder="Name")
         layout.prop(self, "default_value", text="")
         
 
-class TGR_DT_ND_Enum(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Enum"
+class TGR_ND_Enum(BaseDataNode):
+    bl_idname = "TGR_ND_Enum"
     bl_label = "Enum"
     bl_icon = 'LINENUMBERS_OFF'
     
-    
     def init(self, context):
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
         self.inputs.new('TGR_SKT_EnumItem', "Item 001")
         self.outputs.new('TGR_SKT_Enum', "Enum")
     
@@ -149,8 +173,8 @@ class TGR_DT_ND_Enum(BaseDataNode):
         layout.prop(self, "name", text="", placeholder="Name")
 
 
-class TGR_DT_ND_EnumItem(BaseDataNode):
-    bl_idname = "TGR_DT_ND_EnumItem"
+class TGR_ND_EnumItem(BaseDataNode):
+    bl_idname = "TGR_ND_EnumItem"
     bl_label = "Enum Item"
     bl_icon = 'LINENUMBERS_ON'
         
@@ -162,8 +186,8 @@ class TGR_DT_ND_EnumItem(BaseDataNode):
         layout.prop(self, "description", text="", placeholder="Description")
 
 
-class TGR_DT_ND_Object(BaseDataNode):
-    bl_idname = "TGR_DT_ND_Object"
+class TGR_ND_Object(BaseDataNode):
+    bl_idname = "TGR_ND_Object"
     bl_label = "Object"
     bl_icon = 'OBJECT_DATAMODE'
     
@@ -172,7 +196,7 @@ class TGR_DT_ND_Object(BaseDataNode):
     
     def init(self, context):
         self.outputs.new('NodeSocketObject', "Object")
-        self.inputs.new('TGR_SKT_Executable', "Update")
+        # self.inputs.new('TGR_SKT_Executable', "Update")
     
     def draw_buttons(self, context, layout):
         layout.prop(self, "name", text="", placeholder="Name")
@@ -186,9 +210,9 @@ class TGR_DT_ND_PropertyGroup(Node):
     bl_label = "Property Group"
     bl_icon = 'GROUP'
     
-    name: bpy.props.StringProperty(name="Name", default="")
-    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the property group")
-    bone: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the property group (optional)")
+    name: bpy.props.StringProperty(name="Name", default="Rig Data", description="Name of the property group", update=compile_rig_ui)
+    target: bpy.props.PointerProperty(name="Target Object", type=bpy.types.Object, description="Object that contains the property group", update=compile_rig_ui)
+    bone: bpy.props.StringProperty(name="Bone", default="", description="Name of the bone that contains the property group (optional)", update=compile_rig_ui)
     
     def init(self, context):
         self.inputs.new('TGR_SKT_Property', "Property 001")
@@ -256,10 +280,6 @@ class BaseDynamicLayoutNode(Node):
         
         while len(self.inputs) > 1 and not self.inputs[-2].is_linked:
             self.inputs.remove(self.inputs[-1])
-
-
-def compile_rig_ui(self, context):
-    run_tgr_ui_generator()
 
 
 class TGR_LY_ND_Row(BaseDynamicLayoutNode):
@@ -416,51 +436,61 @@ class TGR_LY_ND_Prop(Node):
     def _draw_float(self, context, layout):
         layout.prop(self, "property_name", text="Property")
         layout.prop(self, "use_slider", text="Use Slider")
-        layout.prop(self, "subtype", text="Subtype")
     
     def _draw_boolean(self, context, layout):
         layout.prop(self, "property_name", text="Property")
         layout.prop(self, "toggle", text="Toggle")
         layout.prop(self, "invert_boolean", text="Invert Boolean")
     
-    def _draw_vector(self, context, layout):
-        layout.prop(self, "property_name", text="Property")
-        layout.prop(self, "subtype", text="Subtype")
-        layout.prop(self, "orientation", text="Orientation")
-    
     def _draw_default(self, context, layout):
         layout.prop(self, "property_name", text="Property")
-        
     
     def _get_property_enum_items(self, context):
         """Dynamically generate enum items based on the property nodes available in the data tree"""
         items = []
-        data_node_tree = None
+        node_tree = None
         for node_group in bpy.data.node_groups:
-            if isinstance(node_group, TGR_NT_Data):
-                data_node_tree = node_group
+            if isinstance(node_group, TGR_NT_UI):
+                node_tree = node_group
                 break
-        if data_node_tree:
-            for node in data_node_tree.nodes:
-                if isinstance(node, (TGR_DT_ND_Float, TGR_DT_ND_Integer, TGR_DT_ND_String, TGR_DT_ND_Boolean, TGR_DT_ND_Vector, TGR_DT_ND_Color, TGR_DT_ND_Enum, TGR_DT_ND_Object)):
+        if node_tree:
+            for node in node_tree.nodes:
+                if isinstance(node, (TGR_ND_Float, TGR_ND_Integer, TGR_ND_String, TGR_ND_Boolean, TGR_ND_Vector, TGR_ND_Color, TGR_ND_Enum, TGR_ND_Object)):
                     # Don't add to the enum if they are not linked to the Property Group node
                     if not any(isinstance(link.to_node, TGR_DT_ND_PropertyGroup) for link in node.outputs[0].links):
                         continue
                     items.append((node.name, node.name, ""))
         return items
     
-    def _get_property_type(self):
-        data_node_tree = None
+    @property
+    def current_node(self) -> Node:
+        node_tree = None
         for node_group in bpy.data.node_groups:
-            if isinstance(node_group, TGR_NT_Data):
-                data_node_tree = node_group
+            if isinstance(node_group, TGR_NT_UI):
+                node_tree = node_group
                 break
-        if data_node_tree:
-            for node in data_node_tree.nodes:
+        if node_tree:
+            for node in node_tree.nodes:
                 if node.name == self.property_name:
-                    return type(node)
+                    return node
         return None
     
+    @property
+    def prop_type(self):
+        return type(self.current_node)
+
+    @property
+    def prop_values(self) -> dict:
+        values = {'name': self.current_node.name}
+
+        if self.prop_type in (TGR_ND_Float, TGR_ND_Integer, TGR_ND_Vector):
+            values['slider'] = self.use_slider
+        elif self.prop_type == TGR_ND_Boolean:
+            values['toggle'] = self.toggle
+            values['invert_checkbox'] = self.invert_boolean
+
+        return values
+
     property_name: bpy.props.EnumProperty(name="Property", items=_get_property_enum_items, update=compile_rig_ui)
     
     # Float, Int
@@ -480,28 +510,21 @@ class TGR_LY_ND_Prop(Node):
     # Boolean
     toggle: bpy.props.BoolProperty(name="Toggle", default=False, description="Display boolean property as a toggle button", update=compile_rig_ui)
     invert_boolean: bpy.props.BoolProperty(name="Invert Boolean", default=False, description="Invert the value of the boolean property", update=compile_rig_ui)
-    
-    # Vector
-    orientation: bpy.props.EnumProperty(name="Orientation",
-                                        items=[
-                                            ('HORIZONTAL', "Horizontal", "Arrange vector components horizontally"),
-                                            ('VERTICAL', "Vertical", "Arrange vector components vertically")],
-                                        default='HORIZONTAL',
-                                        update=compile_rig_ui)
 
+    
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
     
     def draw_buttons(self, context, layout):
-        property_type = self._get_property_type()
-        if property_type == TGR_DT_ND_Float:
+        property_type = self.prop_type
+        if property_type == TGR_ND_Float:
             self._draw_float(context, layout)
-        elif property_type == TGR_DT_ND_Integer:
+        elif property_type == TGR_ND_Integer:
             self._draw_float(context, layout)
-        elif property_type == TGR_DT_ND_Boolean:
+        elif property_type == TGR_ND_Vector:
+            self._draw_float(context, layout)
+        elif property_type == TGR_ND_Boolean:
             self._draw_boolean(context, layout)
-        elif property_type == TGR_DT_ND_Vector:
-            self._draw_vector(context, layout)
         else:
             self._draw_default(context, layout)
 
