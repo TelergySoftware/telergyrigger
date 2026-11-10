@@ -204,8 +204,11 @@ class NodeTreeCompiler:
         """Compile float data nodes into Python code"""
         if float_node.is_data:
             name = float_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
-            self._new_line(f"{name}: bpy.props.FloatProperty(name='{float_node.name}', default={float_node.default_value}, min={float_node.min_value}, max={float_node.max_value}, description='{float_node.description}')")
-        
+            update_text = ""
+            if float_node.inputs[0].is_linked:
+                update_node = float_node.inputs[0].links[0].from_node
+                update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+            self._new_line(f"{name}: bpy.props.FloatProperty(name='{float_node.name}', default={float_node.default_value}, min={float_node.min_value}, max={float_node.max_value}, description='{float_node.description}'{update_text})")
         return float_node.default_value
 
     def _compile_integer_data_node(self, integer_node: Node) -> int:
@@ -222,16 +225,25 @@ class NodeTreeCompiler:
 
     def _compile_string_data_node(self, string_node: Node) -> str:
         """Compile string data nodes into Python code"""
-        name = string_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
-        self._new_line(f"{name}: bpy.props.StringProperty(name='{string_node.name}', default='{string_node.default_value}', description='{string_node.description}')")
-
+        if string_node.is_data:
+            name = string_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
+            update_text = ""
+            if string_node.inputs[0].is_linked:
+                update_node = string_node.inputs[0].links[0].from_node
+                update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+            self._new_line(f"{name}: bpy.props.StringProperty(name='{string_node.name}', default='{string_node.default_value}', description='{string_node.description}'{update_text})")
+            
         return string_node.default_value
 
     def _compile_bool_data_node(self, bool_node: Node) -> bool:
         """Compile boolean data nodes into Python code"""
         if bool_node.is_data:
             name = bool_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
-            self._new_line(f"{name}: bpy.props.BoolProperty(name='{bool_node.name}', default={bool_node.default_value}, description='{bool_node.description}')")
+            update_text = ""
+            if bool_node.inputs[0].is_linked:
+                update_node = bool_node.inputs[0].links[0].from_node
+                update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+            self._new_line(f"{name}: bpy.props.BoolProperty(name='{bool_node.name}', default={bool_node.default_value}, description='{bool_node.description}'{update_text})")
         
         return bool_node.default_value
 
@@ -239,7 +251,11 @@ class NodeTreeCompiler:
         """Compile vector data nodes into Python code"""
         if vector_node.is_data:
             name = vector_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
-            self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{vector_node.name}', default={vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2]}, min={vector_node.min_value}, max={vector_node.max_value}, description='{vector_node.description}')")
+            update_text = ""
+            if vector_node.inputs[0].is_linked:
+                update_node = vector_node.inputs[0].links[0].from_node
+                update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+            self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{vector_node.name}', default={vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2]}, min={vector_node.min_value}, max={vector_node.max_value}, description='{vector_node.description}'{update_text})")
         
         return vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2] 
 
@@ -247,7 +263,11 @@ class NodeTreeCompiler:
         """Compile vector data nodes into Python code"""
         if color_node.is_data:
             name = color_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
-            self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{color_node.name}', default={color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]}, description='{color_node.description}')")
+            update_text = ""
+            if color_node.inputs[0].is_linked:
+                update_node = color_node.inputs[0].links[0].from_node
+                update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+            self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{color_node.name}', default={color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]}, description='{color_node.description}'{update_text})")
         
         return color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]
 
@@ -268,13 +288,21 @@ class NodeTreeCompiler:
                 item_node = item.links[0].from_node
                 items.append(self._compile_enum_item_data_node(item_node))
 
-        self._new_line(f"{name}: bpy.props.EnumProperty(name='{enum_node.name}', items={items}, default='{items[0][0]}')")
+        update_text = ""
+        if enum_node.inputs[0].is_linked:
+            update_node = enum_node.inputs[0].links[0].from_node
+            update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+        self._new_line(f"{name}: bpy.props.EnumProperty(name='{enum_node.name}', items={items}, default='{items[0][0]}'{update_text})")
 
     def _compile_object_data_node(self, object_node: Node):
         """Compile object nodes into Python code"""
 
         name = object_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
-        self._new_line(f"{name} = bpy.props.PointerProperty(name='{object_node.name}')")
+        update_text = ""
+        if object_node.inputs[0].is_linked:
+            update_node = object_node.inputs[0].links[0].from_node
+            update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+        self._new_line(f"{name} = bpy.props.PointerProperty(name='{object_node.name}'{update_text})")
 
     def _compile_property_group_nodes(self, property_group_node: Node):
         """Compile property group nodes into Python code"""
