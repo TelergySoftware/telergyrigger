@@ -180,7 +180,9 @@ class TGR_OT_CreateExecutable(bpy.types.Operator):
             executable_code += f"    # TODO: Implement the callback logic here\n"
             executable_code += f"    print(\"{self.name} callback executed\")\n"
         executable_code += f"# [END] {self.exec_type}: {self.name}\n\n"
-     
+
+        text_block.cursor_set(line=len(text_block.lines))
+
         text_block.write(executable_code)
         
         # Find a text editor area to display the new executable code
