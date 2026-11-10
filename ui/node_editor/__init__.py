@@ -29,7 +29,6 @@ from .tgr_nodes import (
     TGR_LY_ND_Prop,
     TGR_LY_ND_CustomProp,
     TGR_LY_ND_Value,
-    TGR_LY_ND_Operator,
     TGR_LY_ND_Label,
     # Data nodes
     TGR_ND_Float,
@@ -43,7 +42,8 @@ from .tgr_nodes import (
     TGR_ND_EnumItem,
     TGR_DT_ND_PropertyGroup,
     # Operator nodes
-    TGR_OP_ND_Executable,
+    TGR_EX_Operator,
+    TGR_EX_Callback,
     # Flow control nodes
     TGR_FC_ND_If,
     TGR_FC_ND_Compare,
@@ -74,7 +74,6 @@ NODE_CLASSES = [
     TGR_LY_ND_Prop,
     TGR_LY_ND_CustomProp,
     TGR_LY_ND_Value,
-    TGR_LY_ND_Operator,
     TGR_LY_ND_Label,
     # Data nodes
     TGR_ND_Float,
@@ -88,7 +87,8 @@ NODE_CLASSES = [
     TGR_ND_EnumItem,
     TGR_DT_ND_PropertyGroup,
     # Operator nodes
-    TGR_OP_ND_Executable,
+    TGR_EX_Operator,
+    TGR_EX_Callback,
     # Flow control nodes
     TGR_FC_ND_If,
     TGR_FC_ND_Compare,

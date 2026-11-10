@@ -55,6 +55,11 @@ node_categories = [
         NodeItem("TGR_LY_ND_Label"),
     ]),
 
+    TGR_NodeCategory("EXECUTABLE", "Executable", items=[
+        NodeItem("TGR_EX_Operator"),
+        NodeItem("TGR_EX_Callback"),
+    ]),
+
     TGR_NodeCategory("FLOW_CONTROL", "Flow Control", items=[
         NodeItem("TGR_FC_ND_If"),
         NodeItem("TGR_FC_ND_Compare"),

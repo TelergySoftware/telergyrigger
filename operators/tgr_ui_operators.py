@@ -129,6 +129,7 @@ class TGR_OT_CreateExecutable(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     name: bpy.props.StringProperty(name="Operator Name", default="")
+    label: bpy.props.StringProperty(name="Operator Label", default="")
     exec_type: bpy.props.StringProperty(name="Executable Type", default="OPERATOR")
 
     def execute(self, context):
@@ -150,7 +151,7 @@ class TGR_OT_CreateExecutable(bpy.types.Operator):
         # Generate a unique executable name
         executable_name = ""
         if self.exec_type == "OPERATOR":
-            executable_name = f"TGR_OT_{self.name.capitalize().replace(' ', '_')}"
+            executable_name = f"TGR_OT_{self.name.replace(' ', '_')}"
         elif self.exec_type == "CALLBACK":
             executable_name = f"tgr_{self.name.lower().replace(' ', '_')}"
             
@@ -159,12 +160,26 @@ class TGR_OT_CreateExecutable(bpy.types.Operator):
             return {'CANCELLED'}
         
         # Create the operator execute function template
-        executable_code = f"""
-# {self.exec_type}: {self.name}
-def {"execute_" + executable_name if self.exec_type == "OPERATOR" else executable_name}({"self, context" if self.exec_type == "OPERATOR" else ""}):
-    # TODO: Implement the functionality for this {self.exec_type.lower()}
-    return {{'FINISHED'}}\n
-"""
+        executable_code = ""
+        executable_code += f"\n# [START] {self.exec_type}: {self.name}\n"
+        if self.exec_type == "OPERATOR":
+            executable_code += f"class {executable_name}(bpy.types.Operator):\n"
+            executable_code += f"    bl_idname = \"tgr.{self.name.lower().replace(' ', '_')}\"\n"
+            executable_code += f"    bl_label = \"{self.label}\"\n"
+            executable_code += f"    bl_options = {{'REGISTER', 'UNDO'}}\n\n"
+            executable_code += f"    @classmethod\n"
+            executable_code += f"    def poll(cls, context):\n"
+            executable_code += f"        # TODO: Implement poll logic if needed\n"
+            executable_code += f"        return True\n\n"
+            executable_code += f"    def execute(self, context):\n"
+            executable_code += f"        # TODO: Implement the operator logic here\n"
+            executable_code += f"        self.report({{'INFO'}}, \"{self.name} executed\")\n"
+            executable_code += f"        return {{'FINISHED'}}\n"
+        elif self.exec_type == "CALLBACK":
+            executable_code += f"def {executable_name}(self, context):\n"
+            executable_code += f"    # TODO: Implement the callback logic here\n"
+            executable_code += f"    print(\"{self.name} callback executed\")\n"
+        executable_code += f"# [END] {self.exec_type}: {self.name}\n\n"
      
         text_block.write(executable_code)
         

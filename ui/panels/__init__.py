@@ -20,6 +20,8 @@ from .tgr_bone_layers_panels import TGR_PT_View3D_Panel_BoneCollections
 from .tgr_custom_properties_panels import TGR_PT_View3D_Panel_CustomProperties
 # Pressets Panel
 from .tgr_pressets_panel import TGR_PT_View3D_Panel_Pressets
+# Node Tree Panels
+from .tgr_ui_tree_panels import TGR_PT_NodeTreeSettings
 
 
 PANEL_CLASSES = [
@@ -42,6 +44,8 @@ PANEL_CLASSES = [
     TGR_PT_View3D_Panel_Utilities_Selection,
     # Custom Properties panels
     TGR_PT_View3D_Panel_CustomProperties,
+    # Node Tree Panels
+    TGR_PT_NodeTreeSettings,
 ]
 
 def register():

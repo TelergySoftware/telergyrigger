@@ -22,8 +22,7 @@ BLENDER_ICONS = get_cached_blender_icons()
 class NodeTreeCompiler:
     """Compiler for TGR node trees to generate UI code"""
 
-    def __init__(self, data_tree, layout_tree, armature):
-        self.data_tree = data_tree
+    def __init__(self, layout_tree, armature):
         self.layout_tree = layout_tree
         self.armature = armature
         try:
@@ -31,7 +30,11 @@ class NodeTreeCompiler:
         except AttributeError:
             self.panel_nodes = []
         try:
-            self.operator_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_LY_ND_Operator"]
+            self.callback_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_EX_Callback"]
+        except AttributeError:
+            self.callback_nodes = []
+        try:
+            self.operator_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_EX_Operator"]
         except AttributeError:
             self.operator_nodes = []
         try:
@@ -61,7 +64,7 @@ class NodeTreeCompiler:
         self._new_line("# =========================================================================")
         self._new_line("# Global Variables")
         self._new_line("# =========================================================================")
-        self._new_line(f"ARMATURE_NAME = '{bpy.context.active_object.name}'")
+        self._new_line(f"ARMATURE_NAME = '{self.armature.name}'")
         self._new_line(f"ARMATURE = bpy.data.objects[ARMATURE_NAME]")
 
     def _set_classes_to_register(self):
@@ -165,7 +168,7 @@ class NodeTreeCompiler:
                 if vis_condition and not solo_condition:
                     condition = vis_condition
                 elif solo_condition and not vis_condition:
-                    condtion = solo_condition
+                    condition = solo_condition
                 elif vis_condition and solo_condition:
                     condition = f"{vis_condition} and {solo_condition}"
                 self._new_line(f"if {condition}:")
@@ -200,7 +203,7 @@ class NodeTreeCompiler:
     def _compile_float_data_node(self, float_node: Node) -> float:
         """Compile float data nodes into Python code"""
         if float_node.is_data:
-            name = float_node.name.replace(' ', '_').lower()
+            name = float_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
             self._new_line(f"{name}: bpy.props.FloatProperty(name='{float_node.name}', default={float_node.default_value}, min={float_node.min_value}, max={float_node.max_value}, description='{float_node.description}')")
         
         return float_node.default_value
@@ -208,14 +211,18 @@ class NodeTreeCompiler:
     def _compile_integer_data_node(self, integer_node: Node) -> int:
         """Compile integer data nodes into Python code"""
         if integer_node.is_data:
-            name = integer_node.name.replace(' ', '_').lower()
-            self._new_line(f"{name}: bpy.props.IntProperty(name='{integer_node.name}', default={integer_node.default_value}, min={integer_node.min_value}, max={integer_node.max_value}, description='{integer_node.description}')")
+            name = integer_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
+            update_text = ""
+            if integer_node.inputs[0].is_linked:
+                update_node = integer_node.inputs[0].links[0].from_node
+                update_text = f", update=tgr_{update_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()}"
+            self._new_line(f"{name}: bpy.props.IntProperty(name='{integer_node.name}', default={integer_node.default_value}, min={integer_node.min_value}, max={integer_node.max_value}, description='{integer_node.description}'{update_text})")
         
         return integer_node.default_value
 
     def _compile_string_data_node(self, string_node: Node) -> str:
         """Compile string data nodes into Python code"""
-        name = string_node.name.replace(' ', '_').lower()
+        name = string_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
         self._new_line(f"{name}: bpy.props.StringProperty(name='{string_node.name}', default='{string_node.default_value}', description='{string_node.description}')")
 
         return string_node.default_value
@@ -223,7 +230,7 @@ class NodeTreeCompiler:
     def _compile_bool_data_node(self, bool_node: Node) -> bool:
         """Compile boolean data nodes into Python code"""
         if bool_node.is_data:
-            name = bool_node.name.replace(' ', '_').lower()
+            name = bool_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
             self._new_line(f"{name}: bpy.props.BoolProperty(name='{bool_node.name}', default={bool_node.default_value}, description='{bool_node.description}')")
         
         return bool_node.default_value
@@ -231,7 +238,7 @@ class NodeTreeCompiler:
     def _compile_vector_data_node(self, vector_node: Node) -> tuple[float]:
         """Compile vector data nodes into Python code"""
         if vector_node.is_data:
-            name = vector_node.name.replace(' ', '_').lower()
+            name = vector_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
             self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{vector_node.name}', default={vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2]}, min={vector_node.min_value}, max={vector_node.max_value}, description='{vector_node.description}')")
         
         return vector_node.default_value[0], vector_node.default_value[1], vector_node.default_value[2] 
@@ -239,7 +246,7 @@ class NodeTreeCompiler:
     def _compile_color_data_node(self, color_node: Node) -> tuple[float]:
         """Compile vector data nodes into Python code"""
         if color_node.is_data:
-            name = color_node.name.replace(' ', '_').lower()
+            name = color_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
             self._new_line(f"{name}: bpy.props.FloatVectorProperty(name='{color_node.name}', default={color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]}, description='{color_node.description}')")
         
         return color_node.default_value[0], color_node.default_value[1], color_node.default_value[2]
@@ -254,7 +261,7 @@ class NodeTreeCompiler:
         if len(enum_node.inputs) <= 2 and not enum_node.inputs[0].is_linked:
             return
         
-        name = enum_node.name.replace(' ', '_').lower()
+        name = enum_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
         items = []
         for item in enum_node.inputs:
             if item.is_linked:
@@ -266,7 +273,7 @@ class NodeTreeCompiler:
     def _compile_object_data_node(self, object_node: Node):
         """Compile object nodes into Python code"""
 
-        name = object_node.name.replace(' ', '_').lower()
+        name = object_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
         self._new_line(f"{name} = bpy.props.PointerProperty(name='{object_node.name}')")
 
     def _compile_property_group_nodes(self, property_group_node: Node):
@@ -294,11 +301,17 @@ class NodeTreeCompiler:
         for node in self.property_group_nodes:
             self._new_line(f"class TGR_PG_{node.name.replace(' ', '_')}(PropertyGroup):")
             self.indent_level += 1
-            if len(node.inputs) <= 2 and not (node.inputs[0].is_linked or node.inputs[1].is_linked):
+            one_linked = False
+            for input_socket in node.inputs:
+                if input_socket.is_linked:
+                    one_linked = True
+                    break
+            if not one_linked:
                 self._new_line(f"# No properties defined for this property group")
                 self._new_line("pass")
                 self.indent_level -= 1
                 continue
+
             for input_socket in node.inputs:
                 if input_socket.is_linked:
                     input_node = input_socket.links[0].from_node
@@ -307,8 +320,17 @@ class NodeTreeCompiler:
             self._new_line("")
             self._new_line("")
 
+    def _compile_callbacks(self):
+        """Compile callback functions into Python code"""
+        for node in self.callback_nodes:
+            self._new_line(node.executable_string)
+            self._new_line("")
+
     def _compile_operators(self):
         """Compile operator nodes into Python code"""
+        for node in self.operator_nodes:
+            self._new_line(node.executable_string)
+            self._new_line("")
 
     def _compile_layout_nodes(self, layout_node: Node, parent_layout, level=0):
         """Compile layout nodes into Python code"""
@@ -374,8 +396,8 @@ class NodeTreeCompiler:
 
     def _compile_custom_prop(self, custom_prop_node: Node, parent_layout):
         """Compile custom property nodes into Python code"""
+        text = custom_prop_node.alias
         if custom_prop_node.target.type == 'ARMATURE' and custom_prop_node.subtarget:
-            text = custom_prop_node.alias if custom_prop_node.alias else custom_prop_node.property_name
             self._new_line(f"{parent_layout}.prop(bpy.data.objects['{custom_prop_node.target.name}'].pose.bones['{custom_prop_node.subtarget}'], "
                            f"'[\"{custom_prop_node.property_name}\"]', text='{text}'"
                            f"{", slider=True" if custom_prop_node.use_slider else ""}"
@@ -411,7 +433,7 @@ class NodeTreeCompiler:
 
     def _compile_split(self, split_node: Node, parent_layout, level=0):
         """Compile split nodes into Python code"""
-        if not (split_node.inputs[0].is_linked or split_node.inputs[1].is_linked):
+        if not split_node.inputs[0].is_linked or not split_node.inputs[1].is_linked:
             print("[TGR COMPILE SPLIT] Both input nodes must be connected")
             return
         left_node = split_node.inputs[0].links[0].from_node
@@ -425,17 +447,20 @@ class NodeTreeCompiler:
     def _compile_pg_property(self, prop_node: Node, parent_layout):
         """Compile PG Property nodes into Python code"""
         real_prop_node = prop_node.current_node
-        prop_name = real_prop_node.name.replace(' ', '_').lower()
+        if not real_prop_node:
+            print(f"[TGR COMPILE PG PROPERTY] No property node connected to {prop_node.name}")
+            return
+        prop_name = real_prop_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
         prop_group = real_prop_node.outputs[0].links[0].to_node
-        group_name = prop_group.name.replace(' ', '_').lower()
+        group_name = prop_group.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
         target_name = prop_group.target.name
         bone_name = prop_group.bone
         line = ""
 
         if not prop_group.bone:
-            line = f"{parent_layout}.prop(bpy.data.objects['{target_name}'].{group_name}, '{prop_name}', text='{real_prop_node.name}'"
+            line = f"{parent_layout}.prop(bpy.data.objects['{target_name}'].{group_name}, '{prop_name}', text='{prop_node.alias}'"
         else:
-            line = f"{parent_layout}.prop(bpy.data.objects['{target_name}'].pose.bones['{bone_name}'].{group_name}, '{prop_name}', text='{real_prop_node.name}'"
+            line = f"{parent_layout}.prop(bpy.data.objects['{target_name}'].pose.bones['{bone_name}'].{group_name}, '{prop_name}', text='{prop_node.alias}'"
 
         for key, value in prop_node.prop_values.items():
             if key == "name":
@@ -520,7 +545,7 @@ class NodeTreeCompiler:
                 self._new_line(f"# Remove property group from the {node.bone} bone of the {node.target.name} armature")
                 self._new_line(f"del bpy.types.PoseBone.{node.name.replace(' ', '_').lower()}")
         self._new_line("")
-        self._new_line("for cls in CLASSES:")
+        self._new_line("for cls in reversed(CLASSES):")
         self.indent_level += 1
         self._new_line("bpy.utils.unregister_class(cls)")
         self.indent_level -= 2
@@ -552,6 +577,10 @@ class NodeTreeCompiler:
         """Compile the node trees into a Python script"""
         self._set_boilerplate()
         self._new_line("# =========================================================================")
+        self._new_line("# Callbacks")
+        self._new_line("# =========================================================================")
+        self._compile_callbacks()
+        self._new_line("# =========================================================================")
         self._new_line("# Property Groups")
         self._new_line("# =========================================================================")
         self._compile_property_groups()
@@ -577,7 +606,7 @@ class NodeTreeCompiler:
         return self.generated_code
 
 
-def run_tgr_ui_generator(armature=None):
+def run_tgr_ui_generator(armature=None, tree=None):
     """Standalone compilation logic. Can be called directly from anywhere"""
     # Fallback to get active armature if none is passed
     if armature is None:
@@ -591,18 +620,12 @@ def run_tgr_ui_generator(armature=None):
     if not armature:
         print("[TGR Auto-Compile]: No active or selected Armature found.")
         return False
-
-    layout_trees = [tree for tree in bpy.data.node_groups if tree.bl_idname == "TGR_NT_UI"]
-    data_trees = [tree for tree in bpy.data.node_groups if tree.bl_idname == "TGR_NT_Data"]
-
-    if not layout_trees:
-        print("[TGR Auto-Compile]: No UI Layout tree found.")
-        return False
-
-    layout_tree = layout_trees[0]
-    data_tree = data_trees[0] if data_trees else None
     
-    script_name = f"{layout_tree.name.replace(' ', '_').lower()}.py"
+    tree = tree or bpy.context.space_data.edit_tree
+    if not tree:
+        print("[TGR Auto-Compile]: No active node tree found.")
+        return False
+    script_name = f"{tree.name.replace(' ', '_').lower()}.py"
     if script_name in bpy.data.texts:
         text_block = bpy.data.texts[script_name]
         text_block.clear()
@@ -612,7 +635,7 @@ def run_tgr_ui_generator(armature=None):
     text_block.use_module = True
 
     # 1. Compile Code
-    compiler = NodeTreeCompiler(data_tree, layout_tree, armature)
+    compiler = NodeTreeCompiler(tree, armature)
     generated_code = compiler.compile()
     text_block.write(generated_code)
 
