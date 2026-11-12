@@ -180,8 +180,8 @@ class NodeTreeCompiler:
             print("[TGR COMPILE AND] Both input nodes must be connected")
             return
 
-        socket_a = and_node.inputs[0].links[0].from_socket if and_node.inputs[0].is_linked else None
-        socket_b = and_node.inputs[1].links[0].from_socket if and_node.inputs[1].is_linked else None
+        socket_a = and_node.inputs[0].links[0].from_socket
+        socket_b = and_node.inputs[1].links[0].from_socket
 
         condition_a = self._get_condition(node_a, socket_a)
         condition_b = self._get_condition(node_b, socket_b)
@@ -198,8 +198,8 @@ class NodeTreeCompiler:
             print("[TGR COMPILE OR] Both input nodes must be connected")
             return
 
-        socket_a = or_node.inputs[0].links[0].from_socket if or_node.inputs[0].is_linked else None
-        socket_b = or_node.inputs[1].links[0].from_socket if or_node.inputs[1].is_linked else None
+        socket_a = or_node.inputs[0].links[0].from_socket
+        socket_b = or_node.inputs[1].links[0].from_socket
 
         condition_a = self._get_condition(node_a, socket_a)
         condition_b = self._get_condition(node_b, socket_b)
@@ -215,7 +215,7 @@ class NodeTreeCompiler:
             print("[TGR COMPILE NOT] Input node must be connected")
             return
 
-        socket = not_node.inputs[0].links[0].from_socket if not_node.inputs[0].is_linked else None
+        socket = not_node.inputs[0].links[0].from_socket
 
         condition = self._get_condition(input_node, socket)
 
