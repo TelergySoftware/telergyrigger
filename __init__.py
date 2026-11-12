@@ -62,6 +62,9 @@ node_categories = [
 
     TGR_NodeCategory("FLOW_CONTROL", "Flow Control", items=[
         NodeItem("TGR_FC_ND_If"),
+        NodeItem("TGR_FC_ND_And"),
+        NodeItem("TGR_FC_ND_Or"),
+        NodeItem("TGR_FC_ND_Not"),
         NodeItem("TGR_FC_ND_Compare"),
     ]),
 ]    

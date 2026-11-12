@@ -880,6 +880,8 @@ class TGR_LY_ND_BoneCollection(Node):
     
     def init(self, context):
         self.outputs.new('TGR_SKT_Layout', "Layout")
+        self.outputs.new('NodeSocketBool', "Is Visible")
+        self.outputs.new('NodeSocketBool', "Is Solo")
     
     def draw_buttons(self, context, layout):
         layout.prop(self, "collection_name", text="")
@@ -906,6 +908,38 @@ class TGR_FC_ND_If(Node):
         self.inputs.new('TGR_SKT_Any', "False")
 
         self.outputs.new('TGR_SKT_Any', "Result")
+
+
+class TGR_FC_ND_And(Node):
+    bl_idname = "TGR_FC_ND_And"
+    bl_label = "And"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketBool', "A")
+        self.inputs.new('NodeSocketBool', "B")
+        self.outputs.new('NodeSocketBool', "Result")
+
+
+class TGR_FC_ND_Or(Node):
+    bl_idname = "TGR_FC_ND_Or"
+    bl_label = "Or"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketBool', "A")
+        self.inputs.new('NodeSocketBool', "B")
+        self.outputs.new('NodeSocketBool', "Result")
+
+
+class TGR_FC_ND_Not(Node):
+    bl_idname = "TGR_FC_ND_Not"
+    bl_label = "Not"
+    bl_icon = 'ALIGN_JUSTIFY'
+
+    def init(self, context):
+        self.inputs.new('NodeSocketBool', "A")
+        self.outputs.new('NodeSocketBool', "Result")
 
 
 class TGR_FC_ND_Compare(Node):

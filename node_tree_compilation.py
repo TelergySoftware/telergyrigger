@@ -1,5 +1,5 @@
 import bpy
-from bpy.types import Node
+from bpy.types import Node, NodeSocket
 
 
 # Global scope storage for registered panels
@@ -104,7 +104,7 @@ class NodeTreeCompiler:
                 # TODO: Show the connection is not valid
                 pass
 
-    def _compile_compare_node(self, compare_node: Node, parent_layout, level=0):
+    def _compile_compare_node(self, compare_node: Node) -> str:
         """Compile compare nodes into Python code"""
         try:
             value_a = self._value_node_string_get(compare_node.inputs[0].links[0].from_node)
@@ -139,8 +139,87 @@ class NodeTreeCompiler:
                 condition = f"{compare_node.expression}"
                 condition = condition.replace('A', value_a)
                 condition = condition.replace('B', value_b)
-        self._new_line(f"if {condition}:")
-        self.indent_level += 1
+        if compare_node.outputs[0].links[0].to_node.bl_idname == 'TGR_FC_ND_If': 
+            self._new_line(f"if {condition}:")
+            self.indent_level += 1
+
+        return condition
+    
+    def _get_bone_collection_condition(self, bone_collection_node: Node, socket: NodeSocket) -> str:
+        """Get the condition for a bone collection node based on the connected socket"""
+        if socket.name == "Is Visible":
+            return f"ARMATURE.data.collections_all['{bone_collection_node.collection_name}'].is_visible"
+        elif socket.name == "Is Solo":
+            return f"ARMATURE.data.collections_all['{bone_collection_node.collection_name}'].is_solo"
+        else:
+            print(f"[TGR COMPILE BONE COLLECTION] Unsupported socket: {socket.name}")
+            return None
+
+    def _get_condition(self, node: Node, socket: NodeSocket) -> str:
+        match node.bl_idname:
+            case 'TGR_FC_ND_Compare':
+                return self._compile_compare_node(node)
+            case 'TGR_FC_ND_And':
+                return self._compile_and_node(node, socket)
+            case 'TGR_FC_ND_Or':
+                return self._compile_or_node(node, socket)
+            case 'TGR_FC_ND_Not':
+                return self._compile_not_node(node, socket)
+            case 'TGR_LY_ND_BoneCollection':
+                return self._get_bone_collection_condition(node, socket)
+            case _:
+                print(f"[TGR COMPILE AND] Unsupported node type: {node.bl_idname}")
+                return None
+
+    def _compile_and_node(self, and_node: Node, socket: NodeSocket) -> str:
+        """Compile AND nodes into Python code"""
+        node_a = and_node.inputs[0].links[0].from_node if and_node.inputs[0].is_linked else None
+        node_b = and_node.inputs[1].links[0].from_node if and_node.inputs[1].is_linked else None
+
+        if not node_a or not node_b:
+            print("[TGR COMPILE AND] Both input nodes must be connected")
+            return
+
+        socket_a = and_node.inputs[0].links[0].from_socket if and_node.inputs[0].is_linked else None
+        socket_b = and_node.inputs[1].links[0].from_socket if and_node.inputs[1].is_linked else None
+
+        condition_a = self._get_condition(node_a, socket_a)
+        condition_b = self._get_condition(node_b, socket_b)
+
+        return f"({condition_a}) and ({condition_b})"
+
+
+    def _compile_or_node(self, or_node: Node, socket: NodeSocket) -> str:
+        """Compile OR nodes into Python code"""
+        node_a = or_node.inputs[0].links[0].from_node if or_node.inputs[0].is_linked else None
+        node_b = or_node.inputs[1].links[0].from_node if or_node.inputs[1].is_linked else None
+
+        if not node_a or not node_b:
+            print("[TGR COMPILE OR] Both input nodes must be connected")
+            return
+
+        socket_a = or_node.inputs[0].links[0].from_socket if or_node.inputs[0].is_linked else None
+        socket_b = or_node.inputs[1].links[0].from_socket if or_node.inputs[1].is_linked else None
+
+        condition_a = self._get_condition(node_a, socket_a)
+        condition_b = self._get_condition(node_b, socket_b)
+
+        return f"({condition_a}) or ({condition_b})"
+
+
+    def _compile_not_node(self, not_node: Node, socket: NodeSocket) -> str:
+        """Compile NOT nodes into Python code"""
+        input_node = not_node.inputs[0].links[0].from_node if not_node.inputs[0].is_linked else None
+
+        if not input_node:
+            print("[TGR COMPILE NOT] Input node must be connected")
+            return
+
+        socket = not_node.inputs[0].links[0].from_socket if not_node.inputs[0].is_linked else None
+
+        condition = self._get_condition(input_node, socket)
+
+        return f"not ({condition})"
         
 
     def _compile_if(self, if_node: Node, parent_layout, level=0):
@@ -160,17 +239,42 @@ class NodeTreeCompiler:
             elif condition_node.bl_idname == 'TGR_LY_ND_BoneCollection':
                 vis_condition = ""
                 solo_condition = ""
-                if condition_node.use_visibility:
-                    vis_condition = f"ARMATURE.data.collections_all['{condition_node.collection_name}'].is_visible"
-                if condition_node.use_solo:
-                    solo_condition = f"ARMATURE.data.collections_all['{condition_node.collection_name}'].is_solo"
+                # Check which output is connected to the if node's input
+                for socket in condition_node.outputs:
+                    if not socket.is_linked:
+                        continue
+                    if socket.links[0].to_socket == if_node.inputs[0]:
+                        if socket.name == "Is Visible":
+                            vis_condition = f"ARMATURE.data.collections_all['{condition_node.collection_name}'].is_visible"
+                        elif socket.name == "Is Solo":
+                            solo_condition = f"ARMATURE.data.collections_all['{condition_node.collection_name}'].is_solo"
 
-                if vis_condition and not solo_condition:
+                if vis_condition:
                     condition = vis_condition
-                elif solo_condition and not vis_condition:
+                elif solo_condition:
                     condition = solo_condition
-                elif vis_condition and solo_condition:
-                    condition = f"{vis_condition} and {solo_condition}"
+                else:
+                    # TODO: Show connection error
+                    print("[TGR COMPILE IF] No valid output connected to the if node's input")
+                    return
+                
+                self._new_line(f"if {condition}:")
+                self.indent_level += 1
+                if true_node and true_node.bl_idname != 'TGR_LY_ND_Empty':
+                    self._compile_layout_nodes(layout_node=true_node, parent_layout=parent_layout, level=level)
+                else:
+                    self._new_line("pass")
+                self.indent_level -= 1
+                self._new_line("else:")
+                self.indent_level += 1
+                if false_node and false_node.bl_idname != 'TGR_LY_ND_Empty':
+                    self._compile_layout_nodes(layout_node=false_node, parent_layout=parent_layout, level=level)
+                else:
+                    self._new_line("pass")
+                self.indent_level -= 1
+
+            elif condition_node.bl_idname in ['TGR_FC_ND_And', 'TGR_FC_ND_Or', 'TGR_FC_ND_Not']:
+                condition = self._get_condition(condition_node, condition_node.outputs[0])
                 self._new_line(f"if {condition}:")
                 self.indent_level += 1
                 if true_node and true_node.bl_idname != 'TGR_LY_ND_Empty':

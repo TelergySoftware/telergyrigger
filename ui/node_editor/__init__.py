@@ -46,6 +46,9 @@ from .tgr_nodes import (
     TGR_EX_Callback,
     # Flow control nodes
     TGR_FC_ND_If,
+    TGR_FC_ND_And,
+    TGR_FC_ND_Or,
+    TGR_FC_ND_Not,
     TGR_FC_ND_Compare,
 )
 
@@ -91,6 +94,9 @@ NODE_CLASSES = [
     TGR_EX_Callback,
     # Flow control nodes
     TGR_FC_ND_If,
+    TGR_FC_ND_And,
+    TGR_FC_ND_Or,
+    TGR_FC_ND_Not,
     TGR_FC_ND_Compare,
 ]
 
