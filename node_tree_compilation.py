@@ -30,15 +30,30 @@ class NodeTreeCompiler:
         except AttributeError:
             self.panel_nodes = []
         try:
-            self.callback_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_EX_Callback"]
+            self.callback_nodes = []
+            for node in self.layout_tree.nodes:
+                if node.bl_idname == "TGR_EX_Callback":
+                    exists = any(callback_node.name == node.name for callback_node in self.callback_nodes)
+                    if not exists:
+                        self.callback_nodes.append(node)
         except AttributeError:
             self.callback_nodes = []
         try:
-            self.operator_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_EX_Operator"]
+            self.operator_nodes = []
+            for node in self.layout_tree.nodes:
+                if node.bl_idname == "TGR_EX_Operator":
+                    exists = any(operator_node.name == node.name for operator_node in self.operator_nodes)
+                    if not exists:
+                        self.operator_nodes.append(node)
         except AttributeError:
             self.operator_nodes = []
         try:
-            self.property_group_nodes = [node for node in self.layout_tree.nodes if node.bl_idname == "TGR_DT_ND_PropertyGroup"]
+            self.property_group_nodes = []
+            for node in self.layout_tree.nodes:
+                if node.bl_idname == "TGR_DT_ND_PropertyGroup":
+                    exists = any(property_group_node.name == node.name for property_group_node in self.property_group_nodes)
+                    if not exists:
+                        self.property_group_nodes.append(node)
         except AttributeError:
             self.property_group_nodes = []
         self.indent_level = 0
