@@ -729,8 +729,6 @@ class TGR_LY_ND_CustomProp(Node):
 
         skt_type = self._socket_type_get(self._property_get())
 
-        layout.prop(self, "alias", text="", placeholder="Alias")
-
         if skt_type == "NodeSocketFloat":
             self._draw_float(context, layout)
         elif skt_type == "NodeSocketInt":
@@ -866,7 +864,9 @@ class TGR_LY_ND_BoneCollection(Node):
 
     use_visibility: bpy.props.BoolProperty(name="Use Visibility", default=True, update=compile_rig_ui)
     use_solo: bpy.props.BoolProperty(name="Use Solo", default=False, update=compile_rig_ui)
-    
+    use_alias: bpy.props.BoolProperty(name="Use Alias", default=False, update=compile_rig_ui)
+    alias: bpy.props.StringProperty(name="Alias", default="", description="Alias for the bone collection", update=compile_rig_ui)
+
     def _get_bone_collection_items(self, context):
         """Dynamically generate enum items based on the bone collections available in the armature"""
         items = []
@@ -885,6 +885,9 @@ class TGR_LY_ND_BoneCollection(Node):
     
     def draw_buttons(self, context, layout):
         layout.prop(self, "collection_name", text="")
+        layout.prop(self, "use_alias", text="Use Alias", toggle=True)
+        if self.use_alias:
+            layout.prop(self, "alias", text="", placeholder="Alias")
         row = layout.row(align=True)
         row.prop(self, "use_visibility", text="Use Visibility", toggle=True)
         row.prop(self, "use_solo", text="Use Solo", toggle=True)

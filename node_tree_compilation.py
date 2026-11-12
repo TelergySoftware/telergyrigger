@@ -110,7 +110,11 @@ class NodeTreeCompiler:
                 else:
                     return f"bpy.data.objects['{value_node.target.name}'].pose.bones['{value_node.subtarget}']['{value_node.property_name}']"
             case 'TGR_LY_ND_Prop':
-                pass
+                current_node_name = value_node.current_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower()
+                prop_node_name = value_node.current_node.outputs[0].links[0].to_node.name.replace(' ', '_').replace('-', '_').replace('.', '_').lower() if value_node.current_node.outputs[0].is_linked else None
+
+                return f"ARMATURE.{prop_node_name}.{current_node_name}"
+
             case 'TGR_ND_Float':
                 return f"{value_node.default_value}"
             case 'TGR_ND_Integer':
@@ -154,7 +158,7 @@ class NodeTreeCompiler:
                 condition = f"{compare_node.expression}"
                 condition = condition.replace('A', value_a)
                 condition = condition.replace('B', value_b)
-        if compare_node.outputs[0].links[0].to_node.bl_idname == 'TGR_FC_ND_If': 
+        if compare_node.outputs[0].links[0].to_node.bl_idname == 'TGR_FC_ND_If':
             self._new_line(f"if {condition}:")
             self.indent_level += 1
 
@@ -244,7 +248,7 @@ class NodeTreeCompiler:
         if if_node.inputs[0].is_linked:
             condition_node = if_node.inputs[0].links[0].from_node
             if condition_node.bl_idname == 'TGR_FC_ND_Compare':
-                self._compile_compare_node(condition_node, parent_layout, level)
+                self._compile_compare_node(condition_node)
                 self._compile_layout_nodes(layout_node=true_node, parent_layout=parent_layout, level=level)
                 self.indent_level -= 1
                 self._new_line("else:")
@@ -519,8 +523,9 @@ class NodeTreeCompiler:
 
     def _compile_bone_collection(self, bone_collection_node: Node, parent_layout, visibility=True, solo=False):
         """Compile bone collection nodes into Python code"""
+        text = bone_collection_node.alias if bone_collection_node.use_alias else bone_collection_node.collection_name
         if visibility:
-            self._new_line(f"{parent_layout}.prop(ARMATURE.data.collections_all['{bone_collection_node.collection_name}'], 'is_visible', text='{bone_collection_node.collection_name}', toggle=True)")
+            self._new_line(f"{parent_layout}.prop(ARMATURE.data.collections_all['{bone_collection_node.collection_name}'], 'is_visible', text='{text}', toggle=True)")
         if solo:
             self._new_line(f"{parent_layout}.prop(ARMATURE.data.collections_all['{bone_collection_node.collection_name}'],"
                            f" 'is_solo', text='', toggle=True, icon='SOLO_ON' if ARMATURE.data.collections_all['{bone_collection_node.collection_name}'].is_solo else 'SOLO_OFF')")
