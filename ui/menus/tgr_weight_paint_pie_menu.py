@@ -52,8 +52,8 @@ class TGR_MT_WP_Extras_PieMenu(bpy.types.Menu):
         layout = self.layout
         pie = layout.menu_pie()
 
-        pie.separator()
-        pie.separator()
+        pie.operator("object.vertex_group_clean", text="Clean", icon="BRUSH_DATA")
+        pie.operator("object.vertex_group_normalize_all", text="Normalize All", icon="MOD_VERTEX_WEIGHT")
         # South
         pie.operator("tgr.wp_clean_up", text="Clean All", icon="BRUSH_DATA")
         # North
@@ -61,5 +61,5 @@ class TGR_MT_WP_Extras_PieMenu(bpy.types.Menu):
         pie.prop(context.space_data.overlay, "show_bones", icon=icon)
         pie.separator()
         pie.separator()
-        pie.separator()
+        pie.operator("object.vertex_group_smooth", text="Smooth", icon="SMOOTHCURVE")
         pie.separator()
