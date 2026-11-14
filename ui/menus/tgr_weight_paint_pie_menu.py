@@ -15,9 +15,6 @@ class TGR_MT_WP_PieMenu(bpy.types.Menu):
         pie = layout.menu_pie()
 
         wp_brushes = [brush for brush in bpy.data.brushes if brush.use_paint_weight]
-        if len(wp_brushes) < 4:
-            pie.operator("tgr.load_wp_brushes", text="Load Brushes", icon="FILE_REFRESH")
-            return
 
         brush_icons = {}
         for brush in wp_brushes:
@@ -26,7 +23,16 @@ class TGR_MT_WP_PieMenu(bpy.types.Menu):
             except AttributeError:
                 pass
 
-        pie.operator("tgr.activate_brush", text="Paint", icon_value=brush_icons['Paint']).brush = 'Paint'
+        if len(brush_icons) < 5:
+            pie.operator("tgr.load_wp_brushes", text="Load Brushes", icon="FILE_REFRESH")
+            return
+        
+        try:
+            pie.operator("tgr.activate_brush", text="Paint", icon_value=brush_icons['Paint']).brush = 'Paint'
+        except KeyError:
+            pie.operator("tgr.activate_brush", text="Add Weight", icon_value=brush_icons['Add Weight']).brush = 'Add Weight'
+        if "Set Weight" in brush_icons:
+            pie.operator("tgr.activate_brush", text="Set Weight", icon_value=brush_icons['Set Weight']).brush = 'Set Weight'
         pie.operator("tgr.activate_brush", text="Blur", icon_value=brush_icons['Blur']).brush = 'Blur'
         pie.operator("tgr.activate_brush", text="Average", icon_value=brush_icons['Average']).brush = 'Average'
         pie.operator("tgr.activate_brush", text="Smear", icon_value=brush_icons['Smear']).brush = 'Smear'

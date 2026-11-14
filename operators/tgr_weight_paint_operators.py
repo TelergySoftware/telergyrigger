@@ -46,11 +46,13 @@ class TGR_OT_ActivateBrush(bpy.types.Operator):
             ("Average", "Average", "Average brush"),
             ("Paint", "Paint", "Paint brush"),
             ("Blur", "Blur", "Blur brush"),
-            ("Smear", "Smear", "Smear brush")
+            ("Smear", "Smear", "Smear brush"),
+            ("Add Weight", "Add Weight", "Add Weight brush"),
+            ("Set Weight", "Set Weight", "Set Weight brush")
         ],
         default="Average"
     )
-    
+
     @classmethod
     def poll(cls, context):
         return context.mode == 'PAINT_WEIGHT'
@@ -66,6 +68,10 @@ class TGR_OT_ActivateBrush(bpy.types.Operator):
                 bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Blur")
             case "Smear":
                 bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Smear")
+            case "Add Weight":
+                bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Add Weight")
+            case "Set Weight":
+                bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Set Weight")
             case _:
                 self.report({'ERROR'}, "Invalid brush type")
         
@@ -87,7 +93,8 @@ class TGR_OT_LoadWPBrushes(bpy.types.Operator):
         current_brush = context.tool_settings.weight_paint.brush.name if context.tool_settings.weight_paint.brush else None
         # Load the default weight paint brushes
         bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Average")
-        bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Paint")
+        bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Add Weight")
+        bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Set Weight")
         bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Blur")
         bpy.ops.brush.asset_activate(asset_library_type='ESSENTIALS', asset_library_identifier="", relative_asset_identifier="brushes\\essentials_brushes-mesh_weight.blend\\Brush\\Smear")
         # Restore the brush
