@@ -864,7 +864,7 @@ class TGR_OT_SaveCollections(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not context.object:
+        if not context.active_object:
             cls.poll_message_set("No active object found")
             return False
         if not context.active_object.type == 'ARMATURE':
@@ -935,7 +935,7 @@ class TGR_OT_LoadCollections(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        if not context.object:
+        if not context.active_object:
             cls.poll_message_set("No active object found")
             return False
         if not context.active_object.type == 'ARMATURE':
@@ -957,10 +957,10 @@ class TGR_OT_LoadCollections(bpy.types.Operator):
         for collection in bone_collections:
             # Create a new collection if it doesn't exist
             new_collection = None
-            if collection.name not in bpy.context.object.tgr_props.armature.data.collections_all:
-                new_collection = bpy.context.object.tgr_props.armature.data.collections.new(collection.name)
+            if collection.name not in bpy.context.active_object.tgr_props.armature.data.collections_all:
+                new_collection = bpy.context.active_object.tgr_props.armature.data.collections.new(collection.name)
             else:
-                new_collection = bpy.context.object.tgr_props.armature.data.collections_all[collection.name]
+                new_collection = bpy.context.active_object.tgr_props.armature.data.collections_all[collection.name]
             
             if parent_collection:
                 new_collection.parent = parent_collection
